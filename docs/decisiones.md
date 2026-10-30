@@ -587,6 +587,8 @@ El evento puede tener **una imagen opcional**. Es una columna nueva,
   comprueba que sea JPG, PNG o WebP por su contenido (los primeros bytes), no
   por la extensión ni por el tipo que declara el navegador, y que no pase de
   2 MB.
+- **El gateway no la interpreta:** pasa la subida entera (`spring.servlet.multipart.enabled=false`)
+  y el límite lo aplica Eventos y Venta, que da el aviso `IMAGEN_DEMASIADO_GRANDE`.
 - **Se guarda en una carpeta del servidor**, configurable con
   `EVENTOS_IMAGENES_DIRECTORIO` (un volumen en Docker). El nombre del archivo lo
   genera el sistema; el que trae la persona se descarta. La tabla guarda solo

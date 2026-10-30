@@ -41,6 +41,22 @@ services:
       EVENTOS_ADMIN_CORREO: ${EVENTOS_ADMIN_CORREO:-}
       EVENTOS_ADMIN_PASSWORD: ${EVENTOS_ADMIN_PASSWORD:-}
 
+  eventos-venta:
+    build:
+      context: ./servicios/eventos-venta
+      dockerfile: ../Dockerfile
+    restart: unless-stopped
+    depends_on:
+      base:
+        condition: service_healthy
+    environment:
+      EVENTOS_DB_HOST: base
+      EVENTOS_EVENTOS_DB_PASSWORD: ${EVENTOS_EVENTOS_DB_PASSWORD}
+      EVENTOS_CLAVE_SERVICIO: ${EVENTOS_CLAVE_SERVICIO}
+      EVENTOS_IMAGENES_DIRECTORIO: /datos/imagenes
+    volumes:
+      - imagenes-eventos:/datos/imagenes
+
   gateway:
     build:
       context: ./servicios/gateway
@@ -48,8 +64,10 @@ services:
     restart: unless-stopped
     depends_on:
       - seguridad
+      - eventos-venta
     environment:
       EVENTOS_SEGURIDAD_URL: http://seguridad:8081
+      EVENTOS_VENTA_URL: http://eventos-venta:8082
       EVENTOS_CLAVE_SERVICIO: ${EVENTOS_CLAVE_SERVICIO}
     # Sin puertos publicados: se llega por nginx, bajo /api
 
@@ -63,3 +81,4 @@ services:
 
 volumes:
   datos-mysql:
+  imagenes-eventos:
