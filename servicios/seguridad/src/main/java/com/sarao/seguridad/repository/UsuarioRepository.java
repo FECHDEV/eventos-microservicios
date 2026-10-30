@@ -6,6 +6,7 @@ import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import com.sarao.seguridad.entity.Rol;
 import com.sarao.seguridad.entity.Usuario;
 
 public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
@@ -13,6 +14,8 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 	boolean existsByCorreo(String correo);
 
 	Optional<Usuario> findByCorreo(String correo);
+
+	boolean existsByRol(Rol rol);
 
 	// correo es la única restricción UNIQUE de la tabla usuario
 	static boolean esCorreoDuplicado(DataIntegrityViolationException ex) {

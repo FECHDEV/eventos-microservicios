@@ -35,6 +35,11 @@ services:
     environment:
       EVENTOS_DB_HOST: base
       EVENTOS_SEGURIDAD_DB_PASSWORD: ${EVENTOS_SEGURIDAD_DB_PASSWORD}
+      EVENTOS_JWT_SECRETO: ${EVENTOS_JWT_SECRETO:?Falta EVENTOS_JWT_SECRETO en .env}
+      EVENTOS_CLAVE_SERVICIO: ${EVENTOS_CLAVE_SERVICIO:?Falta EVENTOS_CLAVE_SERVICIO en .env}
+      # Solo hacen falta en el primer arranque: sin administrador y sin ellas, Seguridad no arranca
+      EVENTOS_ADMIN_CORREO: ${EVENTOS_ADMIN_CORREO:-}
+      EVENTOS_ADMIN_PASSWORD: ${EVENTOS_ADMIN_PASSWORD:-}
 
   gateway:
     build:
@@ -45,7 +50,8 @@ services:
       - seguridad
     environment:
       EVENTOS_SEGURIDAD_URL: http://seguridad:8081
-    # shortcut: publicado directo mientras no exista el frontend, pasa detrás de nginx con HU-09
+      EVENTOS_CLAVE_SERVICIO: ${EVENTOS_CLAVE_SERVICIO}
+    # shortcut: publicado directo mientras no exista el frontend, con HU-09 pasa detrás de nginx y activa server.forward-headers-strategy
     ports:
       - "${SARAO_PUERTO:-80}:8080"
 
