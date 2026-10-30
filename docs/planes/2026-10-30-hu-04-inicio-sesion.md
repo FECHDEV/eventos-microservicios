@@ -28,7 +28,14 @@ Spec: `docs/criterios-aceptacion/CU-02.md`. Solo backend; la pantalla entra con 
 
 ## Resultado
 
-- **Suites:** 103 pruebas de `seguridad` y 6 de `gateway` en verde.
+- **Suites:** `seguridad` y `gateway` en verde.
 - **Prueba de punta a punta** por el gateway contra MySQL en Docker: los casos de los
   criterios de finalización, más identidad falsa del cliente (401) y `/interno` (404).
-- **Pendiente:** `/code-review`, `/security-review` y CI, que necesitan el commit.
+- **`/security-review`:** sin vulnerabilidades. Detectó que `X-Forwarded-For` no llegaba a
+  Seguridad; se confirmó con una prueba y se corrigió con `trusted-proxies`.
+- **`/code-review`, corregidos:** tamaño máximo en el inicio de sesión, `toString` sin
+  secretos, clave de servicio en blanco no arranca, variables del administrador opcionales
+  en compose, límite de registros en el servicio y 503 cuando Seguridad falla.
+- **`/code-review`, descartados:** contar el intento antes de comparar (decisión del sistema
+  base contra ráfagas), encabezados inválidos con la clave correcta (solo los manda el
+  gateway), código para HU-06 a HU-08 del mismo sprint, y `docs/` en la rama (ya acordado).

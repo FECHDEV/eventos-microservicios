@@ -20,9 +20,12 @@ public class UsuarioService {
 	private final UsuarioRepository usuarioRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final Clock clock;
+	private final LimiteRegistros limiteRegistros;
 
 	// Sin @Transactional: el hash BCrypt no retiene una conexión, y la restricción UNIQUE resuelve la carrera
-	public Usuario registrarCliente(RegistroClienteRequest solicitud) {
+	public Usuario registrarCliente(RegistroClienteRequest solicitud, String ip) {
+		// También cuenta el correo ya registrado: frena probar qué correos tienen cuenta
+		limiteRegistros.registrarIntento(ip);
 		String correo = Usuario.normalizarCorreo(solicitud.correo());
 		if (usuarioRepository.existsByCorreo(correo)) {
 			throw new CuentaExistenteException();

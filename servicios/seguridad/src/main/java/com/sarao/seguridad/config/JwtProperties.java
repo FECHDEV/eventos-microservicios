@@ -6,4 +6,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties("eventos.jwt")
 public record JwtProperties(String secreto, Duration duracion) {
+
+	@Override
+	public String toString() {
+		return "JwtProperties[duracion=" + duracion + "]";
+	}
 }

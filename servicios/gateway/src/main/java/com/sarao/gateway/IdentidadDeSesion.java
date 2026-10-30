@@ -9,15 +9,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.function.ServerRequest;
 
 // Resuelve el token con Seguridad, la unica que tiene la clave JWT, y pasa la identidad a los servicios. Un token invalido
-// o Seguridad caida no cortan la peticion: va sin identidad, las rutas publicas la atienden y las protegidas dan 401
+// no corta la peticion: va sin identidad y las rutas protegidas dan 401. Si Seguridad falla, 503: un 401 cerraria la
+// sesion de un usuario con token vigente
 @Component
 public class IdentidadDeSesion {
 
@@ -68,12 +71,15 @@ public class IdentidadDeSesion {
 		try {
 			return Optional.ofNullable(seguridad.post().uri("/interno/sesiones").header(CLAVE, claveServicio)
 					.contentType(MediaType.APPLICATION_JSON).body(Map.of("token", token))
-					.exchange((pedido, respuesta) -> respuesta.getStatusCode().is2xxSuccessful()
-							? respuesta.bodyTo(Identidad.class)
-							: null));
+					.exchange((pedido, respuesta) -> {
+						if (respuesta.getStatusCode().is5xxServerError()) {
+							throw new RestClientException("Seguridad respondio " + respuesta.getStatusCode());
+						}
+						return respuesta.getStatusCode().is2xxSuccessful() ? respuesta.bodyTo(Identidad.class) : null;
+					}));
 		} catch (RestClientException e) {
 			log.warn("No se pudo consultar la sesion en Seguridad: {}", e.getMessage());
-			return Optional.empty();
+			throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE);
 		}
 	}
 

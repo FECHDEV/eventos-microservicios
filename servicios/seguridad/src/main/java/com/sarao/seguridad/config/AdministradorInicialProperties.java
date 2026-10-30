@@ -28,4 +28,9 @@ public record AdministradorInicialProperties(
 	public AdministradorInicialProperties {
 		correo = correo == null ? null : Usuario.normalizarCorreo(correo);
 	}
+
+	@Override
+	public String toString() {
+		return "AdministradorInicialProperties[correo=" + correo + "]";
+	}
 }

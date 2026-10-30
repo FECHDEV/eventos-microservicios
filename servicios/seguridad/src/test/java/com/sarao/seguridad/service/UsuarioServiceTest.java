@@ -49,7 +49,7 @@ class UsuarioServiceTest {
 
 	@BeforeEach
 	void crearServicio() {
-		usuarioService = new UsuarioService(usuarioRepository, passwordEncoder, RELOJ);
+		usuarioService = new UsuarioService(usuarioRepository, passwordEncoder, RELOJ, new LimiteRegistros(RELOJ));
 	}
 
 	private static RegistroClienteRequest solicitud(String correo, String telefono) {
@@ -61,7 +61,7 @@ class UsuarioServiceTest {
 		given(usuarioRepository.existsByCorreo("ana@mail.com")).willReturn(false);
 		given(usuarioRepository.saveAndFlush(any(Usuario.class))).willAnswer(invocacion -> invocacion.getArgument(0));
 
-		Usuario registrado = usuarioService.registrarCliente(solicitud("Ana@Mail.COM", "70000000"));
+		Usuario registrado = usuarioService.registrarCliente(solicitud("Ana@Mail.COM", "70000000"), "10.0.0.1");
 
 		ArgumentCaptor<Usuario> guardado = ArgumentCaptor.forClass(Usuario.class);
 		then(usuarioRepository).should().saveAndFlush(guardado.capture());
@@ -84,7 +84,7 @@ class UsuarioServiceTest {
 		given(usuarioRepository.existsByCorreo("ana@mail.com")).willReturn(false);
 		given(usuarioRepository.saveAndFlush(any(Usuario.class))).willAnswer(invocacion -> invocacion.getArgument(0));
 
-		Usuario usuario = usuarioService.registrarCliente(solicitud("ana@mail.com", "  "));
+		Usuario usuario = usuarioService.registrarCliente(solicitud("ana@mail.com", "  "), "10.0.0.1");
 
 		assertThat(usuario.getTelefono()).isNull();
 	}
@@ -93,7 +93,7 @@ class UsuarioServiceTest {
 	void rechazaCorreoYaRegistradoAunqueCambienLasMayusculas() {
 		given(usuarioRepository.existsByCorreo("ana@mail.com")).willReturn(true);
 
-		assertThatThrownBy(() -> usuarioService.registrarCliente(solicitud("ANA@mail.com", null)))
+		assertThatThrownBy(() -> usuarioService.registrarCliente(solicitud("ANA@mail.com", null), "10.0.0.1"))
 				.isInstanceOf(CuentaExistenteException.class);
 		then(usuarioRepository).should(never()).saveAndFlush(any(Usuario.class));
 	}
@@ -105,7 +105,7 @@ class UsuarioServiceTest {
 				new ConstraintViolationException("duplicado", new SQLException("Duplicate entry", "23000", 1062),
 						ConstraintViolationException.ConstraintKind.UNIQUE, "uk_usuario_correo")));
 
-		assertThatThrownBy(() -> usuarioService.registrarCliente(solicitud("ana@mail.com", null)))
+		assertThatThrownBy(() -> usuarioService.registrarCliente(solicitud("ana@mail.com", null), "10.0.0.1"))
 				.isInstanceOf(CuentaExistenteException.class);
 	}
 
@@ -116,7 +116,7 @@ class UsuarioServiceTest {
 		given(usuarioRepository.existsByCorreo("ana@mail.com")).willReturn(false);
 		given(usuarioRepository.saveAndFlush(any(Usuario.class))).willThrow(datoDemasiadoLargo);
 
-		assertThatThrownBy(() -> usuarioService.registrarCliente(solicitud("ana@mail.com", null)))
+		assertThatThrownBy(() -> usuarioService.registrarCliente(solicitud("ana@mail.com", null), "10.0.0.1"))
 				.isSameAs(datoDemasiadoLargo);
 	}
 

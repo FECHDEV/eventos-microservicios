@@ -38,7 +38,6 @@ import com.sarao.seguridad.exception.CuentaExistenteException;
 import com.sarao.seguridad.exception.IntentosExcedidosException;
 import com.sarao.seguridad.exception.RegistrosExcedidosException;
 import com.sarao.seguridad.service.AutenticacionService;
-import com.sarao.seguridad.service.LimiteRegistros;
 import com.sarao.seguridad.service.SesionIniciada;
 import com.sarao.seguridad.service.UsuarioService;
 
@@ -59,9 +58,6 @@ class AuthControllerTest {
 
 	@MockitoBean
 	private AutenticacionService autenticacionService;
-
-	@MockitoBean
-	private LimiteRegistros limiteRegistros;
 
 	private static Map<String, String> datosValidos() {
 		Map<String, String> datos = new LinkedHashMap<>();
@@ -90,7 +86,7 @@ class AuthControllerTest {
 
 	@Test
 	void registroValidoSinSesionDevuelve201SinContrasena() {
-		given(usuarioService.registrarCliente(any(RegistroClienteRequest.class))).willReturn(clienteRegistrado());
+		given(usuarioService.registrarCliente(any(RegistroClienteRequest.class), anyString())).willReturn(clienteRegistrado());
 
 		MvcTestResult resultado = registrar(datosValidos());
 
@@ -103,7 +99,7 @@ class AuthControllerTest {
 
 	@Test
 	void rolYEstadoEnviadosEnLaSolicitudSeIgnoran() {
-		given(usuarioService.registrarCliente(any(RegistroClienteRequest.class))).willReturn(clienteRegistrado());
+		given(usuarioService.registrarCliente(any(RegistroClienteRequest.class), anyString())).willReturn(clienteRegistrado());
 		Map<String, String> datos = datosValidos();
 		datos.put("rol", "ADMINISTRADOR");
 		datos.put("estado", "DESACTIVADA");
@@ -113,14 +109,14 @@ class AuthControllerTest {
 
 	@Test
 	void correoLlegaNormalizadoAlServicio() {
-		given(usuarioService.registrarCliente(any(RegistroClienteRequest.class))).willReturn(clienteRegistrado());
+		given(usuarioService.registrarCliente(any(RegistroClienteRequest.class), anyString())).willReturn(clienteRegistrado());
 		Map<String, String> datos = datosValidos();
 		datos.put("correo", "  Ana@Mail.com ");
 
 		assertThat(registrar(datos)).hasStatus(HttpStatus.CREATED);
 
 		ArgumentCaptor<RegistroClienteRequest> solicitud = ArgumentCaptor.forClass(RegistroClienteRequest.class);
-		then(usuarioService).should().registrarCliente(solicitud.capture());
+		then(usuarioService).should().registrarCliente(solicitud.capture(), anyString());
 		assertThat(solicitud.getValue().correo()).isEqualTo("ana@mail.com");
 	}
 
@@ -177,7 +173,7 @@ class AuthControllerTest {
 
 	@Test
 	void cuentaExistenteDevuelve409() {
-		given(usuarioService.registrarCliente(any(RegistroClienteRequest.class)))
+		given(usuarioService.registrarCliente(any(RegistroClienteRequest.class), anyString()))
 				.willThrow(new CuentaExistenteException());
 
 		MvcTestResult resultado = registrar(datosValidos());
@@ -289,14 +285,24 @@ class AuthControllerTest {
 
 	// CU-01 RF-17
 	@Test
-	void registrosExcedidosDevuelven429SinLlamarAlServicio() {
-		willThrow(new RegistrosExcedidosException()).given(limiteRegistros).registrarIntento(anyString());
+	void registrosExcedidosDevuelven429() {
+		given(usuarioService.registrarCliente(any(RegistroClienteRequest.class), anyString()))
+				.willThrow(new RegistrosExcedidosException());
 
 		MvcTestResult resultado = registrar(datosValidos());
 
 		assertThat(resultado).hasStatus(HttpStatus.TOO_MANY_REQUESTS);
 		assertThat(resultado).bodyJson().extractingPath("$.codigo").isEqualTo("REGISTROS_EXCEDIDOS");
-		then(usuarioService).shouldHaveNoInteractions();
+	}
+
+	@Test
+	void correoOContrasenaDeInicioDeSesionDemasiadoLargosDevuelven400SinLlamarAlServicio() {
+		String cuerpo = "{\"correo\":\"%s\",\"contrasena\":\"%s\"}".formatted("a".repeat(121), "a".repeat(1001));
+
+		MvcTestResult resultado = iniciarSesion(cuerpo);
+
+		assertThat(resultado).hasStatus(HttpStatus.BAD_REQUEST);
+		then(autenticacionService).shouldHaveNoInteractions();
 	}
 
 	@Test

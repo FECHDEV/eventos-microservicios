@@ -81,10 +81,12 @@ Seguridad tiene la clave JWT.
 - Pasa la identidad en `X-Usuario-Id` y `X-Usuario-Rol`, con `X-Clave-Servicio`, y
   borra esos encabezados si los manda el cliente. Un servicio solo los acepta con la
   clave.
-- Un token inválido o Seguridad caída no cortan la petición: sigue sin identidad, las
-  rutas públicas responden y las protegidas dan 401.
+- Un token inválido no corta la petición: sigue sin identidad, las rutas públicas
+  responden y las protegidas dan 401. Si Seguridad falla, el gateway responde 503: un
+  401 le cerraría la sesión a un usuario con token vigente.
 - El gateway fija `X-Forwarded-For`: los límites de intentos ven la IP real y el
-  cliente no puede inventarla.
+  cliente no puede inventarla. Necesita `trusted-proxies`: sin esa propiedad, Spring
+  Cloud Gateway borra el encabezado y todos los clientes comparten una IP.
 
 ### Reportes
 

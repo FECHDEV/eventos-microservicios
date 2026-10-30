@@ -37,9 +37,9 @@ services:
       EVENTOS_SEGURIDAD_DB_PASSWORD: ${EVENTOS_SEGURIDAD_DB_PASSWORD}
       EVENTOS_JWT_SECRETO: ${EVENTOS_JWT_SECRETO:?Falta EVENTOS_JWT_SECRETO en .env}
       EVENTOS_CLAVE_SERVICIO: ${EVENTOS_CLAVE_SERVICIO:?Falta EVENTOS_CLAVE_SERVICIO en .env}
-      # El Administrador inicial se crea solo si todavía no hay ninguno
-      EVENTOS_ADMIN_CORREO: ${EVENTOS_ADMIN_CORREO:?Falta EVENTOS_ADMIN_CORREO en .env}
-      EVENTOS_ADMIN_PASSWORD: ${EVENTOS_ADMIN_PASSWORD:?Falta EVENTOS_ADMIN_PASSWORD en .env}
+      # Solo hacen falta en el primer arranque: sin administrador y sin ellas, Seguridad no arranca
+      EVENTOS_ADMIN_CORREO: ${EVENTOS_ADMIN_CORREO:-}
+      EVENTOS_ADMIN_PASSWORD: ${EVENTOS_ADMIN_PASSWORD:-}
 
   gateway:
     build:

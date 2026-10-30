@@ -15,14 +15,19 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
 
 // El gateway ya resolvió el token. Sus encabezados solo valen con la clave de servicio: alguien que llegue directo a
 // este servicio no puede hacerse pasar por un usuario. No es un @Component: lo crea SecurityConfig
-@RequiredArgsConstructor
 public class IdentidadDelGatewayFiltro extends OncePerRequestFilter {
 
 	private final String claveServicio;
+
+	public IdentidadDelGatewayFiltro(String claveServicio) {
+		if (claveServicio == null || claveServicio.isBlank()) {
+			throw new IllegalStateException("Falta configurar EVENTOS_CLAVE_SERVICIO.");
+		}
+		this.claveServicio = claveServicio;
+	}
 
 	@Override
 	protected void doFilterInternal(HttpServletRequest peticion, HttpServletResponse respuesta, FilterChain cadena)

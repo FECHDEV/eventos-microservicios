@@ -99,8 +99,8 @@ class EnrutamientoTest {
 	}
 
 	@Test
-	void seguridadConErrorDejaLaPeticionSinIdentidad() throws Exception {
-		assertThat(pedir("/api/cuenta", "Authorization", "Bearer falla").body()).startsWith("/api/cuenta|null|null|null|");
+	void seguridadConErrorDevuelve503YNoCierraLaSesion() throws Exception {
+		assertThat(pedir("/api/cuenta", "Authorization", "Bearer falla").statusCode()).isEqualTo(503);
 	}
 
 	@Test
@@ -110,6 +110,7 @@ class EnrutamientoTest {
 
 		assertThat(respuesta.body()).startsWith("/api/cuenta|null|null|null|");
 		assertThat(respuesta.body()).doesNotContain("1.2.3.4");
+		assertThat(respuesta.body()).endsWith("|127.0.0.1,127.0.0.1");
 	}
 
 	private HttpResponse<String> pedir(String ruta, String... encabezados) throws Exception {
