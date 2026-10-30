@@ -35,6 +35,8 @@ public class SecurityConfig {
 						.requestMatchers(HttpMethod.POST, "/api/auth/registro", "/api/auth/inicio-sesion",
 								"/api/auth/recuperacion", "/api/auth/recuperacion/restablecimiento").permitAll()
 						.requestMatchers("/interno/**").hasRole("SERVICIO")
+						// El rol llega de la cuenta en cada petición: un cambio de CU-09 rige desde la siguiente
+						.requestMatchers("/api/usuarios/**").hasRole("ADMINISTRADOR")
 						// El rol SERVICIO no entra a las rutas de usuarios
 						.anyRequest().hasAnyRole("CLIENTE", "ADMINISTRADOR", "PERSONAL"))
 				// El 401 y el 403 pasan por ManejadorErrores para salir con el mismo formato que el resto de la API

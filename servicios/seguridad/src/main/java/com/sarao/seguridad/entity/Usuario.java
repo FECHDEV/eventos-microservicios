@@ -14,13 +14,15 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "usuario")
+// Sin el índice, el bloqueo de administradores activos de CU-09 recorre y bloquea toda la tabla
+@Table(name = "usuario", indexes = @Index(name = "idx_usuario_rol_estado", columnList = "rol, estado"))
 // Sin esto, guardar el nombre reescribe el hash leído antes y deshace un cambio de contraseña simultáneo
 @DynamicUpdate
 @Getter
@@ -114,6 +116,10 @@ public class Usuario {
 
 	public void desactivar() {
 		estado = EstadoCuenta.DESACTIVADA;
+	}
+
+	public void activar() {
+		estado = EstadoCuenta.ACTIVA;
 	}
 
 	private static String telefonoONulo(String telefono) {

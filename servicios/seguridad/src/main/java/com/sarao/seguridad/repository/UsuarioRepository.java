@@ -1,12 +1,18 @@
 package com.sarao.seguridad.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
+import com.sarao.seguridad.entity.EstadoCuenta;
 import com.sarao.seguridad.entity.Rol;
 import com.sarao.seguridad.entity.Usuario;
 import jakarta.persistence.LockModeType;
@@ -18,6 +24,23 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 	Optional<Usuario> findByCorreo(String correo);
 
 	boolean existsByRol(Rol rol);
+
+	// Siempre en el mismo orden: dos operaciones de CU-09 simultáneas se esperan, y la segunda cuenta los
+	// administradores que dejó la primera (decisiones.md → Gestión de usuarios)
+	@Lock(LockModeType.PESSIMISTIC_WRITE)
+	List<Usuario> findConBloqueoByRolAndEstadoOrderByIdUsuario(Rol rol, EstadoCuenta estado);
+
+	// Un null no filtra. El texto llega como patrón LIKE en minúsculas con '!' como escape: la barra invertida también
+	// escapa dentro de los literales de MySQL
+	@Query("""
+			select u from Usuario u
+			where (:rol is null or u.rol = :rol)
+				and (:estado is null or u.estado = :estado)
+				and (:texto is null or lower(u.correo) like :texto escape '!' or lower(u.nombre) like :texto escape '!'
+					or lower(u.apellido) like :texto escape '!')
+			""")
+	Page<Usuario> buscar(@Param("rol") Rol rol, @Param("estado") EstadoCuenta estado, @Param("texto") String texto,
+			Pageable paginacion);
 
 	// Serializa las operaciones sobre la misma cuenta, como dos solicitudes de recuperación simultáneas
 	@Lock(LockModeType.PESSIMISTIC_WRITE)
