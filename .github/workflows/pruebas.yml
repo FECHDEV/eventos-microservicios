@@ -1,0 +1,35 @@
+# Corre las pruebas de cada servicio en cada PR y en cada push a main. Los
+# servicios prueban sobre H2 (perfil test): no necesitan MySQL.
+name: Pruebas
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# Un push nuevo a la misma rama cancela la corrida anterior
+concurrency:
+  group: pruebas-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  servicio:
+    name: Servicio ${{ matrix.servicio }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        servicio: [gateway, seguridad]
+    defaults:
+      run:
+        working-directory: servicios/${{ matrix.servicio }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+          cache-dependency-path: servicios/${{ matrix.servicio }}/pom.xml
+      - run: ./mvnw -B test
