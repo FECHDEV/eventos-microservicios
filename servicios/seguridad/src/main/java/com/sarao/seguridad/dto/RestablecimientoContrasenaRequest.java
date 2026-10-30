@@ -13,6 +13,7 @@ import jakarta.validation.constraints.Size;
 public record RestablecimientoContrasenaRequest(
 
 		@NotBlank(message = "es obligatorio")
+		@Size(max = 100, message = "admite hasta 100 caracteres")
 		String token,
 
 		@NotNull(message = "es obligatoria")

@@ -94,4 +94,20 @@ class UsuarioRepositoryTest {
 				.hasValueSatisfying(usuario -> assertThat(usuario.getNombre()).isEqualTo("Ana"));
 		assertThat(usuarioRepository.findByCorreo("otra@mail.com")).isEmpty();
 	}
+
+	@Test
+	void guardarDatosNoReescribeUnaContrasenaCambiadaMientrasTanto() {
+		Long id = em.persistAndGetId(cliente("ana@mail.com"), Long.class);
+		em.flush();
+		em.clear();
+		Usuario leida = em.find(Usuario.class, id);
+		em.getEntityManager().createNativeQuery("update usuario set contrasena = 'hash-nuevo' where id_usuario = :id")
+				.setParameter("id", id).executeUpdate();
+
+		leida.actualizarDatos("Anita", "Rojas", null);
+		em.flush();
+		em.clear();
+
+		assertThat(em.find(Usuario.class, id).getContrasena()).isEqualTo("hash-nuevo");
+	}
 }

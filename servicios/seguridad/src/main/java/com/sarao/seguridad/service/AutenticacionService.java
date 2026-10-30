@@ -11,10 +11,12 @@ import org.springframework.transaction.annotation.Transactional;
 import com.sarao.seguridad.config.TokenJwt;
 import com.sarao.seguridad.dto.CambioContrasenaRequest;
 import com.sarao.seguridad.dto.InicioSesionRequest;
+import com.sarao.seguridad.entity.RecuperacionContrasena;
 import com.sarao.seguridad.entity.Usuario;
 import com.sarao.seguridad.exception.ContrasenaActualIncorrectaException;
 import com.sarao.seguridad.exception.CredencialesIncorrectasException;
 import com.sarao.seguridad.exception.CuentaDesactivadaException;
+import com.sarao.seguridad.repository.RecuperacionContrasenaRepository;
 import com.sarao.seguridad.repository.UsuarioRepository;
 
 @Service
@@ -24,15 +26,18 @@ public class AutenticacionService {
 	private static final int MAXIMO_BYTES_CONTRASENA = 72;
 
 	private final UsuarioRepository usuarioRepository;
+	private final RecuperacionContrasenaRepository recuperacionRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final TokenJwt tokenJwt;
 	private final LimiteIntentos limiteIntentos;
 	// Se compara cuando el correo no existe, para que la demora no revele qué correos tienen cuenta
 	private final String hashParaCorreoInexistente;
 
-	public AutenticacionService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder,
+	public AutenticacionService(UsuarioRepository usuarioRepository,
+			RecuperacionContrasenaRepository recuperacionRepository, PasswordEncoder passwordEncoder,
 			TokenJwt tokenJwt, LimiteIntentos limiteIntentos) {
 		this.usuarioRepository = usuarioRepository;
+		this.recuperacionRepository = recuperacionRepository;
 		this.passwordEncoder = passwordEncoder;
 		this.tokenJwt = tokenJwt;
 		this.limiteIntentos = limiteIntentos;
@@ -70,6 +75,8 @@ public class AutenticacionService {
 			throw new ContrasenaActualIncorrectaException();
 		}
 		usuario.cambiarContrasena(passwordEncoder.encode(solicitud.contrasenaNueva()));
+		// Un enlace filtrado antes del cambio no sirve para quitarle la cuenta después (CU-04 RF-17)
+		recuperacionRepository.findByUsuarioAndUsadoFalse(usuario).forEach(RecuperacionContrasena::marcarUsada);
 		limiteIntentos.registrarExito(usuario.getCorreo(), ip);
 		// El token se emite con el hash nuevo: los anteriores dejan de corresponder a la cuenta
 		return new SesionIniciada(usuario, tokenJwt.emitir(usuario));

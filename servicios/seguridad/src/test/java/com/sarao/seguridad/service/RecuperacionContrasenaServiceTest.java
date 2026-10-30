@@ -24,6 +24,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import com.sarao.seguridad.dto.RestablecimientoContrasenaRequest;
 import com.sarao.seguridad.dto.SolicitudRecuperacionRequest;
@@ -97,6 +98,9 @@ class RecuperacionContrasenaServiceTest {
 	// Registro existente para ese token, tal como lo devolvería la base
 	private RecuperacionContrasena registrada(Usuario usuario, String token, LocalDateTime creada) {
 		RecuperacionContrasena recuperacion = RecuperacionContrasena.crear(usuario, TokenRecuperacion.hash(token), creada);
+		ReflectionTestUtils.setField(recuperacion.getUsuario(), "idUsuario", 7L);
+		given(recuperacionRepository.findIdUsuarioByHashToken(TokenRecuperacion.hash(token))).willReturn(Optional.of(7L));
+		given(usuarioRepository.findConBloqueoByIdUsuario(7L)).willReturn(Optional.of(recuperacion.getUsuario()));
 		given(recuperacionRepository.findByHashToken(TokenRecuperacion.hash(token))).willReturn(Optional.of(recuperacion));
 		return recuperacion;
 	}

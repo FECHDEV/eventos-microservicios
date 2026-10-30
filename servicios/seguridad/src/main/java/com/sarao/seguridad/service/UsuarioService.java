@@ -52,7 +52,7 @@ public class UsuarioService {
 
 	@Transactional
 	public Usuario actualizarDatos(Long idUsuario, DatosPersonalesRequest solicitud) {
-		Usuario usuario = usuarioRepository.findById(idUsuario).orElseThrow();
+		Usuario usuario = usuarioRepository.findConBloqueoByIdUsuario(idUsuario).orElseThrow();
 		usuario.actualizarDatos(solicitud.nombre(), solicitud.apellido(), solicitud.telefono());
 		return usuario;
 	}

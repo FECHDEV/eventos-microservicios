@@ -40,12 +40,14 @@ import com.sarao.seguridad.config.TokenJwt;
 import com.sarao.seguridad.config.TokenLeido;
 import com.sarao.seguridad.dto.CambioContrasenaRequest;
 import com.sarao.seguridad.dto.InicioSesionRequest;
+import com.sarao.seguridad.entity.RecuperacionContrasena;
 import com.sarao.seguridad.entity.Rol;
 import com.sarao.seguridad.entity.Usuario;
 import com.sarao.seguridad.exception.ContrasenaActualIncorrectaException;
 import com.sarao.seguridad.exception.CredencialesIncorrectasException;
 import com.sarao.seguridad.exception.CuentaDesactivadaException;
 import com.sarao.seguridad.exception.IntentosExcedidosException;
+import com.sarao.seguridad.repository.RecuperacionContrasenaRepository;
 import com.sarao.seguridad.repository.UsuarioRepository;
 
 @ExtendWith(MockitoExtension.class)
@@ -60,6 +62,9 @@ class AutenticacionServiceTest {
 	@Mock
 	private UsuarioRepository usuarioRepository;
 
+	@Mock
+	private RecuperacionContrasenaRepository recuperacionRepository;
+
 	private final PasswordEncoder passwordEncoder = spy(new BCryptPasswordEncoder());
 
 	private final TokenJwt tokenJwt = new TokenJwt(
@@ -69,7 +74,7 @@ class AutenticacionServiceTest {
 
 	@BeforeEach
 	void crearServicio() {
-		servicio = new AutenticacionService(usuarioRepository, passwordEncoder, tokenJwt, new LimiteIntentos(RELOJ));
+		servicio = new AutenticacionService(usuarioRepository, recuperacionRepository, passwordEncoder, tokenJwt, new LimiteIntentos(RELOJ));
 	}
 
 	private static Usuario cliente(long id, String hash) {
@@ -231,7 +236,7 @@ class AutenticacionServiceTest {
 				return false;
 			}
 		};
-		AutenticacionService servicioLento = new AutenticacionService(usuarioRepository, comparacionLenta, tokenJwt,
+		AutenticacionService servicioLento = new AutenticacionService(usuarioRepository, recuperacionRepository, comparacionLenta, tokenJwt,
 				new LimiteIntentos(RELOJ));
 		given(usuarioRepository.findByCorreo("ana@mail.com")).willReturn(Optional.of(cliente(7, HASH_SECRETA12)));
 
@@ -345,5 +350,18 @@ class AutenticacionServiceTest {
 		fallarCambioVeces(4);
 
 		assertThatCode(() -> cambiarContrasena("Nueva-clave-1", "Nueva-clave-2")).doesNotThrowAnyException();
+	}
+
+	// CU-04 RF-17
+	@Test
+	void cambioDeContrasenaInvalidaLosEnlacesDeRecuperacionPendientes() {
+		Usuario ana = cliente(7, HASH_SECRETA12);
+		RecuperacionContrasena pendiente = RecuperacionContrasena.crear(ana, "hash", LocalDateTime.of(2026, 9, 14, 11, 0));
+		given(usuarioRepository.findConBloqueoByIdUsuario(7L)).willReturn(Optional.of(ana));
+		given(recuperacionRepository.findByUsuarioAndUsadoFalse(ana)).willReturn(List.of(pendiente));
+
+		cambiarContrasena("Secreta12", "Nueva-clave-1");
+
+		assertThat(pendiente.isUsado()).isTrue();
 	}
 }

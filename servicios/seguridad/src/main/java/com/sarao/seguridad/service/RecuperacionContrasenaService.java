@@ -40,11 +40,14 @@ public class RecuperacionContrasenaService {
 	@Transactional
 	public void restablecer(RestablecimientoContrasenaRequest solicitud) {
 		LocalDateTime ahora = LocalDateTime.now(clock);
-		RecuperacionContrasena recuperacion = recuperacionRepository
-				.findByHashToken(TokenRecuperacion.hash(solicitud.token()))
+		String hashToken = TokenRecuperacion.hash(solicitud.token());
+		// Primero la cuenta, como solicitar y cambiarContrasena: el orden inverso produce interbloqueos
+		Usuario usuario = recuperacionRepository.findIdUsuarioByHashToken(hashToken)
+				.flatMap(usuarioRepository::findConBloqueoByIdUsuario)
+				.orElseThrow(TokenRecuperacionInvalidoException::new);
+		recuperacionRepository.findByHashToken(hashToken)
 				.filter(registro -> registro.estaVigente(ahora))
 				.orElseThrow(TokenRecuperacionInvalidoException::new);
-		Usuario usuario = recuperacion.getUsuario();
 		usuario.cambiarContrasena(passwordEncoder.encode(solicitud.contrasena()));
 		invalidarPendientes(usuario);
 		// Quien restablece tiene el token que llegó al correo: el bloqueo por intentos fallidos ya no protege la cuenta

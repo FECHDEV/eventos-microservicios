@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 import java.util.Locale;
 import java.util.Objects;
 
+import org.hibernate.annotations.DynamicUpdate;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -19,6 +21,8 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "usuario")
+// Sin esto, guardar el nombre reescribe el hash leído antes y deshace un cambio de contraseña simultáneo
+@DynamicUpdate
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Usuario {

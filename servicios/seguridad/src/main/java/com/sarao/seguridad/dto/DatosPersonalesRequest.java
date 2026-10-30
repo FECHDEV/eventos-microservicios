@@ -20,4 +20,8 @@ public record DatosPersonalesRequest(
 
 		@Size(max = 20, message = "admite hasta 20 caracteres")
 		String telefono) {
+
+	public DatosPersonalesRequest {
+		telefono = telefono == null || telefono.isBlank() ? null : telefono;
+	}
 }
