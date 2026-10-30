@@ -1,0 +1,45 @@
+# Java / Maven
+target/
+*.class
+*.jar
+!.mvn/wrapper/maven-wrapper.jar
+
+# Node / Angular
+node_modules/
+dist/
+.angular/
+npm-debug.log*
+
+# Secretos
+.env
+.env.*
+!.env.example
+application-local.properties
+application-local.yml
+
+# Material privado (manuales de proveedores)
+referencias/
+
+# Logs
+*.log
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.settings/
+.project
+.classpath
+
+# Sistema operativo
+Thumbs.db
+Desktop.ini
+
+# Skills y configuración local de agentes
+.agents/
+.claude/skills/
+.claude/settings.local.json
+skills-lock.json
+
+# Documentación de perfil: se trabaja fuera del repositorio
+/documentacion/
