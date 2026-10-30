@@ -266,4 +266,15 @@ class GestionUsuariosIntegracionTest {
 			hilos.shutdownNow();
 		}
 	}
+
+	@Test
+	void paginaFueraDeRangoDevuelveListaVaciaConLosTotales() throws Exception {
+		String admin = token("admin@eventos.test", "Clave-admin-1");
+
+		MvcTestResult resultado = mvc.get().uri("/api/usuarios?pagina=107374183&tamano=20")
+				.with(SesionDelGateway.sesion(mvc, admin)).exchange();
+
+		assertThat(resultado).hasStatus(HttpStatus.OK);
+		assertThat(resultado).bodyJson().extractingPath("$.contenido").asArray().isEmpty();
+	}
 }

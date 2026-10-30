@@ -1,11 +1,13 @@
 package com.sarao.seguridad.service;
 
+import java.util.List;
 import java.util.Locale;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.sarao.seguridad.entity.EstadoCuenta;
@@ -34,19 +36,22 @@ public class GestionUsuariosService {
 	@Transactional(readOnly = true)
 	public Page<Usuario> listar(Rol rol, EstadoCuenta estado, String texto, int pagina, int tamano) {
 		// Igual que el Pageable de Spring Data: una página negativa es la primera y un tamaño inválido, el por defecto
-		PageRequest paginacion = PageRequest.of(Math.max(pagina, 0),
-				tamano < 1 ? TAMANO_POR_DEFECTO : Math.min(tamano, TAMANO_MAXIMO), ORDEN);
+		int tamanoValido = tamano < 1 ? TAMANO_POR_DEFECTO : Math.min(tamano, TAMANO_MAXIMO);
+		// El offset tiene que entrar en un int: una página más alta también queda vacía, con los totales correctos
+		int paginaValida = Math.min(Math.max(pagina, 0), Integer.MAX_VALUE / tamanoValido);
+		PageRequest paginacion = PageRequest.of(paginaValida, tamanoValido, ORDEN);
 		return usuarioRepository.buscar(rol, estado, patronDeBusqueda(texto), paginacion);
 	}
 
-	@Transactional
+	// READ_COMMITTED: los bloqueos quedan en las filas, sin los huecos del índice que frenan registros y causan interbloqueos
+	@Transactional(isolation = Isolation.READ_COMMITTED)
 	public Usuario cambiarRol(Long idAdministrador, Long idUsuario, Rol rolNuevo) {
 		if (idAdministrador.equals(idUsuario)) {
 			throw new RolPropioNoModificableException();
 		}
-		long administradoresActivos = contarAdministradoresActivosConBloqueo();
+		List<Usuario> administradores = bloquearAdministradoresActivos();
 		Usuario usuario = bloquearCuenta(idUsuario);
-		if (esAdministradorActivo(usuario) && rolNuevo != Rol.ADMINISTRADOR && administradoresActivos <= 1) {
+		if (esAdministradorActivo(usuario) && rolNuevo != Rol.ADMINISTRADOR && !hayOtro(administradores, idUsuario)) {
 			throw new UltimoAdministradorActivoException();
 		}
 		if (!usuario.estaActiva()) {
@@ -59,7 +64,7 @@ public class GestionUsuariosService {
 		return usuario;
 	}
 
-	@Transactional
+	@Transactional(isolation = Isolation.READ_COMMITTED)
 	public Usuario cambiarEstado(Long idAdministrador, Long idUsuario, EstadoCuenta estadoNuevo) {
 		if (estadoNuevo == EstadoCuenta.DESACTIVADA && idAdministrador.equals(idUsuario)) {
 			throw new CuentaPropiaNoDesactivableException();
@@ -71,9 +76,9 @@ public class GestionUsuariosService {
 			reactivada.activar();
 			return reactivada;
 		}
-		long administradoresActivos = contarAdministradoresActivosConBloqueo();
+		List<Usuario> administradores = bloquearAdministradoresActivos();
 		Usuario usuario = bloquearCuenta(idUsuario);
-		if (esAdministradorActivo(usuario) && administradoresActivos <= 1) {
+		if (esAdministradorActivo(usuario) && !hayOtro(administradores, idUsuario)) {
 			throw new UltimoAdministradorActivoException();
 		}
 		usuario.desactivar();
@@ -83,9 +88,14 @@ public class GestionUsuariosService {
 	// Primero los administradores y después la cuenta, siempre en ese orden: dos operaciones simultáneas se esperan
 	// en vez de bloquearse mutuamente. Se vuelve a mirar cada fila porque, tras esperar el bloqueo, puede llegar una
 	// que otra operación acaba de cambiar
-	private long contarAdministradoresActivosConBloqueo() {
+	private List<Usuario> bloquearAdministradoresActivos() {
 		return usuarioRepository.findConBloqueoByRolAndEstadoOrderByIdUsuario(Rol.ADMINISTRADOR, EstadoCuenta.ACTIVA)
-				.stream().filter(GestionUsuariosService::esAdministradorActivo).count();
+				.stream().filter(GestionUsuariosService::esAdministradorActivo).toList();
+	}
+
+	// Compara por id: una cuenta reactivada mientras tanto no está en la lista y no cuenta como la última
+	private static boolean hayOtro(List<Usuario> administradores, Long idUsuario) {
+		return administradores.stream().anyMatch(administrador -> !administrador.getIdUsuario().equals(idUsuario));
 	}
 
 	private Usuario bloquearCuenta(Long idUsuario) {
