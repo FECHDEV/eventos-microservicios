@@ -27,6 +27,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import com.sarao.seguridad.dto.DatosPersonalesRequest;
 import com.sarao.seguridad.dto.RegistroClienteRequest;
 import com.sarao.seguridad.entity.EstadoCuenta;
 import com.sarao.seguridad.entity.Rol;
@@ -49,7 +50,7 @@ class UsuarioServiceTest {
 
 	@BeforeEach
 	void crearServicio() {
-		usuarioService = new UsuarioService(usuarioRepository, passwordEncoder, RELOJ, new LimiteRegistros(RELOJ));
+		usuarioService = new UsuarioService(usuarioRepository, passwordEncoder, RELOJ, new LimiteRegistros(RELOJ, 20));
 	}
 
 	private static RegistroClienteRequest solicitud(String correo, String telefono) {
@@ -125,5 +126,53 @@ class UsuarioServiceTest {
 				LocalDateTime.of(2026, 9, 12, 11, 0));
 		ReflectionTestUtils.setField(ana, "idUsuario", 7L);
 		return ana;
+	}
+
+	@Test
+	void datosPersonalesDevuelveLaCuentaDeLaSesion() {
+		Usuario ana = ana();
+		given(usuarioRepository.findById(7L)).willReturn(Optional.of(ana));
+
+		assertThat(usuarioService.datosPersonales(7L)).isSameAs(ana);
+	}
+
+	@Test
+	void actualizarDatosCambiaSoloNombreApellidoYTelefono() {
+		Usuario ana = ana();
+		given(usuarioRepository.findById(7L)).willReturn(Optional.of(ana));
+
+		Usuario actualizado = usuarioService.actualizarDatos(7L,
+				new DatosPersonalesRequest("Ana María", "Rojas Paz", "71111111"));
+
+		assertThat(actualizado).isSameAs(ana);
+		assertThat(ana.getNombre()).isEqualTo("Ana María");
+		assertThat(ana.getApellido()).isEqualTo("Rojas Paz");
+		assertThat(ana.getTelefono()).isEqualTo("71111111");
+		assertThat(ana.getCorreo()).isEqualTo("ana@mail.com");
+		assertThat(ana.getContrasena()).isEqualTo("$2a$10$hash");
+		assertThat(ana.getFechaNacimiento()).isEqualTo(NACIMIENTO);
+		assertThat(ana.getRol()).isEqualTo(Rol.CLIENTE);
+		assertThat(ana.getEstado()).isEqualTo(EstadoCuenta.ACTIVA);
+	}
+
+	@Test
+	void telefonoEnBlancoAlActualizarDejaLaCuentaSinTelefono() {
+		given(usuarioRepository.findById(7L)).willReturn(Optional.of(ana()));
+
+		assertThat(usuarioService.actualizarDatos(7L, new DatosPersonalesRequest("Ana", "Rojas", "  ")).getTelefono())
+				.isNull();
+	}
+
+	@Test
+	void actualizarConLosMismosDatosNoAlteraLaCuenta() {
+		Usuario ana = ana();
+		given(usuarioRepository.findById(7L)).willReturn(Optional.of(ana));
+
+		usuarioService.actualizarDatos(7L, new DatosPersonalesRequest("Ana", "Rojas", "70000000"));
+
+		assertThat(ana.getNombre()).isEqualTo("Ana");
+		assertThat(ana.getApellido()).isEqualTo("Rojas");
+		assertThat(ana.getTelefono()).isEqualTo("70000000");
+		then(usuarioRepository).should(never()).saveAndFlush(any(Usuario.class));
 	}
 }

@@ -6,10 +6,13 @@ import java.util.UUID;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.sarao.seguridad.config.TokenJwt;
+import com.sarao.seguridad.dto.CambioContrasenaRequest;
 import com.sarao.seguridad.dto.InicioSesionRequest;
 import com.sarao.seguridad.entity.Usuario;
+import com.sarao.seguridad.exception.ContrasenaActualIncorrectaException;
 import com.sarao.seguridad.exception.CredencialesIncorrectasException;
 import com.sarao.seguridad.exception.CuentaDesactivadaException;
 import com.sarao.seguridad.repository.UsuarioRepository;
@@ -54,6 +57,21 @@ public class AutenticacionService {
 			throw new CuentaDesactivadaException();
 		}
 		limiteIntentos.registrarExito(correo, ip);
+		return new SesionIniciada(usuario, tokenJwt.emitir(usuario));
+	}
+
+	@Transactional
+	public SesionIniciada cambiarContrasena(Long idUsuario, CambioContrasenaRequest solicitud, String ip) {
+		Usuario usuario = usuarioRepository.findConBloqueoByIdUsuario(idUsuario).orElseThrow();
+		// Mismo límite que el inicio de sesión: adivinar la contraseña actual por acá no da más intentos
+		limiteIntentos.registrarIntento(usuario.getCorreo(), ip);
+		if (!passwordEncoder.matches(solicitud.contrasenaActual(), usuario.getContrasena())
+				|| !tieneLargoAdmitido(solicitud.contrasenaActual())) {
+			throw new ContrasenaActualIncorrectaException();
+		}
+		usuario.cambiarContrasena(passwordEncoder.encode(solicitud.contrasenaNueva()));
+		limiteIntentos.registrarExito(usuario.getCorreo(), ip);
+		// El token se emite con el hash nuevo: los anteriores dejan de corresponder a la cuenta
 		return new SesionIniciada(usuario, tokenJwt.emitir(usuario));
 	}
 

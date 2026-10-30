@@ -3,6 +3,7 @@ package com.sarao.seguridad.service;
 import java.time.Clock;
 import java.time.Duration;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import com.sarao.seguridad.exception.ErrorNegocioException;
@@ -14,8 +15,8 @@ public class LimiteRegistros extends LimiteDeFrecuencia {
 
 	private static final String TODOS_LOS_CORREOS = "";
 
-	public LimiteRegistros(Clock clock) {
-		super(clock, 20, Duration.ofHours(1), Duration.ofHours(1));
+	public LimiteRegistros(Clock clock, @Value("${eventos.registro.maximo-por-hora:20}") int maximoPorHora) {
+		super(clock, maximoPorHora, Duration.ofHours(1), Duration.ofHours(1));
 	}
 
 	public void registrarIntento(String ip) {

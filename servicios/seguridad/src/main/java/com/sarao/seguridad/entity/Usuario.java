@@ -98,6 +98,12 @@ public class Usuario {
 		contrasena = Objects.requireNonNull(contrasenaHash);
 	}
 
+	public void actualizarDatos(String nombre, String apellido, String telefono) {
+		this.nombre = Objects.requireNonNull(nombre);
+		this.apellido = Objects.requireNonNull(apellido);
+		this.telefono = telefonoONulo(telefono);
+	}
+
 	public void asignarRol(Rol rol) {
 		this.rol = Objects.requireNonNull(rol);
 	}

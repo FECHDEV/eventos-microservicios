@@ -38,9 +38,11 @@ import org.springframework.test.util.ReflectionTestUtils;
 import com.sarao.seguridad.config.JwtProperties;
 import com.sarao.seguridad.config.TokenJwt;
 import com.sarao.seguridad.config.TokenLeido;
+import com.sarao.seguridad.dto.CambioContrasenaRequest;
 import com.sarao.seguridad.dto.InicioSesionRequest;
 import com.sarao.seguridad.entity.Rol;
 import com.sarao.seguridad.entity.Usuario;
+import com.sarao.seguridad.exception.ContrasenaActualIncorrectaException;
 import com.sarao.seguridad.exception.CredencialesIncorrectasException;
 import com.sarao.seguridad.exception.CuentaDesactivadaException;
 import com.sarao.seguridad.exception.IntentosExcedidosException;
@@ -263,5 +265,85 @@ class AutenticacionServiceTest {
 		assertThat(servicio.usuarioActivo(7L)).isPresent();
 		assertThat(servicio.usuarioActivo(8L)).isEmpty();
 		assertThat(servicio.usuarioActivo(9L)).isEmpty();
+	}
+
+	private SesionIniciada cambiarContrasena(String actual, String nueva) {
+		return servicio.cambiarContrasena(7L, new CambioContrasenaRequest(actual, nueva), IP);
+	}
+
+	private void fallarCambioVeces(int veces) {
+		for (int i = 0; i < veces; i++) {
+			assertThatThrownBy(() -> cambiarContrasena("otra-clave", "Nueva-clave-1"))
+					.isInstanceOf(ContrasenaActualIncorrectaException.class);
+		}
+	}
+
+	@Test
+	void contrasenaActualCorrectaGuardaLaNuevaYEntregaUnTokenDeLaNueva() {
+		Usuario ana = cliente(7, HASH_SECRETA12);
+		given(usuarioRepository.findConBloqueoByIdUsuario(7L)).willReturn(Optional.of(ana));
+		TokenLeido tokenAnterior = tokenJwt.leer(tokenJwt.emitir(ana).token()).orElseThrow();
+
+		SesionIniciada sesion = cambiarContrasena("Secreta12", "Nueva-clave-1");
+
+		assertThat(sesion.usuario()).isSameAs(ana);
+		assertThat(passwordEncoder.matches("Nueva-clave-1", ana.getContrasena())).isTrue();
+		assertThat(tokenJwt.correspondeA(tokenJwt.leer(sesion.token().token()).orElseThrow(), ana)).isTrue();
+		assertThat(tokenJwt.correspondeA(tokenAnterior, ana)).isFalse();
+	}
+
+	@Test
+	void contrasenaActualIncorrectaNoCambiaLaContrasena() {
+		Usuario ana = cliente(7, HASH_SECRETA12);
+		given(usuarioRepository.findConBloqueoByIdUsuario(7L)).willReturn(Optional.of(ana));
+
+		assertThatThrownBy(() -> cambiarContrasena("secreta12", "Nueva-clave-1"))
+				.isInstanceOfSatisfying(ContrasenaActualIncorrectaException.class, ex -> {
+					assertThat(ex.getCodigo()).isEqualTo("CONTRASENA_ACTUAL_INCORRECTA");
+					assertThat(ex.getEstadoHttp()).isEqualTo(HttpStatus.BAD_REQUEST);
+				});
+		assertThat(ana.getContrasena()).isEqualTo(HASH_SECRETA12);
+	}
+
+	@Test
+	void contrasenaActualDeMasDe72BytesEsIncorrectaAunqueBcryptLaTruncaria() {
+		String hash72 = new BCryptPasswordEncoder().encode("a".repeat(72));
+		Usuario ana = cliente(7, hash72);
+		given(usuarioRepository.findConBloqueoByIdUsuario(7L)).willReturn(Optional.of(ana));
+
+		assertThatThrownBy(() -> cambiarContrasena("a".repeat(72) + "b", "Nueva-clave-1"))
+				.isInstanceOf(ContrasenaActualIncorrectaException.class);
+		assertThat(ana.getContrasena()).isEqualTo(hash72);
+	}
+
+	@Test
+	void cincoContrasenasActualesIncorrectasBloqueanElCambioAunqueLaSiguienteSeaCorrecta() {
+		Usuario ana = cliente(7, HASH_SECRETA12);
+		given(usuarioRepository.findConBloqueoByIdUsuario(7L)).willReturn(Optional.of(ana));
+		fallarCambioVeces(5);
+
+		assertThatThrownBy(() -> cambiarContrasena("Secreta12", "Nueva-clave-1"))
+				.isInstanceOf(IntentosExcedidosException.class);
+		assertThat(ana.getContrasena()).isEqualTo(HASH_SECRETA12);
+	}
+
+	@Test
+	void contrasenasActualesIncorrectasSumanAlLimiteDelInicioDeSesion() {
+		given(usuarioRepository.findConBloqueoByIdUsuario(7L)).willReturn(Optional.of(cliente(7, HASH_SECRETA12)));
+		fallarCambioVeces(5);
+
+		// El límite rechaza antes de buscar la cuenta: no hace falta stub de findByCorreo
+		assertThatThrownBy(() -> iniciarSesion("ana@mail.com", "Secreta12"))
+				.isInstanceOf(IntentosExcedidosException.class);
+	}
+
+	@Test
+	void cambioExitosoReiniciaElConteoDeIntentos() {
+		given(usuarioRepository.findConBloqueoByIdUsuario(7L)).willReturn(Optional.of(cliente(7, HASH_SECRETA12)));
+		fallarCambioVeces(4);
+		cambiarContrasena("Secreta12", "Nueva-clave-1");
+		fallarCambioVeces(4);
+
+		assertThatCode(() -> cambiarContrasena("Nueva-clave-1", "Nueva-clave-2")).doesNotThrowAnyException();
 	}
 }
