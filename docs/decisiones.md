@@ -71,9 +71,20 @@ gateway y tres bases. El reparto de casos de uso y tablas está en `CLAUDE.md`.
 
 ### Sesión
 
-El gateway valida la firma del JWT y le pregunta a Seguridad si la cuenta sigue
-activa, con su rol y su huella, para que un cambio de rol rija de inmediato. Se
-mide el costo y se cachea unos segundos si hace falta.
+Decidido de nuevo el 30/10/2026, en lugar de validar la firma en el gateway: solo
+Seguridad tiene la clave JWT.
+
+- El gateway manda cada token a `POST /interno/sesiones` y recibe el id y el rol que
+  la cuenta tiene ahora, para que un cambio de rol, una cuenta desactivada o una
+  contraseña cambiada rijan de inmediato. Se mide el costo y se cachea unos segundos
+  si hace falta.
+- Pasa la identidad en `X-Usuario-Id` y `X-Usuario-Rol`, con `X-Clave-Servicio`, y
+  borra esos encabezados si los manda el cliente. Un servicio solo los acepta con la
+  clave.
+- Un token inválido o Seguridad caída no cortan la petición: sigue sin identidad, las
+  rutas públicas responden y las protegidas dan 401.
+- El gateway fija `X-Forwarded-For`: los límites de intentos ven la IP real y el
+  cliente no puede inventarla.
 
 ### Reportes
 

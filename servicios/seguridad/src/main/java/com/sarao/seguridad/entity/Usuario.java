@@ -73,8 +73,37 @@ public class Usuario {
 		return usuario;
 	}
 
+	public static Usuario crearAdministrador(String nombre, String apellido, String correo, String contrasenaHash,
+			LocalDateTime fechaRegistro) {
+		Usuario usuario = new Usuario();
+		usuario.nombre = Objects.requireNonNull(nombre);
+		usuario.apellido = Objects.requireNonNull(apellido);
+		usuario.correo = normalizarCorreo(Objects.requireNonNull(correo));
+		usuario.contrasena = Objects.requireNonNull(contrasenaHash);
+		usuario.fechaRegistro = Objects.requireNonNull(fechaRegistro);
+		usuario.rol = Rol.ADMINISTRADOR;
+		usuario.estado = EstadoCuenta.ACTIVA;
+		return usuario;
+	}
+
 	public static String normalizarCorreo(String correo) {
 		return correo.strip().toLowerCase(Locale.ROOT);
+	}
+
+	public boolean estaActiva() {
+		return estado == EstadoCuenta.ACTIVA;
+	}
+
+	public void cambiarContrasena(String contrasenaHash) {
+		contrasena = Objects.requireNonNull(contrasenaHash);
+	}
+
+	public void asignarRol(Rol rol) {
+		this.rol = Objects.requireNonNull(rol);
+	}
+
+	public void desactivar() {
+		estado = EstadoCuenta.DESACTIVADA;
 	}
 
 	private static String telefonoONulo(String telefono) {

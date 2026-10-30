@@ -8,6 +8,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.Objects;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
@@ -16,9 +17,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 
+import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = "eventos.clave-servicio=clave-de-pruebas")
 class EnrutamientoTest {
 
 	private static HttpServer seguridad;
@@ -29,12 +31,8 @@ class EnrutamientoTest {
 	@DynamicPropertySource
 	static void seguridadDePrueba(DynamicPropertyRegistry propiedades) throws IOException {
 		seguridad = HttpServer.create(new InetSocketAddress("localhost", 0), 0);
-		seguridad.createContext("/", intercambio -> {
-			byte[] ruta = intercambio.getRequestURI().getPath().getBytes();
-			intercambio.sendResponseHeaders(200, ruta.length);
-			intercambio.getResponseBody().write(ruta);
-			intercambio.close();
-		});
+		seguridad.createContext("/interno/sesiones", EnrutamientoTest::resolverToken);
+		seguridad.createContext("/", EnrutamientoTest::devolverLoRecibido);
 		seguridad.start();
 		propiedades.add("EVENTOS_SEGURIDAD_URL", () -> "http://localhost:" + seguridad.getAddress().getPort());
 	}
@@ -44,25 +42,83 @@ class EnrutamientoTest {
 		seguridad.stop(0);
 	}
 
+	private static void resolverToken(HttpExchange intercambio) throws IOException {
+		String cuerpo = new String(intercambio.getRequestBody().readAllBytes());
+		boolean claveCorrecta = "clave-de-pruebas".equals(intercambio.getRequestHeaders().getFirst("X-Clave-Servicio"));
+		if (cuerpo.contains("falla")) {
+			responder(intercambio, 500, "");
+		} else if (claveCorrecta && cuerpo.contains("valido")) {
+			intercambio.getResponseHeaders().add("Content-Type", "application/json");
+			responder(intercambio, 200, "{\"idUsuario\":7,\"rol\":\"CLIENTE\"}");
+		} else {
+			responder(intercambio, 404, "");
+		}
+	}
+
+	private static void devolverLoRecibido(HttpExchange intercambio) throws IOException {
+		var encabezados = intercambio.getRequestHeaders();
+		responder(intercambio, 200, String.join("|", intercambio.getRequestURI().getPath(),
+				Objects.toString(encabezados.getFirst("X-Usuario-Id")), Objects.toString(encabezados.getFirst("X-Usuario-Rol")),
+				Objects.toString(encabezados.getFirst("X-Clave-Servicio")), Objects.toString(encabezados.getFirst("X-Forwarded-For"))));
+	}
+
+	private static void responder(HttpExchange intercambio, int estado, String cuerpo) throws IOException {
+		byte[] bytes = cuerpo.getBytes();
+		intercambio.sendResponseHeaders(estado, bytes.length == 0 ? -1 : bytes.length);
+		if (bytes.length > 0) {
+			intercambio.getResponseBody().write(bytes);
+		}
+		intercambio.close();
+	}
+
 	@Test
-	void lasRutasPublicasLleganASeguridadConSuRutaOriginal() throws Exception {
+	void lasRutasPublicasLleganASeguridadConSuRutaOriginalYSinIdentidad() throws Exception {
 		var respuesta = pedir("/api/auth/registro");
 
 		assertThat(respuesta.statusCode()).isEqualTo(200);
-		assertThat(respuesta.body()).isEqualTo("/api/auth/registro");
+		assertThat(respuesta.body()).startsWith("/api/auth/registro|null|null|null|");
 	}
 
 	@Test
 	void lasRutasInternasNoSePublican() throws Exception {
 		assertThat(pedir("/interno/usuarios").statusCode()).isEqualTo(404);
+		assertThat(pedir("/interno/sesiones").statusCode()).isEqualTo(404);
 		assertThat(pedir("/api/interno/usuarios").statusCode()).isEqualTo(404);
 	}
 
-	private HttpResponse<String> pedir(String ruta) throws Exception {
-		try (var cliente = HttpClient.newHttpClient()) {
-			var pedido = HttpRequest.newBuilder(URI.create("http://localhost:" + puerto + ruta)).build();
-			return cliente.send(pedido, HttpResponse.BodyHandlers.ofString());
-		}
+	@Test
+	void tokenValidoPasaLaIdentidadConLaClaveDeServicio() throws Exception {
+		assertThat(pedir("/api/cuenta", "Authorization", "Bearer valido").body())
+				.startsWith("/api/cuenta|7|CLIENTE|clave-de-pruebas|");
 	}
 
+	@Test
+	void tokenInvalidoOSinPrefijoSiguenSinIdentidad() throws Exception {
+		assertThat(pedir("/api/cuenta", "Authorization", "Bearer otro").body()).startsWith("/api/cuenta|null|null|null|");
+		assertThat(pedir("/api/cuenta", "Authorization", "valido").body()).startsWith("/api/cuenta|null|null|null|");
+	}
+
+	@Test
+	void seguridadConErrorDejaLaPeticionSinIdentidad() throws Exception {
+		assertThat(pedir("/api/cuenta", "Authorization", "Bearer falla").body()).startsWith("/api/cuenta|null|null|null|");
+	}
+
+	@Test
+	void losEncabezadosDeIdentidadDelClienteNoLleganALosServicios() throws Exception {
+		var respuesta = pedir("/api/cuenta", "X-Usuario-Id", "1", "X-Usuario-Rol", "ADMINISTRADOR", "X-Clave-Servicio",
+				"adivinada", "X-Forwarded-For", "1.2.3.4");
+
+		assertThat(respuesta.body()).startsWith("/api/cuenta|null|null|null|");
+		assertThat(respuesta.body()).doesNotContain("1.2.3.4");
+	}
+
+	private HttpResponse<String> pedir(String ruta, String... encabezados) throws Exception {
+		try (var cliente = HttpClient.newHttpClient()) {
+			var pedido = HttpRequest.newBuilder(URI.create("http://localhost:" + puerto + ruta));
+			for (int i = 0; i < encabezados.length; i += 2) {
+				pedido.setHeader(encabezados[i], encabezados[i + 1]);
+			}
+			return cliente.send(pedido.build(), HttpResponse.BodyHandlers.ofString());
+		}
+	}
 }

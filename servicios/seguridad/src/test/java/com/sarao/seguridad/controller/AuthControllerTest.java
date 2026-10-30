@@ -2,10 +2,13 @@ package com.sarao.seguridad.controller;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.BDDMockito.willThrow;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
@@ -19,27 +22,46 @@ import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.test.web.servlet.assertj.MvcTestResult;
 
 import com.sarao.seguridad.config.SecurityConfig;
+import com.sarao.seguridad.config.TokenEmitido;
+import com.sarao.seguridad.dto.InicioSesionRequest;
 import com.sarao.seguridad.dto.RegistroClienteRequest;
 import com.sarao.seguridad.entity.Usuario;
+import com.sarao.seguridad.exception.CredencialesIncorrectasException;
+import com.sarao.seguridad.exception.CuentaDesactivadaException;
 import com.sarao.seguridad.exception.CuentaExistenteException;
+import com.sarao.seguridad.exception.IntentosExcedidosException;
+import com.sarao.seguridad.exception.RegistrosExcedidosException;
+import com.sarao.seguridad.service.AutenticacionService;
+import com.sarao.seguridad.service.LimiteRegistros;
+import com.sarao.seguridad.service.SesionIniciada;
 import com.sarao.seguridad.service.UsuarioService;
 
 @WebMvcTest(AuthController.class)
 @Import(SecurityConfig.class)
+@TestPropertySource(properties = "eventos.clave-servicio=clave-de-pruebas")
 class AuthControllerTest {
 
 	private static final String URL = "/api/auth/registro";
+
+	private static final String CREDENCIALES = "{\"correo\":\"ana@mail.com\",\"contrasena\":\"Secreta12\"}";
 
 	@Autowired
 	private MockMvcTester mvc;
 
 	@MockitoBean
 	private UsuarioService usuarioService;
+
+	@MockitoBean
+	private AutenticacionService autenticacionService;
+
+	@MockitoBean
+	private LimiteRegistros limiteRegistros;
 
 	private static Map<String, String> datosValidos() {
 		Map<String, String> datos = new LinkedHashMap<>();
@@ -163,6 +185,118 @@ class AuthControllerTest {
 		assertThat(resultado).hasStatus(HttpStatus.CONFLICT);
 		assertThat(resultado).headers().hasValue("Content-Type", "application/problem+json");
 		assertThat(resultado).bodyJson().extractingPath("$.codigo").isEqualTo("CUENTA_EXISTENTE");
+	}
+
+	private MvcTestResult iniciarSesion(String cuerpo) {
+		return mvc.post().uri("/api/auth/inicio-sesion").contentType(MediaType.APPLICATION_JSON).content(cuerpo)
+				.exchange();
+	}
+
+	private static SesionIniciada sesionDeAna() {
+		return new SesionIniciada(clienteRegistrado(),
+				new TokenEmitido("token.de.prueba", Instant.parse("2026-09-14T23:00:00Z")));
+	}
+
+	@Test
+	void inicioDeSesionValidoSinSesionDevuelveTokenYDatosSinContrasena() throws Exception {
+		given(autenticacionService.iniciarSesion(any(InicioSesionRequest.class), anyString())).willReturn(sesionDeAna());
+
+		MvcTestResult resultado = iniciarSesion(CREDENCIALES);
+
+		assertThat(resultado).hasStatus(HttpStatus.OK);
+		assertThat(resultado).bodyJson().extractingPath("$.token").isEqualTo("token.de.prueba");
+		assertThat(resultado).bodyJson().extractingPath("$.tipo").isEqualTo("Bearer");
+		assertThat(resultado).bodyJson().extractingPath("$.expiracion").isEqualTo("2026-09-14T23:00:00Z");
+		assertThat(resultado).bodyJson().extractingPath("$.usuario.correo").isEqualTo("ana@mail.com");
+		assertThat(resultado).bodyJson().extractingPath("$.usuario.rol").isEqualTo("CLIENTE");
+		assertThat(resultado).bodyJson().doesNotHavePath("$.usuario.contrasena");
+		assertThat(resultado.getResponse().getContentAsString()).doesNotContain("$2a$10$hash");
+	}
+
+	@Test
+	void correoLlegaNormalizadoAlServicioDeAutenticacion() {
+		given(autenticacionService.iniciarSesion(any(InicioSesionRequest.class), anyString())).willReturn(sesionDeAna());
+
+		assertThat(iniciarSesion("{\"correo\":\" Ana@Mail.COM \",\"contrasena\":\"Secreta12\"}"))
+				.hasStatus(HttpStatus.OK);
+
+		ArgumentCaptor<InicioSesionRequest> solicitud = ArgumentCaptor.forClass(InicioSesionRequest.class);
+		then(autenticacionService).should().iniciarSesion(solicitud.capture(), anyString());
+		assertThat(solicitud.getValue().correo()).isEqualTo("ana@mail.com");
+	}
+
+	@Test
+	void direccionIpDelClienteLlegaAlServicioDeAutenticacion() {
+		given(autenticacionService.iniciarSesion(any(InicioSesionRequest.class), anyString())).willReturn(sesionDeAna());
+
+		assertThat(mvc.post().uri("/api/auth/inicio-sesion").contentType(MediaType.APPLICATION_JSON)
+				.with(peticion -> {
+					peticion.setRemoteAddr("10.0.0.9");
+					return peticion;
+				})
+				.content(CREDENCIALES).exchange()).hasStatus(HttpStatus.OK);
+
+		then(autenticacionService).should().iniciarSesion(any(InicioSesionRequest.class), eq("10.0.0.9"));
+	}
+
+	@Test
+	void intentosExcedidosDevuelven429() {
+		given(autenticacionService.iniciarSesion(any(InicioSesionRequest.class), anyString()))
+				.willThrow(new IntentosExcedidosException());
+
+		MvcTestResult resultado = iniciarSesion(CREDENCIALES);
+
+		assertThat(resultado).hasStatus(HttpStatus.TOO_MANY_REQUESTS);
+		assertThat(resultado).headers().hasValue("Content-Type", "application/problem+json");
+		assertThat(resultado).bodyJson().extractingPath("$.codigo").isEqualTo("INTENTOS_EXCEDIDOS");
+	}
+
+	@Test
+	void inicioDeSesionSinCorreoNiContrasenaDevuelve400SinLlamarAlServicio() {
+		MvcTestResult resultado = iniciarSesion("{}");
+
+		assertThat(resultado).hasStatus(HttpStatus.BAD_REQUEST);
+		assertThat(resultado).bodyJson().extractingPath("$.codigo").isEqualTo("DATOS_INVALIDOS");
+		assertThat(resultado).bodyJson().extractingPath("$.errores[*].campo").asArray()
+				.containsExactlyInAnyOrder("correo", "contrasena");
+		then(autenticacionService).shouldHaveNoInteractions();
+	}
+
+	@Test
+	void credencialesIncorrectasDevuelven401() {
+		given(autenticacionService.iniciarSesion(any(InicioSesionRequest.class), anyString()))
+				.willThrow(new CredencialesIncorrectasException());
+
+		MvcTestResult resultado = iniciarSesion(CREDENCIALES);
+
+		assertThat(resultado).hasStatus(HttpStatus.UNAUTHORIZED);
+		assertThat(resultado).headers().hasValue("Content-Type", "application/problem+json");
+		assertThat(resultado).bodyJson().extractingPath("$.codigo").isEqualTo("CREDENCIALES_INCORRECTAS");
+		assertThat(resultado).bodyJson().extractingPath("$.detail").isEqualTo("Correo o contraseña incorrectos.");
+	}
+
+	@Test
+	void cuentaDesactivadaDevuelve403() {
+		given(autenticacionService.iniciarSesion(any(InicioSesionRequest.class), anyString()))
+				.willThrow(new CuentaDesactivadaException());
+
+		MvcTestResult resultado = iniciarSesion(CREDENCIALES);
+
+		assertThat(resultado).hasStatus(HttpStatus.FORBIDDEN);
+		assertThat(resultado).headers().hasValue("Content-Type", "application/problem+json");
+		assertThat(resultado).bodyJson().extractingPath("$.codigo").isEqualTo("CUENTA_DESACTIVADA");
+	}
+
+	// CU-01 RF-17
+	@Test
+	void registrosExcedidosDevuelven429SinLlamarAlServicio() {
+		willThrow(new RegistrosExcedidosException()).given(limiteRegistros).registrarIntento(anyString());
+
+		MvcTestResult resultado = registrar(datosValidos());
+
+		assertThat(resultado).hasStatus(HttpStatus.TOO_MANY_REQUESTS);
+		assertThat(resultado).bodyJson().extractingPath("$.codigo").isEqualTo("REGISTROS_EXCEDIDOS");
+		then(usuarioService).shouldHaveNoInteractions();
 	}
 
 	@Test
