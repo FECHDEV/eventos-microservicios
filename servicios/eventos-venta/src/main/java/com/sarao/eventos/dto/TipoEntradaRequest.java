@@ -30,4 +30,9 @@ public record TipoEntradaRequest(
 		@NotNull(message = "es obligatoria")
 		@Min(value = 1, message = "debe ser de al menos 1")
 		Integer cantidadTotal) {
+
+	// Se valida lo que se guarda: @NotBlank no ve como vacío un espacio Unicode, que strip sí quita
+	public TipoEntradaRequest {
+		nombre = nombre == null ? null : nombre.strip();
+	}
 }

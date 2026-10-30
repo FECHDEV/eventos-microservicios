@@ -17,6 +17,9 @@ npm-debug.log*
 application-local.properties
 application-local.yml
 
+# Imágenes subidas al correr un servicio en local
+servicios/*/datos/
+
 # Material privado (manuales de proveedores)
 referencias/
 

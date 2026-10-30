@@ -44,6 +44,11 @@ class TipoEntradaRequestTest {
 		assertThat(camposInvalidos(new TipoEntradaRequest("General", new BigDecimal("50"), 100))).isEmpty();
 	}
 
+	@Test
+	void unEspacioUnicodeTambienCuentaComoVacio() {
+		assertThat(camposInvalidos(new TipoEntradaRequest("\u2003", new BigDecimal("50"), 100))).containsExactly("nombre");
+	}
+
 	// RF-8: obligatorios, y un nombre de solo espacios cuenta como vacío
 	@Test
 	void faltanLosObligatorios() {

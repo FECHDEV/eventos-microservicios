@@ -46,9 +46,10 @@ public class GestionEventosService {
 	@Transactional(readOnly = true)
 	public Page<Evento> listar(EstadoEvento estado, int pagina, int tamano) {
 		// Igual que CU-09: una página negativa es la primera y un tamaño inválido, el por defecto
-		PageRequest paginacion = PageRequest.of(Math.max(pagina, 0),
-				tamano < 1 ? TAMANO_POR_DEFECTO : Math.min(tamano, TAMANO_MAXIMO), ORDEN);
-		return eventoRepository.buscar(estado, paginacion);
+		int tamanoValido = tamano < 1 ? TAMANO_POR_DEFECTO : Math.min(tamano, TAMANO_MAXIMO);
+		// El offset tiene que entrar en un int: una página más alta también queda vacía, con los totales correctos
+		int paginaValida = Math.min(Math.max(pagina, 0), Integer.MAX_VALUE / tamanoValido);
+		return eventoRepository.buscar(estado, PageRequest.of(paginaValida, tamanoValido, ORDEN));
 	}
 
 	@Transactional(readOnly = true)
@@ -128,13 +129,17 @@ public class GestionEventosService {
 	}
 
 	// El archivo sobrante depende de cómo termina la transacción: si se confirma, sobra el que el evento dejó de usar;
-	// si se revierte, el evento sigue con el anterior y sobra el recién guardado. Borrar antes de saberlo podría dejar
-	// al evento apuntando a un archivo que ya no existe
+	// si se revierte, el evento sigue con el anterior y sobra el recién guardado. Borrar antes de saberlo, o con un final
+	// desconocido, podría dejar al evento apuntando a un archivo que ya no existe
 	private void borrarAlTerminar(String siSeConfirma, String siSeRevierte) {
 		TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
 			@Override
 			public void afterCompletion(int estado) {
-				String sobrante = estado == STATUS_COMMITTED ? siSeConfirma : siSeRevierte;
+				String sobrante = switch (estado) {
+					case STATUS_COMMITTED -> siSeConfirma;
+					case STATUS_ROLLED_BACK -> siSeRevierte;
+					default -> null;
+				};
 				if (sobrante != null) {
 					almacenImagenes.borrar(sobrante);
 				}
@@ -152,6 +157,9 @@ public class GestionEventosService {
 		List<CampoInvalido> errores = new ArrayList<>();
 		if (validarFecha && solicitud.fecha().isBefore(LocalDate.now(clock))) {
 			errores.add(new CampoInvalido("fecha", "no puede ser anterior a hoy"));
+		}
+		if (validarFecha && solicitud.fecha().isAfter(Evento.FECHA_MAXIMA)) {
+			errores.add(new CampoInvalido("fecha", "no es una fecha válida"));
 		}
 		if (solicitud.horaFin().equals(solicitud.horaInicio())) {
 			errores.add(new CampoInvalido("horaFin", "debe ser distinta de la hora de inicio"));

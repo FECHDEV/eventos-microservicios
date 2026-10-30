@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.MultipartException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
@@ -109,6 +110,12 @@ public class ManejadorErrores extends ResponseEntityExceptionHandler {
 			HttpHeaders headers, HttpStatusCode status, WebRequest request) {
 		return datosInvalidos("Falta un archivo en la solicitud.",
 				List.of(error(ex.getRequestPartName(), "es obligatoria")));
+	}
+
+	// Una subida cortada o mal armada llega hasta acá porque el gateway no interpreta multipart
+	@ExceptionHandler(MultipartException.class)
+	public ResponseEntity<Object> manejarSubidaInvalida(MultipartException ex) {
+		return datosInvalidos("La solicitud tiene datos con formato inválido.", List.of());
 	}
 
 	@ExceptionHandler(Exception.class)

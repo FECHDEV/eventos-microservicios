@@ -82,7 +82,7 @@ public class GestionEstadoEventosService {
 		// o cambiarle la imagen, y sin el bloqueo este cierre reescribiría esas columnas con los valores viejos
 		for (Long idEvento : eventoRepository.idsConLaVentaAbiertaHasta(ahora.toLocalDate())) {
 			Evento evento = eventoRepository.findConBloqueoByIdEvento(idEvento).orElse(null);
-			if (evento != null && evento.isVentaAbierta() && evento.laVentaVencio(ahora)) {
+			if (evento != null && evento.isVentaAbierta() && evento.termino(ahora)) {
 				evento.cerrarVenta();
 				cerrados++;
 				log.info("Venta cerrada automáticamente para el evento {}", idEvento);
@@ -95,6 +95,9 @@ public class GestionEstadoEventosService {
 	private void validarFechaNueva(Evento evento, LocalDate nueva) {
 		if (nueva.isBefore(LocalDate.now(clock))) {
 			throw new CamposInvalidosException(List.of(new CampoInvalido("fecha", "no puede ser anterior a hoy")));
+		}
+		if (nueva.isAfter(Evento.FECHA_MAXIMA)) {
+			throw new CamposInvalidosException(List.of(new CampoInvalido("fecha", "no es una fecha válida")));
 		}
 		if (nueva.equals(evento.getFecha())) {
 			throw new CamposInvalidosException(

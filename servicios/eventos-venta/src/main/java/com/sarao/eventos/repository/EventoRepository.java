@@ -22,7 +22,7 @@ public interface EventoRepository extends JpaRepository<Evento, Long> {
 	Page<Evento> buscar(@Param("estado") EstadoEvento estado, Pageable paginacion);
 
 	// Candidatos del cierre automático (CU-12 RF-20): solo los ids, porque cada evento se vuelve a leer con bloqueo
-	// antes de cerrarle la venta. El fin exacto lo decide Evento.laVentaVencio, que depende de si el evento cruza la
+	// antes de cerrarle la venta. El fin exacto lo decide Evento.termino, que depende de si el evento cruza la
 	// medianoche; acotar por fecha evita traer los eventos futuros
 	@Query("select e.idEvento from Evento e where e.ventaAbierta = true and e.fecha <= :limite")
 	List<Long> idsConLaVentaAbiertaHasta(@Param("limite") LocalDate limite);

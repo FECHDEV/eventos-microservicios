@@ -105,6 +105,19 @@ class GestionEventosServiceImagenTest {
 		then(almacenImagenes).should(never()).borrar("vieja.jpg");
 	}
 
+	// Con un final desconocido el commit pudo llegar a la base: borrar la nueva dejaría al evento sin su archivo
+	@Test
+	void conUnFinalDesconocidoNoBorraNada() {
+		evento.cambiarImagen("vieja.jpg");
+		given(almacenImagenes.guardar(FormatoImagenTest.PNG, FormatoImagen.PNG)).willReturn("nueva.png");
+
+		servicio.cambiarImagen(5L, FormatoImagenTest.PNG);
+		terminarTransaccion(TransactionSynchronization.STATUS_UNKNOWN);
+
+		then(almacenImagenes).should(never()).borrar("nueva.png");
+		then(almacenImagenes).should(never()).borrar("vieja.jpg");
+	}
+
 	@Test
 	void cambiarYQuitarLaImagenBloqueanLaFilaDelEvento() {
 		given(almacenImagenes.guardar(FormatoImagenTest.PNG, FormatoImagen.PNG)).willReturn("nueva.png");

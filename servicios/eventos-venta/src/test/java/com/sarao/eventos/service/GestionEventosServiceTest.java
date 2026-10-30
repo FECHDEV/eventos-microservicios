@@ -90,6 +90,15 @@ class GestionEventosServiceTest {
 	}
 
 	@Test
+	void unaPaginaEnormeNoDesbordaElOffset() {
+		given(eventoRepository.buscar(any(), any())).willReturn(new PageImpl<>(List.of()));
+
+		servicio.listar(null, Integer.MAX_VALUE, 100);
+
+		then(eventoRepository).should().buscar(null, PageRequest.of(Integer.MAX_VALUE / 100, 100, ORDEN));
+	}
+
+	@Test
 	void listarConTamanoInvalidoUsaElPorDefecto() {
 		given(eventoRepository.buscar(any(), any())).willReturn(new PageImpl<>(List.of()));
 
@@ -133,6 +142,15 @@ class GestionEventosServiceTest {
 				LocalTime.of(12, 0))))
 				.isInstanceOfSatisfying(CamposInvalidosException.class, error -> assertThat(error.getErrores())
 						.containsExactly(new CampoInvalido("fecha", "no puede ser anterior a hoy")));
+	}
+
+	// Un año que MySQL no guarda sería un 500
+	@Test
+	void registrarRechazaUnaFechaFueraDeLoQueLaBaseGuarda() {
+		assertThatThrownBy(() -> servicio.registrar(1L, solicitud(LocalDate.of(10000, 1, 1), LocalTime.of(10, 0),
+				LocalTime.of(12, 0))))
+				.isInstanceOfSatisfying(CamposInvalidosException.class, error -> assertThat(error.getErrores())
+						.containsExactly(new CampoInvalido("fecha", "no es una fecha válida")));
 	}
 
 	// RF-11: horas iguales no; fin menor que inicio sí (cruza la medianoche)

@@ -111,9 +111,9 @@ class EventoEstadoTest {
 	void laVentaVenceAlLlegarLaHoraDeFin() {
 		Evento diurno = evento(LocalTime.of(10, 0), LocalTime.of(18, 0));
 
-		assertThat(diurno.laVentaVencio(LocalDateTime.of(2026, 10, 4, 17, 59))).isFalse();
-		assertThat(diurno.laVentaVencio(LocalDateTime.of(2026, 10, 4, 18, 0))).isTrue();
-		assertThat(diurno.laVentaVencio(LocalDateTime.of(2026, 10, 5, 0, 1))).isTrue();
+		assertThat(diurno.termino(LocalDateTime.of(2026, 10, 4, 17, 59))).isFalse();
+		assertThat(diurno.termino(LocalDateTime.of(2026, 10, 4, 18, 0))).isTrue();
+		assertThat(diurno.termino(LocalDateTime.of(2026, 10, 5, 0, 1))).isTrue();
 	}
 
 	// CU-08 RF-5: terminó al llegar su hora de fin, al día siguiente si cruza la medianoche

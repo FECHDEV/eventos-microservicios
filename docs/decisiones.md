@@ -725,6 +725,11 @@ evento vuelve a estar activo. La tabla `entrada` nace con CU-06 y CU-07, así qu
 sí hace es dejar el evento ACTIVO con su fecha nueva, que es de donde las
 entradas toman su validez (cuelgan del evento a través de su tipo).
 
+En microservicios el orden se conserva (30/10/2026): FA-02 entra con HU-16, y
+hasta entonces la activación informa 0 entradas reactivadas. Liberar las reservas
+vencidas al listar o modificar tipos (CU-11) entra con HU-15, cuando exista
+`Reserva`.
+
 Al implementarla, en su rama propia, se decidió con el usuario (22/09/2026):
 
 - **Es automática al activar.** Activar un evento POSTERGADO pasa a ACTIVA,

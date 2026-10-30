@@ -41,6 +41,21 @@ class EventosServidorRealTest {
 		assertThat(respuesta.body()).contains("IMAGEN_DEMASIADO_GRANDE");
 	}
 
+	@Test
+	void unaSubidaMalArmadaEsDatosInvalidos() throws Exception {
+		HttpRequest peticion = HttpRequest.newBuilder(URI.create("http://localhost:" + puerto + "/api/eventos/1/imagen"))
+				.header("X-Clave-Servicio", "clave-de-pruebas")
+				.header("X-Usuario-Id", "1")
+				.header("X-Usuario-Rol", "ADMINISTRADOR")
+				.header("Content-Type", "multipart/form-data")
+				.POST(HttpRequest.BodyPublishers.ofString("sin limite")).build();
+
+		HttpResponse<String> respuesta = HttpClient.newHttpClient().send(peticion, HttpResponse.BodyHandlers.ofString());
+
+		assertThat(respuesta.statusCode()).isEqualTo(400);
+		assertThat(respuesta.body()).contains("DATOS_INVALIDOS");
+	}
+
 	private static byte[] cuerpoConArchivoDe(int bytes) {
 		ByteArrayOutputStream cuerpo = new ByteArrayOutputStream();
 		cuerpo.writeBytes(("--" + LIMITE + "\r\n"

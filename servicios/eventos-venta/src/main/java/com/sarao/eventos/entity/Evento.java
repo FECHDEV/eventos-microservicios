@@ -24,6 +24,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Evento {
 
+	// La última que admite DATE en MySQL: una posterior fallaría al guardarse
+	public static final LocalDate FECHA_MAXIMA = LocalDate.of(9999, 12, 31);
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "id_evento")
@@ -151,10 +154,6 @@ public class Evento {
 	// CU-05 y CU-08: el evento terminó al llegar su hora de fin, al día siguiente si cruza la medianoche
 	public boolean termino(LocalDateTime ahora) {
 		return !ahora.isBefore(finDeLaVenta());
-	}
-
-	public boolean laVentaVencio(LocalDateTime ahora) {
-		return termino(ahora);
 	}
 
 	public boolean estaCancelado() {

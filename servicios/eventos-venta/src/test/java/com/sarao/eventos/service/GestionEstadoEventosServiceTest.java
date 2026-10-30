@@ -156,6 +156,15 @@ class GestionEstadoEventosServiceTest {
 						.containsExactly(new CampoInvalido("fecha", "no puede ser anterior a hoy")));
 	}
 
+	@Test
+	void postergarAUnaFechaQueLaBaseNoGuardaEs400() {
+		evento(EstadoEvento.ACTIVO);
+
+		assertThatThrownBy(() -> servicio.postergar(5L, para(LocalDate.of(10000, 1, 1))))
+				.isInstanceOfSatisfying(CamposInvalidosException.class, error -> assertThat(error.getErrores())
+						.containsExactly(new CampoInvalido("fecha", "no es una fecha válida")));
+	}
+
 	// RF-11: postergar a la misma fecha no es postergar
 	@Test
 	void postergarALaMismaFechaEs400() {

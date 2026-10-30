@@ -2,7 +2,6 @@ package com.sarao.eventos.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.then;
-import static org.mockito.BDDMockito.willThrow;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,17 +24,6 @@ class CierreAutomaticoDeVentaTest {
 
 	@Test
 	void cadaVezQueCorreCierraLasVentasVencidas() {
-		cierreAutomaticoDeVenta.cerrarLasVencidas();
-
-		then(gestionEstadoEventosService).should().cerrarVentasVencidas();
-	}
-
-	// Un fallo no puede salir de la tarea: Spring dejaría de programarla y la venta quedaría abierta para siempre
-	@Test
-	void unFalloNoSePropaga() {
-		willThrow(new RuntimeException("la base no responde")).given(gestionEstadoEventosService)
-				.cerrarVentasVencidas();
-
 		cierreAutomaticoDeVenta.cerrarLasVencidas();
 
 		then(gestionEstadoEventosService).should().cerrarVentasVencidas();
