@@ -5,11 +5,11 @@ Orden de arriba abajo por prioridad. Estado: Pendiente, En curso o Hecha.
 
 | ID | Historia | Origen | Servicio | Sprint | Estado |
 |---|---|---|---|---|---|
-| HU-01 | Como equipo, quiero el repositorio, Docker y CI, para integrar cada cambio con seguridad. | Técnica | Todos | 1 | En curso |
-| HU-02 | Como cliente, quiero una entrada única a la API, para usar el sistema sin conocer sus servicios. | Técnica | Gateway | 1 | Pendiente |
-| HU-03 | Como visitante, quiero registrarme, para comprar entradas. | CU-01 | Seguridad | 1 | Pendiente |
+| HU-01 | Como equipo, quiero el repositorio, Docker y CI, para integrar cada cambio con seguridad. | Técnica | Todos | 1 | Hecha |
+| HU-02 | Como cliente, quiero una entrada única a la API, para usar el sistema sin conocer sus servicios. | Técnica | Gateway | 1 | Hecha |
+| HU-03 | Como visitante, quiero registrarme, para comprar entradas. | CU-01 | Seguridad | 1 | En curso |
 | HU-04 | Como usuario, quiero iniciar sesión, para acceder a lo que mi rol permite. | CU-02, req. 5 y 6 | Seguridad | 1 | Pendiente |
-| HU-05 | Como usuario, quiero contraseñas con reglas de complejidad, para proteger mi cuenta. | Req. 6 | Seguridad | 1 | Pendiente |
+| HU-05 | Como usuario, quiero contraseñas con reglas de complejidad, para proteger mi cuenta. | Req. 6 | Seguridad | 1 | En curso |
 | HU-06 | Como usuario, quiero recuperar mi contraseña, para volver a entrar si la olvido. | CU-03 | Seguridad | 1 | Pendiente |
 | HU-07 | Como usuario, quiero gestionar mis datos personales, para mantenerlos al día. | CU-04 | Seguridad | 1 | Pendiente |
 | HU-08 | Como administrador, quiero gestionar usuarios y roles, para controlar quién hace qué. | CU-09, req. 5 | Seguridad | 1 | Pendiente |

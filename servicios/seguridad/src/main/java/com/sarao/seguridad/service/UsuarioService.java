@@ -1,0 +1,43 @@
+package com.sarao.seguridad.service;
+
+import java.time.Clock;
+import java.time.LocalDateTime;
+
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.sarao.seguridad.dto.RegistroClienteRequest;
+import com.sarao.seguridad.entity.Usuario;
+import com.sarao.seguridad.exception.CuentaExistenteException;
+import com.sarao.seguridad.repository.UsuarioRepository;
+import lombok.RequiredArgsConstructor;
+
+@Service
+@RequiredArgsConstructor
+public class UsuarioService {
+
+	private final UsuarioRepository usuarioRepository;
+	private final PasswordEncoder passwordEncoder;
+	private final Clock clock;
+
+	@Transactional
+	public Usuario registrarCliente(RegistroClienteRequest solicitud) {
+		String correo = Usuario.normalizarCorreo(solicitud.correo());
+		if (usuarioRepository.existsByCorreo(correo)) {
+			throw new CuentaExistenteException();
+		}
+		Usuario usuario = Usuario.registrarCliente(solicitud.nombre(), solicitud.apellido(), correo,
+				passwordEncoder.encode(solicitud.contrasena()), solicitud.telefono(),
+				solicitud.fechaNacimiento(), LocalDateTime.now(clock));
+		try {
+			return usuarioRepository.saveAndFlush(usuario);
+		} catch (DataIntegrityViolationException e) {
+			if (UsuarioRepository.esCorreoDuplicado(e)) {
+				throw new CuentaExistenteException();
+			}
+			throw e;
+		}
+	}
+}
