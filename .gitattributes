@@ -1,2 +1,4 @@
 # Scripts que corren en contenedores Linux: siempre con fin de línea LF
 *.sh text eol=lf
+mvnw text eol=lf
+*.cmd text eol=crlf

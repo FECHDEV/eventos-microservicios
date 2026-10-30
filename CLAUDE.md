@@ -43,6 +43,9 @@ las decisiones técnicas anteriores del mismo archivo.
   llevan clave de servicio y no se publican en el gateway.
 - Dentro de cada servicio se mantienen las capas: API REST, lógica de negocio y
   datos.
+- Cada servicio vive en `servicios/<nombre>`, con su pom y su wrapper de Maven, y
+  se agrega a la matriz de `.github/workflows/pruebas.yml`. El paquete es
+  `com.sarao.<servicio>`.
 
 ---
 

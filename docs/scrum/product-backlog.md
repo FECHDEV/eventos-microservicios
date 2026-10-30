@@ -5,7 +5,7 @@ Orden de arriba abajo por prioridad. Estado: Pendiente, En curso o Hecha.
 
 | ID | Historia | Origen | Servicio | Sprint | Estado |
 |---|---|---|---|---|---|
-| HU-01 | Como equipo, quiero el repositorio, Docker y CI, para integrar cada cambio con seguridad. | Técnica | Todos | 1 | Pendiente |
+| HU-01 | Como equipo, quiero el repositorio, Docker y CI, para integrar cada cambio con seguridad. | Técnica | Todos | 1 | En curso |
 | HU-02 | Como cliente, quiero una entrada única a la API, para usar el sistema sin conocer sus servicios. | Técnica | Gateway | 1 | Pendiente |
 | HU-03 | Como visitante, quiero registrarme, para comprar entradas. | CU-01 | Seguridad | 1 | Pendiente |
 | HU-04 | Como usuario, quiero iniciar sesión, para acceder a lo que mi rol permite. | CU-02, req. 5 y 6 | Seguridad | 1 | Pendiente |

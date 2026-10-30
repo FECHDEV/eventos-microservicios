@@ -86,6 +86,17 @@ Regex `^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$`, en el backend y en el formulario,
 al registrarse, al cambiar y al restablecer la contraseña. Sigue el máximo de 72
 bytes de BCrypt. Cumple el requisito de complejidad sin exigir símbolos.
 
+### Estructura del repositorio
+
+- **Un proyecto Maven por servicio, sin pom padre:** cada uno compila y se
+  despliega solo.
+- **Un solo `servicios/Dockerfile`:** todos los servicios se arman igual.
+- **Gateway con Spring Cloud Gateway Server WebMVC:** el mismo modelo de Spring
+  MVC que los servicios, sin programación reactiva.
+- **Paquete `com.sarao`:** el código es público y va con la marca.
+- **Las bases se crean con `mysql/crear-bases.sh`**, que solo corre con el volumen
+  vacío. Cambiar una contraseña en `.env` no la cambia en una base ya creada.
+
 ### Versiones
 
 Spring Cloud 2025.1.x: `start.spring.io` la declara compatible con Spring Boot
