@@ -6,7 +6,9 @@ import java.time.LocalDateTime;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import com.sarao.seguridad.dto.DatosPersonalesRequest;
 import com.sarao.seguridad.dto.RegistroClienteRequest;
 import com.sarao.seguridad.entity.Usuario;
 import com.sarao.seguridad.exception.CuentaExistenteException;
@@ -41,5 +43,17 @@ public class UsuarioService {
 			}
 			throw e;
 		}
+	}
+
+	@Transactional(readOnly = true)
+	public Usuario datosPersonales(Long idUsuario) {
+		return usuarioRepository.findById(idUsuario).orElseThrow();
+	}
+
+	@Transactional
+	public Usuario actualizarDatos(Long idUsuario, DatosPersonalesRequest solicitud) {
+		Usuario usuario = usuarioRepository.findConBloqueoByIdUsuario(idUsuario).orElseThrow();
+		usuario.actualizarDatos(solicitud.nombre(), solicitud.apellido(), solicitud.telefono());
+		return usuario;
 	}
 }

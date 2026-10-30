@@ -31,13 +31,18 @@ import com.sarao.seguridad.config.SecurityConfig;
 import com.sarao.seguridad.config.TokenEmitido;
 import com.sarao.seguridad.dto.InicioSesionRequest;
 import com.sarao.seguridad.dto.RegistroClienteRequest;
+import com.sarao.seguridad.dto.RestablecimientoContrasenaRequest;
+import com.sarao.seguridad.dto.SolicitudRecuperacionRequest;
 import com.sarao.seguridad.entity.Usuario;
 import com.sarao.seguridad.exception.CredencialesIncorrectasException;
 import com.sarao.seguridad.exception.CuentaDesactivadaException;
 import com.sarao.seguridad.exception.CuentaExistenteException;
 import com.sarao.seguridad.exception.IntentosExcedidosException;
 import com.sarao.seguridad.exception.RegistrosExcedidosException;
+import com.sarao.seguridad.exception.SolicitudesExcedidasException;
+import com.sarao.seguridad.exception.TokenRecuperacionInvalidoException;
 import com.sarao.seguridad.service.AutenticacionService;
+import com.sarao.seguridad.service.RecuperacionContrasenaService;
 import com.sarao.seguridad.service.SesionIniciada;
 import com.sarao.seguridad.service.UsuarioService;
 
@@ -58,6 +63,9 @@ class AuthControllerTest {
 
 	@MockitoBean
 	private AutenticacionService autenticacionService;
+
+	@MockitoBean
+	private RecuperacionContrasenaService recuperacionContrasenaService;
 
 	private static Map<String, String> datosValidos() {
 		Map<String, String> datos = new LinkedHashMap<>();
@@ -311,5 +319,111 @@ class AuthControllerTest {
 
 		assertThat(resultado).hasStatus(HttpStatus.UNAUTHORIZED);
 		assertThat(resultado).bodyJson().extractingPath("$.codigo").isEqualTo("NO_AUTENTICADO");
+	}
+
+	private MvcTestResult solicitarRecuperacion(String cuerpo) {
+		return mvc.post().uri("/api/auth/recuperacion").contentType(MediaType.APPLICATION_JSON)
+				.with(peticion -> {
+					peticion.setRemoteAddr("10.0.0.9");
+					return peticion;
+				})
+				.content(cuerpo).exchange();
+	}
+
+	private MvcTestResult restablecerContrasena(String cuerpo) {
+		return mvc.post().uri("/api/auth/recuperacion/restablecimiento").contentType(MediaType.APPLICATION_JSON)
+				.content(cuerpo).exchange();
+	}
+
+	@Test
+	void solicitudDeRecuperacionSinSesionDevuelve202ConElMensajeDeConfirmacion() {
+		MvcTestResult resultado = solicitarRecuperacion("{\"correo\":\" Ana@Mail.COM \"}");
+
+		assertThat(resultado).hasStatus(HttpStatus.ACCEPTED);
+		assertThat(resultado).bodyJson().extractingPath("$.mensaje")
+				.isEqualTo("Si el correo está registrado, le enviamos las instrucciones para recuperar la contraseña.");
+		ArgumentCaptor<SolicitudRecuperacionRequest> solicitud = ArgumentCaptor
+				.forClass(SolicitudRecuperacionRequest.class);
+		then(recuperacionContrasenaService).should().solicitar(solicitud.capture(), eq("10.0.0.9"));
+		assertThat(solicitud.getValue().correo()).isEqualTo("ana@mail.com");
+	}
+
+	@Test
+	void solicitudDeRecuperacionConCorreoInvalidoDevuelve400SinLlamarAlServicio() {
+		MvcTestResult resultado = solicitarRecuperacion("{\"correo\":\"ana-sin-arroba\"}");
+
+		assertThat(resultado).hasStatus(HttpStatus.BAD_REQUEST);
+		assertThat(resultado).bodyJson().extractingPath("$.codigo").isEqualTo("DATOS_INVALIDOS");
+		assertThat(resultado).bodyJson().extractingPath("$.errores[*].campo").asArray().containsExactly("correo");
+		then(recuperacionContrasenaService).shouldHaveNoInteractions();
+	}
+
+	@Test
+	void solicitudesDeRecuperacionExcedidasDevuelven429() {
+		willThrow(new SolicitudesExcedidasException()).given(recuperacionContrasenaService)
+				.solicitar(any(SolicitudRecuperacionRequest.class), anyString());
+
+		MvcTestResult resultado = solicitarRecuperacion("{\"correo\":\"ana@mail.com\"}");
+
+		assertThat(resultado).hasStatus(HttpStatus.TOO_MANY_REQUESTS);
+		assertThat(resultado).headers().hasValue("Content-Type", "application/problem+json");
+		assertThat(resultado).bodyJson().extractingPath("$.codigo").isEqualTo("SOLICITUDES_EXCEDIDAS");
+	}
+
+	@Test
+	void restablecimientoValidoSinSesionDevuelve200ConLaConfirmacion() {
+		MvcTestResult resultado = restablecerContrasena(
+				"{\"token\":\"token-del-correo\",\"contrasena\":\"Nueva-clave-1\"}");
+
+		assertThat(resultado).hasStatus(HttpStatus.OK);
+		assertThat(resultado).bodyJson().extractingPath("$.mensaje")
+				.isEqualTo("La contraseña se actualizó. Ya puede iniciar sesión con la nueva contraseña.");
+		ArgumentCaptor<RestablecimientoContrasenaRequest> solicitud = ArgumentCaptor
+				.forClass(RestablecimientoContrasenaRequest.class);
+		then(recuperacionContrasenaService).should().restablecer(solicitud.capture());
+		assertThat(solicitud.getValue().token()).isEqualTo("token-del-correo");
+		assertThat(solicitud.getValue().contrasena()).isEqualTo("Nueva-clave-1");
+	}
+
+	@Test
+	void restablecimientoSinTokenYConContrasenaCortaDevuelve400ConAmbosCampos() {
+		MvcTestResult resultado = restablecerContrasena("{\"contrasena\":\"corta\"}");
+
+		assertThat(resultado).hasStatus(HttpStatus.BAD_REQUEST);
+		assertThat(resultado).bodyJson().extractingPath("$.codigo").isEqualTo("DATOS_INVALIDOS");
+		assertThat(resultado).bodyJson().extractingPath("$.errores[*].campo").asArray()
+				.containsExactlyInAnyOrder("token", "contrasena");
+		then(recuperacionContrasenaService).shouldHaveNoInteractions();
+	}
+
+	@Test
+	void restablecimientoConContrasenaDeMasDe72BytesDevuelve400() {
+		assertThat(restablecerContrasena("{\"token\":\"t\",\"contrasena\":\"%s\"}".formatted("a".repeat(73))))
+				.hasStatus(HttpStatus.BAD_REQUEST);
+		then(recuperacionContrasenaService).shouldHaveNoInteractions();
+	}
+
+	@Test
+	void tokenDeRecuperacionInvalidoDevuelve400ConSuCodigo() {
+		willThrow(new TokenRecuperacionInvalidoException()).given(recuperacionContrasenaService)
+				.restablecer(any(RestablecimientoContrasenaRequest.class));
+
+		MvcTestResult resultado = restablecerContrasena("{\"token\":\"vencido\",\"contrasena\":\"Nueva-clave-1\"}");
+
+		assertThat(resultado).hasStatus(HttpStatus.BAD_REQUEST);
+		assertThat(resultado).headers().hasValue("Content-Type", "application/problem+json");
+		assertThat(resultado).bodyJson().extractingPath("$.codigo").isEqualTo("TOKEN_RECUPERACION_INVALIDO");
+	}
+
+	// CU-03 RF-11
+	@Test
+	void restablecimientoSinMayusculaSinMinusculaOSinNumeroDevuelve400() {
+		for (String contrasena : new String[] { "secreta12", "SECRETA12", "Secretaaa" }) {
+			MvcTestResult resultado = restablecerContrasena(
+					"{\"token\":\"t\",\"contrasena\":\"%s\"}".formatted(contrasena));
+
+			assertThat(resultado).hasStatus(HttpStatus.BAD_REQUEST);
+		}
+		then(recuperacionContrasenaService).shouldHaveNoInteractions();
 	}
 }

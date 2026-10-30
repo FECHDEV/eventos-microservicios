@@ -32,7 +32,8 @@ public class SecurityConfig {
 						// El despacho interno a /error no pasa por el filtro de identidad: sin esto, cualquier error de una
 						// petición autenticada terminaría como 401
 						.dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
-						.requestMatchers(HttpMethod.POST, "/api/auth/registro", "/api/auth/inicio-sesion").permitAll()
+						.requestMatchers(HttpMethod.POST, "/api/auth/registro", "/api/auth/inicio-sesion",
+								"/api/auth/recuperacion", "/api/auth/recuperacion/restablecimiento").permitAll()
 						.requestMatchers("/interno/**").hasRole("SERVICIO")
 						// El rol SERVICIO no entra a las rutas de usuarios
 						.anyRequest().hasAnyRole("CLIENTE", "ADMINISTRADOR", "PERSONAL"))
