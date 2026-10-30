@@ -1,0 +1,40 @@
+:host {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--sarao-espacio-2);
+	white-space: nowrap;
+	color: var(--color-estado);
+}
+
+:host::before {
+	content: '';
+	width: 8px;
+	height: 8px;
+	background: currentColor;
+	clip-path: var(--forma-estado);
+}
+
+:host([data-estado='BORRADOR']) {
+	--color-estado: var(--sarao-neutro);
+	--forma-estado: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+}
+
+:host([data-estado='ACTIVO']) {
+	--color-estado: var(--sarao-exito);
+	--forma-estado: circle(50%);
+}
+
+:host([data-estado='POSTERGADO']) {
+	--color-estado: var(--sarao-ambar);
+	--forma-estado: polygon(50% 0, 100% 100%, 0 100%);
+}
+
+:host([data-estado='CANCELADO']) {
+	--color-estado: var(--sarao-error);
+	--forma-estado: inset(0 round 1px);
+}
+
+// Ya pasó: la forma y el color del estado quedan, atenuados
+:host([data-terminado]) {
+	opacity: 0.75;
+}

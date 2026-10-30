@@ -1,0 +1,125 @@
+// Los campos, los avisos y el botón secundario vienen de _lista.scss; acá
+// quedan las tarjetas de cada acción y los botones principal y de peligro
+@use '../../../../styles/lista';
+
+:host {
+	display: flex;
+	flex-direction: column;
+	gap: var(--sarao-espacio-6);
+}
+
+// Explica por qué no hay acciones: informa, no es un error
+.aviso-neutro {
+	margin: 0;
+	padding: var(--sarao-espacio-3);
+	border: 1px solid var(--sarao-borde);
+	border-left: 4px solid var(--sarao-ambar);
+	border-radius: var(--sarao-radio-control);
+	background: var(--sarao-superficie);
+	font-size: 14px;
+}
+
+.aviso a {
+	margin-left: var(--sarao-espacio-2);
+	color: inherit;
+	font-weight: 600;
+	text-underline-offset: 2px;
+}
+
+.aviso a:hover {
+	text-decoration-thickness: 2px;
+}
+
+.acciones {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+	gap: var(--sarao-espacio-4);
+}
+
+.accion {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: var(--sarao-espacio-3);
+	padding: var(--sarao-espacio-4);
+	border: 1px solid var(--sarao-borde);
+	border-radius: var(--sarao-radio);
+	background: var(--sarao-superficie);
+}
+
+.accion h2 {
+	font-size: 16px;
+}
+
+.accion p {
+	margin: 0;
+	color: var(--sarao-texto-suave);
+	font-size: 14px;
+}
+
+// Cancelar es definitivo: se separa con el color de error, no solo con el texto
+.accion.peligro {
+	border-color: var(--sarao-error);
+}
+
+.postergacion {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-end;
+	gap: var(--sarao-espacio-3);
+	width: 100%;
+}
+
+.postergacion .campo {
+	flex: 1 1 160px;
+}
+
+input[aria-invalid='true'] {
+	border-color: var(--sarao-error);
+	border-width: 2px;
+}
+
+.error {
+	margin: 0;
+	color: var(--sarao-error);
+	font-size: 12.5px;
+	font-weight: 500;
+}
+
+.boton,
+.peligroso {
+	font: inherit;
+	font-size: 14px;
+	font-weight: 600;
+	min-height: 44px;
+	padding: var(--sarao-espacio-2) var(--sarao-espacio-4);
+	border: 1px solid transparent;
+	border-radius: var(--sarao-radio-control);
+	cursor: pointer;
+	transition: background-color var(--sarao-transicion);
+}
+
+.boton {
+	background: var(--sarao-ambar);
+	color: var(--sarao-sobre-ambar);
+}
+
+.boton:hover:not([disabled]) {
+	background: var(--sarao-ambar-fuerte);
+}
+
+.peligroso {
+	border-color: var(--sarao-error);
+	background: transparent;
+	color: var(--sarao-error);
+}
+
+.peligroso:hover:not([disabled]) {
+	background: var(--sarao-error-fondo);
+}
+
+.boton[disabled],
+.peligroso[disabled] {
+	opacity: 0.6;
+	cursor: default;
+}

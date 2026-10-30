@@ -1,0 +1,52 @@
+<h1>Devoluciones</h1>
+<p class="bajada">
+  Eventos cancelados. La devolución del dinero se hace fuera del sistema; acá se registra que se hizo.
+</p>
+
+@if (cancelados(); as cancelados) {
+  @if (cancelados.length === 0) {
+    <p class="vacio" role="status">No hay eventos cancelados.</p>
+  } @else {
+    <div class="contenedor-tabla">
+      <table>
+        <caption class="solo-lectores">Eventos cancelados</caption>
+        <thead>
+          <tr>
+            <th scope="col">Evento</th>
+            <th scope="col">Fecha</th>
+            <th scope="col">Horario</th>
+            <th scope="col">Lugar</th>
+            <th scope="col" class="numero">Pendientes</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (evento of cancelados; track evento.idEvento) {
+            <tr>
+              <th scope="row" data-etiqueta="Evento">
+                <a [routerLink]="['/devoluciones', evento.idEvento]">{{ evento.nombre }}</a>
+              </th>
+              <td data-etiqueta="Fecha" class="numero">{{ fecha(evento.fecha) }}</td>
+              <td data-etiqueta="Horario">
+                <span class="horario">
+                  <span class="numero">{{ hora(evento.horaInicio) }}–{{ hora(evento.horaFin) }}</span>
+                  @if (terminaAlDiaSiguiente(evento.horaInicio, evento.horaFin)) {
+                    <span class="ayuda">termina al día siguiente</span>
+                  }
+                </span>
+              </td>
+              <td data-etiqueta="Lugar">{{ evento.lugar }}</td>
+              <td data-etiqueta="Pendientes" class="numero">{{ evento.pendientes }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+} @else if (errorDeCarga()) {
+  <div class="tarjeta-error">
+    <p class="aviso" role="alert">{{ errorDeCarga() }}</p>
+    <button type="button" class="secundario" (click)="recurso.reload()">Reintentar</button>
+  </div>
+} @else {
+  <p class="cargando" role="status">Cargando los eventos cancelados…</p>
+}

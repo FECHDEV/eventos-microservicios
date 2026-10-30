@@ -1,0 +1,234 @@
+@if (esNuevo) {
+  <a class="volver" routerLink="/eventos">← Eventos</a>
+  <h1>Nuevo evento</h1>
+  <p class="ayuda">Se registra como borrador. Después le agregas los tipos de entrada y lo activas.</p>
+}
+
+@if (soloLectura()) {
+  <p class="aviso-neutro">Este evento está cancelado: sus datos ya no se pueden modificar.</p>
+} @else if (horarioBloqueado()) {
+  <p class="aviso-neutro">
+    Este evento ya está a la venta: la fecha y el horario no se editan acá. Para cambiarlos,
+    <a routerLink="../estado">posterga el evento</a>.
+  </p>
+}
+
+<!-- Siempre presentes: un lector de pantalla anuncia lo que aparece dentro,
+     pero no una región que se crea junto con su texto -->
+<div class="avisos">
+  <div role="alert">
+    @if (aviso()) {
+      <p class="aviso">{{ aviso() }}</p>
+    }
+  </div>
+  <div role="status">
+    @if (datosAlDia()) {
+      <p class="aviso exito">Datos guardados.</p>
+    }
+  </div>
+</div>
+
+<form (submit)="guardar($event)" novalidate>
+  <div class="campo">
+    @let errorNombre = mensaje('nombre');
+    <label for="nombre">Nombre</label>
+    <input
+      id="nombre"
+      type="text"
+      autocomplete="off"
+      [formField]="formulario.nombre"
+      [attr.aria-invalid]="errorNombre ? 'true' : null"
+      [attr.aria-describedby]="errorNombre ? 'error-nombre' : null"
+    />
+    @if (errorNombre) {
+      <p class="error" id="error-nombre">{{ errorNombre }}</p>
+    }
+  </div>
+
+  <div class="campo">
+    @let errorDescripcion = mensaje('descripcion');
+    <label for="descripcion">Descripción <span class="opcional">(opcional)</span></label>
+    <textarea
+      id="descripcion"
+      rows="4"
+      autocomplete="off"
+      [formField]="formulario.descripcion"
+      [attr.aria-invalid]="errorDescripcion ? 'true' : null"
+      [attr.aria-describedby]="errorDescripcion ? 'error-descripcion' : null"
+    ></textarea>
+    @if (errorDescripcion) {
+      <p class="error" id="error-descripcion">{{ errorDescripcion }}</p>
+    }
+  </div>
+
+  <div class="fila">
+    <div class="campo">
+      @let errorFecha = mensaje('fecha');
+      <label for="fecha">Fecha</label>
+      <input
+        id="fecha"
+        type="date"
+        autocomplete="off"
+        [formField]="formulario.fecha"
+        [attr.aria-invalid]="errorFecha ? 'true' : null"
+        [attr.aria-describedby]="errorFecha ? 'error-fecha' : null"
+      />
+      @if (errorFecha) {
+        <p class="error" id="error-fecha">{{ errorFecha }}</p>
+      }
+    </div>
+
+    <div class="campo">
+      @let errorInicio = mensaje('horaInicio');
+      <label for="horaInicio">Inicio</label>
+      <input
+        id="horaInicio"
+        type="time"
+        autocomplete="off"
+        [formField]="formulario.horaInicio"
+        [attr.aria-invalid]="errorInicio ? 'true' : null"
+        [attr.aria-describedby]="errorInicio ? 'error-horaInicio' : null"
+      />
+      @if (errorInicio) {
+        <p class="error" id="error-horaInicio">{{ errorInicio }}</p>
+      }
+    </div>
+
+    <div class="campo">
+      @let errorFin = mensaje('horaFin');
+      <label for="horaFin">Fin</label>
+      <input
+        id="horaFin"
+        type="time"
+        autocomplete="off"
+        [formField]="formulario.horaFin"
+        [attr.aria-invalid]="errorFin ? 'true' : null"
+        [attr.aria-describedby]="(errorFin ? 'error-horaFin ' : '') + (terminaAlDiaSiguiente() ? 'ayuda-horaFin' : '') || null"
+      />
+      @if (errorFin) {
+        <p class="error" id="error-horaFin">{{ errorFin }}</p>
+      }
+      @if (terminaAlDiaSiguiente()) {
+        <p class="ayuda" id="ayuda-horaFin">Termina al día siguiente.</p>
+      }
+    </div>
+  </div>
+
+  <div class="campo">
+    @let errorLugar = mensaje('lugar');
+    <label for="lugar">Lugar</label>
+    <input
+      id="lugar"
+      type="text"
+      autocomplete="off"
+      [formField]="formulario.lugar"
+      [attr.aria-invalid]="errorLugar ? 'true' : null"
+      [attr.aria-describedby]="errorLugar ? 'error-lugar' : null"
+    />
+    @if (errorLugar) {
+      <p class="error" id="error-lugar">{{ errorLugar }}</p>
+    }
+  </div>
+
+  <div class="fila">
+    <div class="campo">
+      @let errorEdad = mensaje('restriccionEdad');
+      <label for="restriccionEdad">Edad mínima <span class="opcional">(opcional)</span></label>
+      <input
+        id="restriccionEdad"
+        type="text"
+        inputmode="numeric"
+        autocomplete="off"
+        [formField]="formulario.restriccionEdad"
+        [attr.aria-invalid]="errorEdad ? 'true' : null"
+        [attr.aria-describedby]="errorEdad ? 'error-restriccionEdad' : 'ayuda-restriccionEdad'"
+      />
+      @if (errorEdad) {
+        <p class="error" id="error-restriccionEdad">{{ errorEdad }}</p>
+      } @else {
+        <p class="ayuda" id="ayuda-restriccionEdad">Vacío: sin restricción de edad.</p>
+      }
+    </div>
+
+    <div class="campo">
+      @let errorLimite = mensaje('limiteCompra');
+      <label for="limiteCompra">Límite por cliente <span class="opcional">(opcional)</span></label>
+      <input
+        id="limiteCompra"
+        type="text"
+        inputmode="numeric"
+        autocomplete="off"
+        [formField]="formulario.limiteCompra"
+        [attr.aria-invalid]="errorLimite ? 'true' : null"
+        [attr.aria-describedby]="errorLimite ? 'error-limiteCompra' : 'ayuda-limiteCompra'"
+      />
+      @if (errorLimite) {
+        <p class="error" id="error-limiteCompra">{{ errorLimite }}</p>
+      } @else {
+        <p class="ayuda" id="ayuda-limiteCompra">Vacío: sin límite de entradas.</p>
+      }
+    </div>
+  </div>
+
+  @if (!soloLectura()) {
+    <div class="acciones">
+      @if (esNuevo) {
+        <button type="button" class="secundario" [disabled]="guardando()" (click)="cancelar()">Cancelar</button>
+      }
+      <button type="submit" class="boton" [disabled]="guardando()">
+        {{ guardando() ? 'Guardando…' : esNuevo ? 'Registrar evento' : 'Guardar cambios' }}
+      </button>
+    </div>
+  }
+</form>
+
+@if (evento(); as evento) {
+  @if (!soloLectura()) {
+    <section class="seccion-imagen" aria-labelledby="titulo-imagen">
+      <h2 id="titulo-imagen">Imagen</h2>
+      <app-imagen-de-evento
+        class="vista-previa"
+        [idEvento]="evento.idEvento"
+        [tieneImagen]="evento.tieneImagen"
+        [descripcion]="'Imagen de ' + evento.nombre"
+        [version]="actual?.versionDeImagen() ?? 0"
+      />
+
+      <div class="avisos">
+        <div role="alert">
+          @if (avisoDeImagen()) {
+            <p class="aviso">{{ avisoDeImagen() }}</p>
+          }
+        </div>
+        <div role="status">
+          @if (exitoDeImagen()) {
+            <p class="aviso exito">{{ exitoDeImagen() }}</p>
+          }
+        </div>
+      </div>
+
+      <div class="campo">
+        <label for="imagen">{{ evento.tieneImagen ? 'Cambiar imagen' : 'Elegir imagen' }}</label>
+        <input
+          #selectorDeImagen
+          id="imagen"
+          name="imagen"
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          aria-describedby="ayuda-imagen"
+          [disabled]="procesandoImagen()"
+          (change)="alElegirImagen(selectorDeImagen)"
+        />
+        <p class="ayuda" id="ayuda-imagen">JPG, PNG o WebP, hasta 2 MB.</p>
+      </div>
+
+      @if (evento.tieneImagen) {
+        <button type="button" class="secundario" [disabled]="procesandoImagen()" (click)="quitarImagen()">
+          Quitar imagen
+        </button>
+      }
+    </section>
+  }
+}
+
+<app-dialogo-confirmacion />

@@ -1,0 +1,51 @@
+<a class="volver" routerLink="/eventos">← Eventos</a>
+
+@if (actual.evento(); as evento) {
+  <header class="encabezado">
+    <app-imagen-de-evento
+      class="imagen"
+      [idEvento]="evento.idEvento"
+      [tieneImagen]="evento.tieneImagen"
+      [descripcion]="'Imagen de ' + evento.nombre"
+      [version]="actual.versionDeImagen()"
+    />
+    <div class="datos">
+      <h1>{{ evento.nombre }}</h1>
+      <p class="resumen">
+        <app-estado-de-evento [estado]="evento.estado" [terminado]="yaTermino(evento)" />
+        <span>{{ evento.ventaAbierta ? 'Venta abierta' : 'Venta cerrada' }}</span>
+        @if (evento.fechaOriginal) {
+          <span class="numero">Fecha original: {{ fecha(evento.fechaOriginal) }}</span>
+        }
+      </p>
+    </div>
+  </header>
+
+  <!-- Una recarga que falló no se lleva la pestaña: el error va arriba -->
+  @if (actual.errorDeCarga()) {
+    <div class="tarjeta-error">
+      <p class="aviso" role="alert">{{ actual.errorDeCarga() }}</p>
+      <button type="button" class="secundario" (click)="actual.recargar()">Reintentar</button>
+    </div>
+  }
+
+  <nav class="pestanas" aria-label="Secciones del evento">
+    <a routerLink="datos" routerLinkActive="activa" ariaCurrentWhenActive="page">Datos</a>
+    <a routerLink="tipos" routerLinkActive="activa" ariaCurrentWhenActive="page">Tipos de entrada</a>
+    <a routerLink="estado" routerLinkActive="activa" ariaCurrentWhenActive="page">Estado</a>
+  </nav>
+
+  <router-outlet />
+} @else if (actual.noEncontrado()) {
+  <div class="vacio" role="status">
+    <p>No encontramos ese evento.</p>
+    <a routerLink="/eventos">Volver a la lista de eventos</a>
+  </div>
+} @else if (actual.errorDeCarga()) {
+  <div class="tarjeta-error">
+    <p class="aviso" role="alert">{{ actual.errorDeCarga() }}</p>
+    <button type="button" class="secundario" (click)="actual.recargar()">Reintentar</button>
+  </div>
+} @else {
+  <p class="cargando" role="status">Cargando el evento…</p>
+}

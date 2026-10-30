@@ -1,0 +1,13 @@
+// El tamaño lo decide quien la usa; sin imagen se ve el fondo neutro
+:host {
+	display: block;
+	overflow: hidden;
+	background: var(--sarao-superficie-alta);
+}
+
+img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}

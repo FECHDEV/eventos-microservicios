@@ -1,0 +1,53 @@
+<button
+  #disparador
+  type="button"
+  class="disparador"
+  aria-label="Apariencia"
+  title="Apariencia"
+  [attr.aria-controls]="abierto() ? 'menu-apariencia' : null"
+  [attr.aria-expanded]="abierto()"
+  (click)="alternar()"
+>
+  <svg class="icono" viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.7-.9 1.4-1.9l-.4-1.2c-.4-1.2.5-2.4 1.8-2.4H17a4 4 0 0 0 4-4c0-4.7-4-8.5-9-8.5Z" />
+    <circle cx="7.5" cy="11" r="1" />
+    <circle cx="10" cy="7" r="1" />
+    <circle cx="15" cy="7.5" r="1" />
+  </svg>
+</button>
+
+@if (abierto()) {
+  <div class="menu" id="menu-apariencia" role="group" aria-label="Apariencia">
+    <fieldset>
+      <legend>Estilo</legend>
+      @for (opcion of estilos; track opcion.valor) {
+        <label>
+          <input
+            type="radio"
+            name="apariencia-estilo"
+            [value]="opcion.valor"
+            [checked]="estilo() === opcion.valor"
+            (change)="estiloElegido.emit(opcion.valor)"
+          />
+          {{ opcion.nombre }}
+        </label>
+      }
+    </fieldset>
+
+    <fieldset>
+      <legend>Modo</legend>
+      @for (opcion of modos; track opcion.valor) {
+        <label>
+          <input
+            type="radio"
+            name="apariencia-modo"
+            [value]="opcion.valor"
+            [checked]="modo() === opcion.valor"
+            (change)="modoElegido.emit(opcion.valor)"
+          />
+          {{ opcion.nombre }}
+        </label>
+      }
+    </fieldset>
+  </div>
+}

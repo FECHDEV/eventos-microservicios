@@ -1,0 +1,202 @@
+// Los campos, los avisos y el botón secundario vienen de _lista.scss; acá
+// quedan el tipo, los filtros en fila y el encabezado del reporte. Ancho
+// completo: las tablas lo necesitan
+@use '../../../styles/lista';
+
+:host {
+	display: flex;
+	flex-direction: column;
+	gap: var(--sarao-espacio-6);
+}
+
+.filtros {
+	display: flex;
+	flex-direction: column;
+	gap: var(--sarao-espacio-4);
+}
+
+.tipos {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--sarao-espacio-2);
+	margin: 0;
+	padding: 0;
+	border: none;
+}
+
+legend {
+	margin-bottom: var(--sarao-espacio-2);
+	font-size: 13px;
+	font-weight: 600;
+}
+
+.tipo {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--sarao-espacio-2);
+	min-height: 44px;
+	padding: var(--sarao-espacio-2) var(--sarao-espacio-4);
+	border: 1px solid var(--sarao-borde-control);
+	border-radius: var(--sarao-radio-control);
+	font-size: 14px;
+	font-weight: 600;
+	cursor: pointer;
+	transition: background-color var(--sarao-transicion), border-color var(--sarao-transicion);
+}
+
+.tipo:hover {
+	background: var(--sarao-superficie-alta);
+}
+
+// El radio queda adentro del botón: el foco se ve en todo el botón
+.tipo:has(input:focus-visible) {
+	outline: 2px solid var(--sarao-ambar);
+	outline-offset: 2px;
+}
+
+.tipo:has(input:checked) {
+	border-color: var(--sarao-ambar);
+	background: var(--sarao-superficie);
+}
+
+.tipo input {
+	accent-color: var(--sarao-ambar);
+	width: auto;
+	min-height: 0;
+	margin: 0;
+}
+
+// Los filtros en fila; en el celular, apilados
+.campos {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+	align-items: start;
+	gap: var(--sarao-espacio-3);
+}
+
+select:disabled {
+	opacity: 0.6;
+	cursor: default;
+}
+
+input[aria-invalid='true'],
+select[aria-invalid='true'] {
+	border-color: var(--sarao-error);
+	border-width: 2px;
+}
+
+.error {
+	margin: 0;
+	color: var(--sarao-error);
+	font-size: 12.5px;
+	font-weight: 500;
+}
+
+.ayuda {
+	margin: 0;
+	color: var(--sarao-texto-suave);
+	font-size: 12.5px;
+}
+
+.acciones {
+	display: flex;
+	gap: var(--sarao-espacio-2);
+}
+
+.principal {
+	font: inherit;
+	font-size: 14px;
+	font-weight: 600;
+	min-height: 44px;
+	padding: var(--sarao-espacio-2) var(--sarao-espacio-4);
+	border: 1px solid transparent;
+	border-radius: var(--sarao-radio-control);
+	background: var(--sarao-ambar);
+	color: var(--sarao-sobre-ambar);
+	cursor: pointer;
+	transition: background-color var(--sarao-transicion);
+}
+
+.principal:hover:not([disabled]) {
+	background: var(--sarao-ambar-fuerte);
+}
+
+.principal[disabled] {
+	opacity: 0.6;
+	cursor: default;
+}
+
+// FA-02 no es un error: se avisa en tono neutro
+.aviso.informativo {
+	border-color: var(--sarao-borde-control);
+	background: var(--sarao-superficie);
+	color: var(--sarao-texto);
+}
+
+.reporte {
+	display: flex;
+	flex-direction: column;
+	gap: var(--sarao-espacio-4);
+}
+
+.encabezado {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-end;
+	justify-content: space-between;
+	gap: var(--sarao-espacio-3);
+}
+
+h2 {
+	margin: 0;
+	font-size: 22px;
+	text-wrap: balance;
+}
+
+.bajada,
+.cuenta {
+	margin: var(--sarao-espacio-1) 0 0;
+	color: var(--sarao-texto-suave);
+	font-size: 14px;
+}
+
+.descargas {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--sarao-espacio-2);
+}
+
+// CU-14: el envío es una sección aparte, cerrada por defecto: solo se usa cuando
+// se quiere dejar el reporte en el correo de otra persona
+.correo {
+	border: 1px solid var(--sarao-borde-control);
+	border-radius: var(--sarao-radio);
+	background: var(--sarao-superficie);
+}
+
+.correo > summary {
+	padding: var(--sarao-espacio-3) var(--sarao-espacio-4);
+	cursor: pointer;
+	font-weight: 600;
+}
+
+.correo > summary:focus-visible {
+	outline: 2px solid var(--sarao-ambar);
+	outline-offset: 2px;
+}
+
+.envio {
+	display: flex;
+	flex-direction: column;
+	gap: var(--sarao-espacio-3);
+	padding: 0 var(--sarao-espacio-4) var(--sarao-espacio-4);
+}
+
+.envio .acciones {
+	justify-content: flex-start;
+}
+
+// El mensaje nombra la dirección que falla, que puede ser larga y sin espacios
+.envio .error {
+	overflow-wrap: anywhere;
+}

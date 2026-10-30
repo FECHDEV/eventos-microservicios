@@ -1,0 +1,302 @@
+// El margen lateral crece con la pantalla: 16 px en el celular, 48 px en una
+// pantalla ancha. El encabezado y el contenido comparten ancho y margen, así
+// la marca queda alineada con el título de cada pantalla
+$margen-lateral: clamp(var(--sarao-espacio-4), 5vw, var(--sarao-espacio-12));
+
+:host {
+	display: flex;
+	flex-direction: column;
+	min-height: 100%;
+}
+
+header {
+	border-bottom: 1px solid var(--sarao-borde);
+}
+
+.barra,
+.busqueda,
+main,
+footer {
+	width: 100%;
+	max-width: var(--sarao-ancho-maximo);
+	margin-inline: auto;
+	padding-inline: $margen-lateral;
+}
+
+.barra {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	column-gap: var(--sarao-espacio-4);
+	padding-block: var(--sarao-espacio-2);
+}
+
+main {
+	flex: 1;
+	padding-block: var(--sarao-espacio-8);
+}
+
+// El contador de visitas (decisiones.md → «Contador de visitas por página»).
+// Con alto fijo (el relleno, una línea y el borde), así el pie no salta cuando
+// llega el total
+footer {
+	min-height: calc(var(--sarao-espacio-12) + 1lh + 1px);
+	padding-block: var(--sarao-espacio-6);
+	border-top: 1px solid var(--sarao-borde);
+	color: var(--sarao-texto-suave);
+	font-size: 13px;
+	text-align: center;
+}
+
+footer p {
+	margin: 0;
+}
+
+// La marca y la navegación, juntas a la izquierda
+.principal {
+	min-width: 0;
+	display: flex;
+	align-items: center;
+	gap: var(--sarao-espacio-6);
+}
+
+.marca {
+	flex: none;
+	display: flex;
+	align-items: center;
+	gap: var(--sarao-espacio-2);
+	color: var(--sarao-texto);
+	text-decoration: none;
+	font-family: var(--sarao-familia-titulos);
+	font-weight: 700;
+	font-size: 18px;
+}
+
+.marca:hover .nombre {
+	color: var(--sarao-ambar);
+}
+
+.logotipo {
+	display: grid;
+	place-items: center;
+	flex: none;
+	width: 30px;
+	height: 30px;
+	border-radius: var(--sarao-radio-control);
+	background: var(--sarao-ambar);
+	color: var(--sarao-sobre-ambar);
+	font-size: 17px;
+}
+
+.icono {
+	flex: none;
+	width: 18px;
+	height: 18px;
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 2;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+
+nav ul {
+	display: flex;
+	gap: var(--sarao-espacio-1);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+// El módulo actual se distingue por la raya de abajo, no solo por el color
+nav a,
+.perfil {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--sarao-espacio-2);
+	min-height: 44px;
+	padding-inline: var(--sarao-espacio-2);
+	border-bottom: 2px solid transparent;
+	color: var(--sarao-texto-suave);
+	font-size: 14px;
+	font-weight: 600;
+	text-decoration: none;
+	white-space: nowrap;
+	transition:
+		color var(--sarao-transicion),
+		border-color var(--sarao-transicion);
+}
+
+nav a:hover,
+.perfil:hover {
+	color: var(--sarao-texto);
+}
+
+nav a.actual,
+.perfil.actual {
+	border-bottom-color: var(--sarao-ambar);
+	color: var(--sarao-texto);
+}
+
+// El buscador (decisiones.md → «Búsqueda en el encabezado») va en su propia
+// fila: con los seis módulos del administrador no entra junto al menú
+.busqueda {
+	padding-bottom: var(--sarao-espacio-3);
+}
+
+.buscador {
+	max-width: 420px;
+	display: flex;
+	align-items: center;
+	border: 1px solid var(--sarao-borde-control);
+	border-radius: var(--sarao-radio-control);
+	background: var(--sarao-superficie);
+}
+
+// El contorno de foco rodea el campo y la lupa juntos, como el de styles.scss
+.buscador:has(input:focus-visible) {
+	outline: 2px solid var(--sarao-ambar);
+	outline-offset: 2px;
+}
+
+.buscador input {
+	flex: 1;
+	min-width: 0;
+	min-height: 44px;
+	padding-inline: var(--sarao-espacio-3);
+	border: 0;
+	background: transparent;
+	color: var(--sarao-texto);
+	font: inherit;
+	font-size: 14px;
+}
+
+.buscador input:focus-visible {
+	outline: none;
+}
+
+.buscador input::placeholder {
+	color: var(--sarao-texto-suave);
+}
+
+.buscador button {
+	flex: none;
+	display: grid;
+	place-items: center;
+	width: 44px;
+	height: 44px;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	color: var(--sarao-texto-suave);
+	cursor: pointer;
+}
+
+.buscador button:hover {
+	color: var(--sarao-texto);
+}
+
+.sesion {
+	// Sin min-width: 0 un nombre largo no se achica y empuja el botón
+	min-width: 0;
+	display: flex;
+	align-items: center;
+	gap: var(--sarao-espacio-3);
+}
+
+.perfil {
+	min-width: 0;
+}
+
+// Un nombre largo se recorta; el completo queda en el title y en el nombre
+// accesible del enlace
+.usuario {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-weight: 500;
+}
+
+.salir {
+	flex: none;
+	font: inherit;
+	font-size: 13px;
+	font-weight: 600;
+	min-height: 44px;
+	padding-inline: var(--sarao-espacio-3);
+	border: 1px solid var(--sarao-borde-control);
+	border-radius: var(--sarao-radio-control);
+	background: transparent;
+	color: var(--sarao-texto);
+	cursor: pointer;
+	transition:
+		border-color var(--sarao-transicion),
+		background-color var(--sarao-transicion);
+}
+
+.salir:hover {
+	border-color: var(--sarao-texto-suave);
+	background: var(--sarao-superficie-alta);
+}
+
+// Sin sesión: entrar es un enlace discreto; crear cuenta, la acción principal
+.entrar,
+.crear-cuenta {
+	display: inline-flex;
+	align-items: center;
+	min-height: 44px;
+	font-size: 14px;
+	font-weight: 600;
+	text-decoration: none;
+	white-space: nowrap;
+}
+
+.entrar {
+	padding-inline: var(--sarao-espacio-2);
+	color: var(--sarao-texto);
+}
+
+.entrar:hover {
+	color: var(--sarao-ambar);
+}
+
+.crear-cuenta {
+	padding-inline: var(--sarao-espacio-4);
+	border-radius: var(--sarao-radio-control);
+	background: var(--sarao-ambar);
+	color: var(--sarao-sobre-ambar);
+	transition: background-color var(--sarao-transicion);
+}
+
+.crear-cuenta:hover {
+	background: var(--sarao-ambar-fuerte);
+}
+
+// En el celular la navegación baja a una segunda fila, que se desplaza de
+// costado si no entra, y del perfil queda el ícono
+@media (max-width: 640px) {
+	.principal {
+		display: contents;
+	}
+
+	.buscador {
+		max-width: none;
+	}
+
+	nav {
+		order: 3;
+		width: 100%;
+		overflow-x: auto;
+		overscroll-behavior-x: contain;
+	}
+
+	// Con desplazamiento el contorno de foco se recortaría: se le deja lugar
+	nav ul {
+		padding: var(--sarao-espacio-1);
+	}
+
+	.usuario {
+		display: none;
+	}
+}

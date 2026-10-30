@@ -1,0 +1,181 @@
+// El campo, los avisos y el botón vienen de _formulario.scss; acá quedan los
+// eventos para elegir, el evento elegido y el resultado, que se lee de lejos
+@use '../../../styles/formulario';
+@use '../../../styles/pagina';
+
+:host {
+	@include pagina.pagina-angosta(var(--sarao-ancho-formulario));
+	display: flex;
+	flex-direction: column;
+	gap: var(--sarao-espacio-4);
+}
+
+p {
+	margin: 0;
+}
+
+// Sin aviso, la región sale del flujo para no sumar un hueco, pero no se oculta:
+// con display: none el lector de pantalla podría no anunciar el aviso
+.avisos:not(:has(.aviso)) {
+	position: absolute;
+}
+
+.vacio,
+.cargando {
+	color: var(--sarao-texto-suave);
+}
+
+.tarjeta-error {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: var(--sarao-espacio-3);
+}
+
+.numero {
+	font-variant-numeric: tabular-nums;
+}
+
+.nombre {
+	margin: 0;
+	font-size: 17px;
+	font-weight: 700;
+	overflow-wrap: anywhere;
+}
+
+.cuando {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--sarao-espacio-1) var(--sarao-espacio-3);
+	font-size: 14px;
+}
+
+.lugar {
+	color: var(--sarao-texto-suave);
+	font-size: 14px;
+	overflow-wrap: anywhere;
+}
+
+.ayuda {
+	color: var(--sarao-texto-suave);
+	font-size: 12.5px;
+}
+
+// --- Elegir el evento
+.eventos {
+	display: flex;
+	flex-direction: column;
+	gap: var(--sarao-espacio-3);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.evento-a-elegir {
+	display: flex;
+	flex-direction: column;
+	gap: var(--sarao-espacio-1);
+	padding: var(--sarao-espacio-4);
+	border: 1px solid var(--sarao-borde);
+	border-radius: var(--sarao-radio);
+	background: var(--sarao-superficie);
+	color: var(--sarao-texto);
+	text-decoration: none;
+	transition: border-color var(--sarao-transicion), background-color var(--sarao-transicion);
+}
+
+.evento-a-elegir:hover {
+	border-color: var(--sarao-ambar);
+	background: var(--sarao-superficie-alta);
+}
+
+// --- El evento elegido
+.evento {
+	display: flex;
+	flex-direction: column;
+	gap: var(--sarao-espacio-1);
+}
+
+.cambiar {
+	align-self: flex-start;
+	margin-top: var(--sarao-espacio-1);
+	color: var(--sarao-ambar);
+	font-size: 14px;
+	font-weight: 600;
+	text-underline-offset: 2px;
+}
+
+.cambiar:hover {
+	color: var(--sarao-ambar-fuerte);
+}
+
+// --- El resultado: grande, con color y con símbolo, para no depender del color
+.zona-resultado:not(:has(.resultado)) {
+	position: absolute;
+}
+
+.resultado {
+	display: grid;
+	grid-template-columns: auto 1fr;
+	align-items: center;
+	column-gap: var(--sarao-espacio-3);
+	padding: var(--sarao-espacio-4);
+	border: 2px solid currentColor;
+	border-radius: var(--sarao-radio);
+	animation: aparecer 240ms ease-out;
+}
+
+.resultado.valida {
+	background: var(--sarao-exito-fondo);
+	color: var(--sarao-exito);
+}
+
+.resultado.rechazo {
+	background: var(--sarao-error-fondo);
+	color: var(--sarao-error);
+}
+
+.icono {
+	grid-row: span 2;
+	font-size: 36px;
+	font-weight: 700;
+	line-height: 1;
+}
+
+.texto {
+	font-size: 22px;
+	font-weight: 700;
+	text-wrap: balance;
+}
+
+.tipo {
+	grid-column: 2;
+	color: var(--sarao-texto);
+	font-size: 16px;
+	font-weight: 600;
+	overflow-wrap: anywhere;
+}
+
+@keyframes aparecer {
+	from {
+		opacity: 0.4;
+		transform: scale(0.97);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.resultado {
+		animation: none;
+	}
+}
+
+// --- El código a mano
+.fila {
+	display: flex;
+	gap: var(--sarao-espacio-2);
+}
+
+.fila input {
+	flex: 1;
+	min-width: 0;
+}

@@ -1,0 +1,154 @@
+@if (soloLectura()) {
+  <p class="aviso-neutro">Este evento está cancelado: sus tipos de entrada ya no se pueden modificar.</p>
+}
+
+<!-- Siempre presentes: un lector de pantalla anuncia lo que aparece dentro,
+     pero no una región que se crea junto con su texto -->
+<div class="avisos">
+  <div role="alert">
+    @if (aviso()) {
+      <p class="aviso">{{ aviso() }}</p>
+    }
+  </div>
+  <div role="status">
+    @if (exito()) {
+      <p class="aviso exito">{{ exito() }}</p>
+    }
+  </div>
+</div>
+
+@if (tipos(); as tipos) {
+  @if (tipos.length === 0) {
+    <p class="vacio" role="status">
+      Este evento todavía no tiene tipos de entrada. Agrega al menos uno: sin tipos no se puede activar.
+    </p>
+  } @else {
+    <div class="contenedor-tabla">
+      <table>
+        <caption class="solo-lectores">Tipos de entrada del evento</caption>
+        <thead>
+          <tr>
+            <th scope="col">Tipo</th>
+            <th scope="col">Precio</th>
+            <th scope="col">Total</th>
+            <th scope="col">Disponibles</th>
+            <th scope="col">Vendidas o reservadas</th>
+            @if (!soloLectura()) {
+              <th scope="col"><span class="solo-lectores">Acciones</span></th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (tipo of tipos; track tipo.idTipoEntrada) {
+            <tr [class.elegida]="editando()?.idTipoEntrada === tipo.idTipoEntrada">
+              <th scope="row" data-etiqueta="Tipo">{{ tipo.nombre }}</th>
+              <td data-etiqueta="Precio" class="numero">{{ precio(tipo.precio) }}</td>
+              <td data-etiqueta="Total" class="numero">{{ cantidad(tipo.cantidadTotal) }}</td>
+              <td data-etiqueta="Disponibles" class="numero">{{ cantidad(tipo.cantidadDisponible) }}</td>
+              <td data-etiqueta="Vendidas o reservadas" class="numero">{{ cantidad(vendidas(tipo)) }}</td>
+              @if (!soloLectura()) {
+                <td data-etiqueta="Acciones">
+                  <button
+                    type="button"
+                    class="secundario"
+                    [attr.aria-label]="'Editar ' + tipo.nombre"
+                    [disabled]="guardando()"
+                    (click)="editar(tipo)"
+                  >
+                    Editar
+                  </button>
+                </td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+} @else if (errorDeCarga()) {
+  <div class="tarjeta-error">
+    <p class="aviso" role="alert">{{ errorDeCarga() }}</p>
+    <button type="button" class="secundario" (click)="recurso.reload()">Reintentar</button>
+  </div>
+} @else {
+  <p class="cargando" role="status">Cargando los tipos de entrada…</p>
+}
+
+@if (!soloLectura()) {
+  <section class="seccion-formulario" aria-labelledby="titulo-formulario">
+    <h2 id="titulo-formulario">
+      {{ editando() ? 'Editar ' + editando()!.nombre : 'Agregar tipo de entrada' }}
+    </h2>
+
+    <form (submit)="guardar($event)" novalidate>
+      <div class="campos">
+        <div class="campo">
+          @let errorNombre = mensaje('nombre');
+          <label for="nombre">Nombre</label>
+          <input
+            id="nombre"
+            type="text"
+            autocomplete="off"
+            placeholder="General, VIP, Estudiante…"
+            [formField]="formulario.nombre"
+            [attr.aria-invalid]="errorNombre ? 'true' : null"
+            [attr.aria-describedby]="errorNombre ? 'error-nombre' : null"
+          />
+          @if (errorNombre) {
+            <p class="error" id="error-nombre">{{ errorNombre }}</p>
+          }
+        </div>
+
+        <div class="campo">
+          @let errorPrecio = mensaje('precio');
+          <label for="precio">Precio (Bs)</label>
+          <input
+            id="precio"
+            type="text"
+            inputmode="decimal"
+            autocomplete="off"
+            placeholder="50,00…"
+            [formField]="formulario.precio"
+            [attr.aria-invalid]="errorPrecio ? 'true' : null"
+            [attr.aria-describedby]="errorPrecio ? 'error-precio' : null"
+          />
+          @if (errorPrecio) {
+            <p class="error" id="error-precio">{{ errorPrecio }}</p>
+          }
+        </div>
+
+        <div class="campo">
+          @let errorCantidad = mensaje('cantidadTotal');
+          <label for="cantidadTotal">Cantidad total</label>
+          <input
+            id="cantidadTotal"
+            type="text"
+            inputmode="numeric"
+            autocomplete="off"
+            [formField]="formulario.cantidadTotal"
+            [attr.aria-invalid]="errorCantidad ? 'true' : null"
+            [attr.aria-describedby]="errorCantidad ? 'error-cantidadTotal' : editando() ? 'ayuda-cantidadTotal' : null"
+          />
+          @if (errorCantidad) {
+            <p class="error" id="error-cantidadTotal">{{ errorCantidad }}</p>
+          } @else if (editando(); as tipo) {
+            <p class="ayuda" id="ayuda-cantidadTotal">
+              Vendidas o reservadas: {{ cantidad(vendidas(tipo)) }}. No puede ser menor.
+            </p>
+          }
+        </div>
+      </div>
+
+      <div class="acciones">
+        @if (editando()) {
+          <button type="button" class="secundario" [disabled]="guardando()" (click)="cancelarEdicion()">
+            Cancelar edición
+          </button>
+        }
+        <button type="submit" class="boton" [disabled]="guardando()">
+          {{ guardando() ? 'Guardando…' : editando() ? 'Guardar cambios' : 'Agregar' }}
+        </button>
+      </div>
+    </form>
+  </section>
+}

@@ -1,0 +1,131 @@
+@if (evento(); as evento) {
+  <div class="encabezado">
+    <a class="volver" routerLink="/devoluciones">Volver a devoluciones</a>
+    <h1>{{ evento.nombre }}</h1>
+    <p class="cuando">
+      <span class="numero">{{ fecha(evento.fecha) }}</span>
+      <span class="numero">{{ hora(evento.horaInicio) }}–{{ hora(evento.horaFin) }}</span>
+      @if (terminaAlDiaSiguiente(evento.horaInicio, evento.horaFin)) {
+        <span class="ayuda">termina al día siguiente</span>
+      }
+      <span class="lugar">{{ evento.lugar }}</span>
+    </p>
+  </div>
+
+  <div class="avisos">
+    <div role="status">
+      @if (exito()) {
+        <p class="aviso exito">{{ exito() }}</p>
+      }
+    </div>
+    <div role="alert">
+      @if (aviso()) {
+        <p class="aviso">{{ aviso() }}</p>
+      }
+    </div>
+  </div>
+
+  <section aria-labelledby="titulo-pendientes">
+    <h2 id="titulo-pendientes" tabindex="-1">Pendientes de devolución</h2>
+    @for (compra of evento.pendientes; track compra.idReserva) {
+      <article class="compra" [attr.aria-labelledby]="'pendiente-' + compra.idReserva">
+        <ng-container
+          [ngTemplateOutlet]="datosDeLaCompra"
+          [ngTemplateOutletContext]="{ $implicit: compra, id: 'pendiente-' + compra.idReserva }"
+        />
+        <ul class="entradas">
+          @for (entrada of compra.entradas; track entrada.idEntrada) {
+            <li>
+              <span>Entrada {{ entrada.numero }}</span>
+              <button
+                type="button"
+                class="secundario"
+                [disabled]="bloqueado()"
+                [attr.aria-label]="'Registrar devolución de la entrada ' + entrada.numero + ' de ' + compra.cliente"
+                (click)="registrarEntrada(compra, entrada)"
+              >
+                Registrar devolución
+              </button>
+            </li>
+          }
+        </ul>
+        <button
+          type="button"
+          class="principal"
+          [disabled]="bloqueado()"
+          [attr.aria-label]="
+            'Registrar devolución de la compra de ' + compra.cliente + ' (' + compra.entradas.length + ' entradas)'
+          "
+          (click)="registrarCompra(compra)"
+        >
+          Registrar devolución de la compra ({{ compra.entradas.length }})
+        </button>
+      </article>
+    } @empty {
+      <div class="vacio" role="status">
+        <p>No hay entradas pendientes de devolución en este evento.</p>
+        <a routerLink="/devoluciones">Volver a devoluciones</a>
+      </div>
+    }
+  </section>
+
+  @if (evento.devueltas.length > 0) {
+    <section aria-labelledby="titulo-devueltas">
+      <h2 id="titulo-devueltas">Devueltas</h2>
+      @for (compra of evento.devueltas; track compra.idReserva) {
+        <article class="compra devuelta" [attr.aria-labelledby]="'devuelta-' + compra.idReserva">
+          <ng-container
+            [ngTemplateOutlet]="datosDeLaCompra"
+            [ngTemplateOutletContext]="{ $implicit: compra, id: 'devuelta-' + compra.idReserva }"
+          />
+          <p class="devueltas">
+            @for (entrada of compra.entradas; track entrada.idEntrada; let ultima = $last) {
+              <span>Entrada {{ entrada.numero }}</span>
+              @if (!ultima) {
+                ·
+              }
+            }
+          </p>
+        </article>
+      }
+    </section>
+  }
+} @else if (noEncontrado()) {
+  <div class="vacio" role="status">
+    <p>No encontramos ese evento.</p>
+    <a routerLink="/devoluciones">Volver a devoluciones</a>
+  </div>
+} @else if (noCancelado()) {
+  <div class="tarjeta-error">
+    <p class="aviso" role="alert">{{ errorDeCarga() }}</p>
+    <a routerLink="/devoluciones">Volver a devoluciones</a>
+  </div>
+} @else if (errorDeCarga()) {
+  <div class="tarjeta-error">
+    <p class="aviso" role="alert">{{ errorDeCarga() }}</p>
+    <button type="button" class="secundario" (click)="recurso.reload()">Reintentar</button>
+  </div>
+} @else {
+  <p class="cargando" role="status">Cargando las devoluciones…</p>
+}
+
+<!-- El Cliente y la compra, iguales en pendientes y devueltas -->
+<ng-template #datosDeLaCompra let-compra let-id="id">
+  <h3 [id]="id">{{ compra.cliente }}</h3>
+  <p class="contacto">
+    <a [href]="'mailto:' + compra.correo">{{ compra.correo }}</a>
+    @if (compra.telefono) {
+      <a class="telefono" [href]="'tel:' + compra.telefono">{{ compra.telefono }}</a>
+    }
+  </p>
+  <p class="compra-detalle">
+    <span>{{ compra.tipoEntrada }} × {{ compra.cantidad }}</span>
+    <span class="numero">{{ precio(compra.monto) }}</span>
+    <span class="numero">{{ precio(compra.precioUnitario) }} por entrada</span>
+    @if (compra.fechaPago) {
+      <span class="numero">Pagado el {{ fecha(compra.fechaPago) }}</span>
+    }
+  </p>
+</ng-template>
+
+<app-dialogo-confirmacion />

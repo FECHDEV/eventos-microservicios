@@ -1,0 +1,105 @@
+// La tarjeta, los campos, los avisos y el botón vienen de _formulario.scss; acá
+// queda lo propio de la compra: el evento, lo elegido y el total
+@use '../../../../styles/formulario';
+@use '../../../../styles/pagina';
+
+:host {
+	@include pagina.pagina-angosta(var(--sarao-ancho-formulario));
+	display: flex;
+	flex-direction: column;
+	gap: var(--sarao-espacio-4);
+}
+
+.volver {
+	align-self: flex-start;
+	color: var(--sarao-texto-suave);
+	font-size: 14px;
+	text-decoration: none;
+}
+
+.volver:hover {
+	color: var(--sarao-ambar);
+}
+
+.evento {
+	display: flex;
+	flex-direction: column;
+	gap: var(--sarao-espacio-1);
+}
+
+.evento p {
+	margin: 0;
+}
+
+.nombre {
+	font-size: 17px;
+	font-weight: 700;
+	overflow-wrap: anywhere;
+}
+
+.cuando {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--sarao-espacio-1) var(--sarao-espacio-3);
+	font-size: 14px;
+}
+
+.lugar {
+	color: var(--sarao-texto-suave);
+	font-size: 14px;
+	overflow-wrap: anywhere;
+}
+
+.ayuda {
+	color: var(--sarao-texto-suave);
+	font-size: 12.5px;
+}
+
+.elegido {
+	display: flex;
+	flex-direction: column;
+	gap: var(--sarao-espacio-2);
+	margin: 0;
+	padding: var(--sarao-espacio-3) 0;
+	border-block: 1px solid var(--sarao-borde);
+}
+
+.elegido div {
+	display: flex;
+	justify-content: space-between;
+	gap: var(--sarao-espacio-3);
+}
+
+dt {
+	color: var(--sarao-texto-suave);
+	font-size: 14px;
+}
+
+dd {
+	margin: 0;
+	font-weight: 600;
+	text-align: right;
+}
+
+.numero {
+	font-variant-numeric: tabular-nums;
+}
+
+// La región existe siempre para que se anuncie; vacía no ocupa lugar de más
+.total {
+	min-height: 1.5em;
+	margin: 0;
+	font-size: 16px;
+}
+
+.vacio {
+	align-items: flex-start;
+}
+
+.vacio p {
+	margin: 0;
+}
+
+.cargando {
+	color: var(--sarao-texto-suave);
+}

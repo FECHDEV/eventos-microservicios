@@ -1,0 +1,96 @@
+<a class="salto-al-contenido" href="#contenido">Saltar al contenido</a>
+
+<header>
+  <div class="barra">
+    <div class="principal">
+      <a class="marca" routerLink="/" [attr.aria-label]="marca.nombre + ', ir al inicio'">
+        <span class="logotipo" aria-hidden="true">{{ marca.inicial }}</span>
+        <span class="nombre" translate="no">{{ marca.nombre }}</span>
+      </a>
+
+      <nav aria-label="Módulos">
+        <ul>
+          <li>
+            <a
+              routerLink="/"
+              routerLinkActive="actual"
+              [routerLinkActiveOptions]="{ exact: true }"
+              ariaCurrentWhenActive="page"
+            >
+              <svg class="icono" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M3 10.5 12 3l9 7.5" />
+                <path d="M5.5 9v11h13V9" />
+                <path d="M10 20v-6h4v6" />
+              </svg>
+              Inicio
+            </a>
+          </li>
+          @for (modulo of modulos(); track modulo.ruta) {
+            <li>
+              <a [routerLink]="modulo.ruta" routerLinkActive="actual" ariaCurrentWhenActive="page">
+                {{ modulo.nombre }}
+              </a>
+            </li>
+          }
+        </ul>
+      </nav>
+    </div>
+
+    <div class="sesion">
+      <app-menu-apariencia
+        [estilo]="estilo()"
+        [modo]="modo()"
+        (estiloElegido)="elegirEstilo($event)"
+        (modoElegido)="elegirModo($event)"
+      />
+
+      @if (autenticado()) {
+        <a
+          class="perfil"
+          routerLink="/mis-datos"
+          routerLinkActive="actual"
+          ariaCurrentWhenActive="page"
+          [attr.aria-label]="'Mis datos de ' + nombre()"
+        >
+          <svg class="icono" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="8" r="4" />
+            <path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7" />
+          </svg>
+          <span class="usuario" [title]="nombre()">{{ nombre() }}</span>
+        </a>
+        <button type="button" class="salir" (click)="salir()">Cerrar sesión</button>
+      } @else {
+        <a class="entrar" routerLink="/inicio-sesion">Iniciar sesión</a>
+        <a class="crear-cuenta" routerLink="/registro">Crear cuenta</a>
+      }
+    </div>
+  </div>
+
+  <div class="busqueda">
+    <form class="buscador" role="search" aria-label="Buscar eventos" (submit)="buscar($event)">
+      <input
+        type="search"
+        autocomplete="off"
+        placeholder="Buscar eventos…"
+        aria-label="Buscar eventos"
+        [formField]="buscador.texto"
+      />
+      <button type="submit" aria-label="Buscar">
+        <svg class="icono" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="11" cy="11" r="7" />
+          <path d="m20 20-4-4" />
+        </svg>
+      </button>
+    </form>
+  </div>
+</header>
+
+<main id="contenido" tabindex="-1">
+  <router-outlet />
+</main>
+
+<footer>
+  @if (visitasDeLaPagina(); as total) {
+    <p>Visitas a esta página: {{ cantidad(total) }}</p>
+  }
+</footer>

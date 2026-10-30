@@ -1,0 +1,140 @@
+// Los campos, los errores, los avisos y el botón principal vienen de
+// _formulario.scss; acá quedan la disposición en filas, el área de texto y la
+// sección de la imagen
+@use '../../../../styles/formulario';
+@use '../../../../styles/pagina';
+
+// Centrada tanto en el alta como en la pestaña de la ficha
+:host {
+	@include pagina.pagina-angosta(720px);
+	display: flex;
+	flex-direction: column;
+	gap: var(--sarao-espacio-4);
+}
+
+.volver {
+	align-self: flex-start;
+	color: var(--sarao-texto-suave);
+	font-size: 14px;
+	text-decoration: none;
+}
+
+.volver:hover {
+	color: var(--sarao-ambar);
+}
+
+h1 {
+	font-size: 26px;
+}
+
+h2 {
+	font-size: 18px;
+}
+
+.ayuda {
+	margin: 0;
+	color: var(--sarao-texto-suave);
+	font-size: 12.5px;
+}
+
+// Explica por qué hay campos bloqueados: informa, no es un error
+.aviso-neutro {
+	margin: 0;
+	padding: var(--sarao-espacio-3);
+	border: 1px solid var(--sarao-borde);
+	border-left: 4px solid var(--sarao-ambar);
+	border-radius: var(--sarao-radio-control);
+	background: var(--sarao-superficie);
+	font-size: 14px;
+}
+
+// Sin avisos, las regiones salen del flujo para no sumar un hueco, pero no se
+// ocultan: con display: none el lector de pantalla podría no anunciarlos
+.avisos {
+	display: flex;
+	flex-direction: column;
+	gap: var(--sarao-espacio-2);
+}
+
+.avisos:not(:has(.aviso)) {
+	position: absolute;
+}
+
+// Fecha y horas, y edad y límite, van lado a lado; en el celular, apilados
+.fila {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+	gap: var(--sarao-espacio-4);
+}
+
+textarea {
+	font: inherit;
+	font-size: 14px;
+	padding: var(--sarao-espacio-3);
+	border: 1px solid var(--sarao-borde-control);
+	border-radius: var(--sarao-radio-control);
+	background: var(--sarao-fondo);
+	color: var(--sarao-texto);
+	width: 100%;
+	resize: vertical;
+}
+
+textarea[aria-invalid='true'] {
+	border-color: var(--sarao-error);
+	border-width: 2px;
+}
+
+input:disabled,
+textarea:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+}
+
+.acciones {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: flex-end;
+	gap: var(--sarao-espacio-3);
+}
+
+.seccion-imagen {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: var(--sarao-espacio-3);
+	padding-top: var(--sarao-espacio-6);
+	border-top: 1px solid var(--sarao-borde);
+}
+
+.vista-previa {
+	width: min(100%, 360px);
+	aspect-ratio: 16 / 9;
+	border-radius: var(--sarao-radio);
+}
+
+input[type='file'] {
+	padding: var(--sarao-espacio-2);
+}
+
+.secundario {
+	font: inherit;
+	font-size: 14px;
+	font-weight: 600;
+	min-height: 44px;
+	padding: var(--sarao-espacio-2) var(--sarao-espacio-4);
+	border: 1px solid var(--sarao-borde-control);
+	border-radius: var(--sarao-radio-control);
+	background: transparent;
+	color: var(--sarao-texto);
+	cursor: pointer;
+}
+
+.secundario:hover:not([disabled]) {
+	border-color: var(--sarao-texto-suave);
+	background: var(--sarao-superficie-alta);
+}
+
+.secundario[disabled] {
+	opacity: 0.5;
+	cursor: default;
+}
