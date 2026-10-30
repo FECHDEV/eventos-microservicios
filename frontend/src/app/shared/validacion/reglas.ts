@@ -7,9 +7,10 @@ export function bytesUtf8(valor: string): number {
 	return new TextEncoder().encode(valor).length;
 }
 
-// La misma regla de ReglasContrasena en Seguridad, también con DOTALL (flag s):
+// La misma regla de ReglasContrasena en Seguridad, también con DOTALL (flag s).
+// Con la flag u cuenta caracteres como Java, no unidades UTF-16: un emoji es uno.
 // al registrarse, al cambiar y al restablecer la contraseña.
-export const CONTRASENA_SEGURA = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/s;
+export const CONTRASENA_SEGURA = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/su;
 export const AYUDA_CONTRASENA = 'al menos 8 caracteres, con una mayúscula, una minúscula y un número.';
 
 // Fecha del calendario de quien usa la pantalla, como AAAA-MM-DD. Se arma con

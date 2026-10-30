@@ -7,6 +7,7 @@ const MENSAJES: Record<string, string> = {
 	CREDENCIALES_INCORRECTAS: 'El correo o la contraseña no son correctos.',
 	CUENTA_DESACTIVADA: 'Esta cuenta está desactivada. Escríbenos para reactivarla.',
 	INTENTOS_EXCEDIDOS: 'Demasiados intentos fallidos. Espera 15 minutos y vuelve a intentar.',
+	REGISTROS_EXCEDIDOS: 'Se crearon demasiadas cuentas desde esta conexión. Espera una hora y vuelve a intentar.',
 	SOLICITUDES_EXCEDIDAS: 'Ya pediste esto varias veces. Espera unos minutos y vuelve a intentar.',
 	DATOS_INVALIDOS: 'Revisa los datos marcados.',
 	CUENTA_EXISTENTE: 'Ya existe una cuenta con ese correo.',

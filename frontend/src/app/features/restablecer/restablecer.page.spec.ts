@@ -1,3 +1,4 @@
+import { Location } from '@angular/common';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, NavigationExtras, Router, convertToParamMap, provideRouter } from '@angular/router';
 
@@ -116,6 +117,10 @@ describe('RestablecerPage', () => {
 
     expect(autenticacion.llamadas).toEqual([]);
     expect(texto()).toContain('8 caracteres');
+  });
+
+  it('quita el token de la barra de direcciones al entrar', () => {
+    expect(TestBed.inject(Location).path()).not.toContain('token');
   });
 
   it('frena una contraseña de más de 72 bytes', async () => {

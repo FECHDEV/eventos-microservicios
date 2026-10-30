@@ -14,6 +14,10 @@ describe('CONTRASENA_SEGURA', () => {
 		}
 	});
 
+	it('un emoji cuenta como un carácter, como en el backend', () => {
+		expect(CONTRASENA_SEGURA.test('Aa1b😀😀')).toBe(false);
+	});
+
 	it('acepta saltos de línea, como el backend', () => {
 		expect(CONTRASENA_SEGURA.test('Secreta12\nabc')).toBe(true);
 	});

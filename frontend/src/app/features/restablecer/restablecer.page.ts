@@ -1,3 +1,4 @@
+import { Location } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, signal } from '@angular/core';
 import { form, FormField, pattern, required, schema, submit, validate } from '@angular/forms/signals';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -35,6 +36,7 @@ export class RestablecerPage {
 	private readonly router = inject(Router);
 	private readonly ruta = inject(ActivatedRoute);
 	private readonly elemento = inject(ElementRef<HTMLElement>);
+	private readonly ubicacion = inject(Location);
 
 	// El token llega en el enlace del correo y no se muestra nunca: vale tanto
 	// como la contraseña que permite cambiar.
@@ -52,6 +54,8 @@ export class RestablecerPage {
 	protected readonly ayuda = computed(() => !CONTRASENA_SEGURA.test(this.formulario.contrasena().value()));
 
 	constructor() {
+		// Vale tanto como la contraseña: no queda en el historial ni en la barra de direcciones
+		this.ubicacion.replaceState('/restablecer');
 		if (!this.hayToken) {
 			// Mismo mensaje que da un token vencido o ya usado, y del mismo lugar
 			this.errorDelServidor.set({
