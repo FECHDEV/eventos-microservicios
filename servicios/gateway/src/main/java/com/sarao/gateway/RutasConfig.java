@@ -17,11 +17,16 @@ public class RutasConfig {
 	// Solo se enrutan rutas publicas de /api: las de /interno nunca salen por aca
 	@Bean
 	RouterFunction<ServerResponse> rutas(@Value("${eventos.seguridad-url}") String seguridad,
-			IdentidadDeSesion identidad) {
+			@Value("${eventos.venta-url}") String venta, IdentidadDeSesion identidad) {
 		return route("seguridad")
 				.route(path("/api/auth/**", "/api/cuenta/**", "/api/usuarios/**"), http())
 				.before(uri(seguridad))
 				.before(identidad::aplicar)
-				.build();
+				.build()
+				.and(route("eventos-venta")
+						.route(path("/api/eventos/**"), http())
+						.before(uri(venta))
+						.before(identidad::aplicar)
+						.build());
 	}
 }

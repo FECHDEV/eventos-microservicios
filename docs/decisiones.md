@@ -587,6 +587,8 @@ El evento puede tener **una imagen opcional**. Es una columna nueva,
   comprueba que sea JPG, PNG o WebP por su contenido (los primeros bytes), no
   por la extensión ni por el tipo que declara el navegador, y que no pase de
   2 MB.
+- **El gateway no la interpreta:** pasa la subida entera (`spring.servlet.multipart.enabled=false`)
+  y el límite lo aplica Eventos y Venta, que da el aviso `IMAGEN_DEMASIADO_GRANDE`.
 - **Se guarda en una carpeta del servidor**, configurable con
   `EVENTOS_IMAGENES_DIRECTORIO` (un volumen en Docker). El nombre del archivo lo
   genera el sistema; el que trae la persona se descarta. La tabla guarda solo
@@ -722,6 +724,11 @@ evento vuelve a estar activo. La tabla `entrada` nace con CU-06 y CU-07, así qu
 **esa reactivación se implementa al llegar la Venta**, no en CU-12. Lo que CU-12
 sí hace es dejar el evento ACTIVO con su fecha nueva, que es de donde las
 entradas toman su validez (cuelgan del evento a través de su tipo).
+
+En microservicios el orden se conserva (30/10/2026): FA-02 entra con HU-16, y
+hasta entonces la activación informa 0 entradas reactivadas. Liberar las reservas
+vencidas al listar o modificar tipos (CU-11) entra con HU-15, cuando exista
+`Reserva`.
 
 Al implementarla, en su rama propia, se decidió con el usuario (22/09/2026):
 

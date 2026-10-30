@@ -13,7 +13,9 @@ RUN ./mvnw -q -B -DskipTests package && cp target/*.jar /fuente/servicio.jar
 
 FROM eclipse-temurin:21-jre
 ENV TZ=America/La_Paz
-RUN groupadd --system sarao && useradd --system --gid sarao --no-create-home sarao
+# /datos: el volumen de un servicio nace con este dueño (las imágenes de Eventos y Venta)
+RUN groupadd --system sarao && useradd --system --gid sarao --no-create-home sarao \
+	&& mkdir -p /datos/imagenes && chown -R sarao:sarao /datos
 WORKDIR /app
 COPY --from=compilacion /fuente/servicio.jar servicio.jar
 USER sarao

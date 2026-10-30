@@ -32,9 +32,11 @@ class EnrutamientoTest {
 	static void seguridadDePrueba(DynamicPropertyRegistry propiedades) throws IOException {
 		seguridad = HttpServer.create(new InetSocketAddress("localhost", 0), 0);
 		seguridad.createContext("/interno/sesiones", EnrutamientoTest::resolverToken);
+		seguridad.createContext("/api/eventos/1/imagen", EnrutamientoTest::contarBytes);
 		seguridad.createContext("/", EnrutamientoTest::devolverLoRecibido);
 		seguridad.start();
 		propiedades.add("EVENTOS_SEGURIDAD_URL", () -> "http://localhost:" + seguridad.getAddress().getPort());
+		propiedades.add("EVENTOS_VENTA_URL", () -> "http://localhost:" + seguridad.getAddress().getPort());
 	}
 
 	@AfterAll
@@ -53,6 +55,10 @@ class EnrutamientoTest {
 		} else {
 			responder(intercambio, 404, "");
 		}
+	}
+
+	private static void contarBytes(HttpExchange intercambio) throws IOException {
+		responder(intercambio, 200, String.valueOf(intercambio.getRequestBody().readAllBytes().length));
 	}
 
 	private static void devolverLoRecibido(HttpExchange intercambio) throws IOException {
@@ -77,6 +83,25 @@ class EnrutamientoTest {
 
 		assertThat(respuesta.statusCode()).isEqualTo(200);
 		assertThat(respuesta.body()).startsWith("/api/auth/registro|null|null|null|");
+	}
+
+	@Test
+	void losEventosLleganASuServicioConLaIdentidad() throws Exception {
+		assertThat(pedir("/api/eventos/5/activacion", "Authorization", "Bearer valido").body())
+				.startsWith("/api/eventos/5/activacion|7|CLIENTE|clave-de-pruebas|");
+	}
+
+	// HU-10: el aviso de imagen demasiado grande lo da el servicio, así que el gateway no puede cortar antes
+	@Test
+	void unaSubidaGrandePasaEnteraAlServicio() throws Exception {
+		byte[] cuerpo = new byte[5 * 1024 * 1024];
+		try (var cliente = HttpClient.newHttpClient()) {
+			var respuesta = cliente.send(HttpRequest.newBuilder(URI.create("http://localhost:" + puerto + "/api/eventos/1/imagen"))
+					.header("Content-Type", "multipart/form-data; boundary=limite")
+					.POST(HttpRequest.BodyPublishers.ofByteArray(cuerpo)).build(), HttpResponse.BodyHandlers.ofString());
+
+			assertThat(respuesta.body()).isEqualTo(String.valueOf(cuerpo.length));
+		}
 	}
 
 	@Test
