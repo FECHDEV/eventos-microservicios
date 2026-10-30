@@ -1,0 +1,113 @@
+<div class="encabezado">
+  <h1>Eventos</h1>
+  <a class="principal" routerLink="/eventos/nuevo">Nuevo evento</a>
+</div>
+
+<form class="filtros" role="search" aria-label="Filtrar eventos" (submit)="$event.preventDefault()">
+  <div class="campo">
+    <label for="filtro-estado">Estado</label>
+    <select id="filtro-estado" name="estado" (change)="alElegirEstado($any($event.target).value)">
+      <option value="" [selected]="filtros().estado === null">Todos</option>
+      @for (estado of estados; track estado) {
+        <option [value]="estado" [selected]="filtros().estado === estado">{{ nombresDeEstado[estado] }}</option>
+      }
+    </select>
+  </div>
+</form>
+
+@if (pagina(); as pagina) {
+  @if (pagina.contenido.length === 0 && pagina.pagina > 0 && pagina.totalElementos > 0) {
+    <div class="vacio" role="status">
+      <p>Esta página no existe.</p>
+      <button type="button" class="secundario" (click)="irAPagina(0)">Ir a la primera página</button>
+    </div>
+  } @else if (pagina.contenido.length === 0) {
+    <p class="vacio" role="status">
+      {{ filtros().estado === null ? 'Todavía no hay eventos.' : 'No hay eventos en ese estado.' }}
+    </p>
+  } @else {
+    <div class="contenedor-tabla">
+      <table>
+        <caption class="solo-lectores">Eventos registrados</caption>
+        <thead>
+          <tr>
+            <th scope="col"><span class="solo-lectores">Imagen</span></th>
+            <th scope="col">Evento</th>
+            <th scope="col">Fecha</th>
+            <th scope="col">Horario</th>
+            <th scope="col">Lugar</th>
+            <th scope="col">Estado</th>
+            <th scope="col">Venta</th>
+            <th scope="col"><span class="solo-lectores">Acciones</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (evento of pagina.contenido; track evento.idEvento) {
+            <tr>
+              <td class="celda-miniatura">
+                <app-imagen-de-evento
+                  class="miniatura"
+                  [idEvento]="evento.idEvento"
+                  [tieneImagen]="evento.tieneImagen"
+                />
+              </td>
+              <th scope="row" data-etiqueta="Evento">
+                <a [routerLink]="['/eventos', evento.idEvento]">{{ evento.nombre }}</a>
+              </th>
+              <td data-etiqueta="Fecha" class="numero">{{ fecha(evento.fecha) }}</td>
+              <td data-etiqueta="Horario">
+                <span class="horario">
+                  <span class="numero">{{ hora(evento.horaInicio) }}–{{ hora(evento.horaFin) }}</span>
+                  @if (terminaAlDiaSiguiente(evento.horaInicio, evento.horaFin)) {
+                    <span class="ayuda">termina al día siguiente</span>
+                  }
+                </span>
+              </td>
+              <td data-etiqueta="Lugar">{{ evento.lugar }}</td>
+              <td data-etiqueta="Estado">
+                <app-estado-de-evento [estado]="evento.estado" [terminado]="yaTermino(evento)" />
+              </td>
+              <td data-etiqueta="Venta">{{ evento.ventaAbierta ? 'Abierta' : 'Cerrada' }}</td>
+              <td class="celda-accion">
+                @let accion = evento.estado === 'CANCELADO' ? 'Ver' : 'Editar';
+                <a class="editar" [routerLink]="['/eventos', evento.idEvento, 'datos']" [attr.aria-label]="accion + ' ' + evento.nombre">
+                  {{ accion }}
+                </a>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  <nav class="paginacion" aria-label="Páginas de la lista">
+    <button
+      type="button"
+      class="secundario"
+      [disabled]="pagina.pagina === 0"
+      (click)="irAPagina(pagina.pagina - 1)"
+    >
+      Anterior
+    </button>
+    <p class="numero">
+      Página {{ pagina.pagina + 1 }} de {{ pagina.totalPaginas || 1 }} ·
+      {{ cantidad(pagina.totalElementos) }} {{ pagina.totalElementos === 1 ? 'evento' : 'eventos' }}
+    </p>
+    <button
+      type="button"
+      class="secundario"
+      [disabled]="pagina.pagina + 1 >= pagina.totalPaginas"
+      (click)="irAPagina(pagina.pagina + 1)"
+    >
+      Siguiente
+    </button>
+  </nav>
+} @else if (errorDeCarga()) {
+  <div class="tarjeta-error">
+    <p class="aviso" role="alert">{{ errorDeCarga() }}</p>
+    <button type="button" class="secundario" (click)="listado.reload()">Reintentar</button>
+  </div>
+} @else {
+  <p class="cargando" role="status">Cargando eventos…</p>
+}

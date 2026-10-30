@@ -1,0 +1,91 @@
+<h1>Validar entradas</h1>
+
+<!-- Siempre presente: un lector de pantalla anuncia lo que aparece dentro,
+     pero no una región que se crea junto con su texto -->
+<div class="avisos" role="alert">
+  @if (aviso()) {
+    <p class="aviso">{{ aviso() }}</p>
+  }
+</div>
+
+@if (elegido(); as evento) {
+  <section class="evento" aria-labelledby="nombre-del-evento">
+    <h2 class="nombre" id="nombre-del-evento">{{ evento.nombre }}</h2>
+    <p class="cuando">
+      <span class="numero">{{ fecha(evento.fecha) }}</span>
+      <span class="numero">{{ hora(evento.horaInicio) }}–{{ hora(evento.horaFin) }}</span>
+      <span class="lugar">{{ evento.lugar }}</span>
+    </p>
+    <a class="cambiar" [routerLink]="[]">Cambiar de evento</a>
+  </section>
+
+  <app-lector-qr (leido)="leer($event)" />
+
+  <div class="zona-resultado" role="status">
+    @for (actual of resultados(); track actual.numero) {
+      <p class="resultado" [class.valida]="esValida(actual.resultado)" [class.rechazo]="!esValida(actual.resultado)">
+        <span class="icono" aria-hidden="true">{{ esValida(actual.resultado) ? '✓' : '✕' }}</span>
+        <span class="texto">{{ textoDelResultado(actual.resultado) }}</span>
+        @if (actual.tipoEntrada) {
+          <span class="tipo">{{ actual.tipoEntrada }}</span>
+        }
+      </p>
+    }
+  </div>
+
+  <form (submit)="enviar($event)" novalidate>
+    <div class="campo">
+      @let error = mensajeDelCodigo();
+      <label for="codigo-entrada">Código de la entrada</label>
+      <div class="fila">
+        <input
+          #campoCodigo
+          id="codigo-entrada"
+          type="text"
+          autocomplete="off"
+          autocapitalize="off"
+          spellcheck="false"
+          [formField]="formulario.codigo"
+          [attr.aria-invalid]="error ? 'true' : null"
+          [attr.aria-describedby]="error ? 'error-codigo-entrada' : null"
+        />
+        <button type="submit" class="boton" [disabled]="procesando()">
+          {{ procesando() ? 'Validando…' : 'Validar' }}
+        </button>
+      </div>
+      @if (error) {
+        <p class="error" id="error-codigo-entrada">{{ error }}</p>
+      }
+    </div>
+  </form>
+} @else if (eventos(); as eventos) {
+  @if (eventos.length === 0) {
+    <p class="vacio" role="status">Hoy no hay eventos para validar.</p>
+  } @else {
+    <p class="bajada">Elige el evento en el que estás validando.</p>
+    <ul class="eventos">
+      @for (evento of eventos; track evento.idEvento) {
+        <li>
+          <a class="evento-a-elegir" [routerLink]="[]" [queryParams]="{ evento: evento.idEvento }">
+            <span class="nombre">{{ evento.nombre }}</span>
+            <span class="cuando">
+              <span class="numero">{{ fecha(evento.fecha) }}</span>
+              <span class="numero">{{ hora(evento.horaInicio) }}–{{ hora(evento.horaFin) }}</span>
+              @if (terminaAlDiaSiguiente(evento.horaInicio, evento.horaFin)) {
+                <span class="ayuda">termina al día siguiente</span>
+              }
+            </span>
+            <span class="lugar">{{ evento.lugar }}</span>
+          </a>
+        </li>
+      }
+    </ul>
+  }
+} @else if (errorDeCarga()) {
+  <div class="tarjeta-error">
+    <p class="aviso" role="alert">{{ errorDeCarga() }}</p>
+    <button type="button" class="boton" (click)="recurso.reload()">Reintentar</button>
+  </div>
+} @else {
+  <p class="cargando" role="status">Cargando los eventos de hoy…</p>
+}

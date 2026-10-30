@@ -1,0 +1,209 @@
+// El título, el aviso y el botón vienen de _formulario.scss; acá queda lo propio
+// del listado: las secciones, la tarjeta de cada compra y el estado de cada
+// entrada
+@use '../../../../styles/formulario';
+@use '../../../../styles/pagina';
+
+:host {
+	@include pagina.pagina-angosta(720px);
+	display: flex;
+	flex-direction: column;
+	gap: var(--sarao-espacio-6);
+}
+
+section {
+	display: flex;
+	flex-direction: column;
+	gap: var(--sarao-espacio-3);
+}
+
+// Una línea separa cada sección de la anterior
+section + section {
+	padding-top: var(--sarao-espacio-6);
+	border-top: 1px solid var(--sarao-borde-control);
+}
+
+h2 {
+	margin: 0;
+	color: var(--sarao-texto-suave);
+	font-size: 14px;
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+}
+
+p {
+	margin: 0;
+}
+
+ul {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.compras {
+	display: flex;
+	flex-direction: column;
+	gap: var(--sarao-espacio-3);
+}
+
+.compra {
+	display: flex;
+	flex-direction: column;
+	gap: var(--sarao-espacio-1);
+	padding: var(--sarao-espacio-4);
+	background: var(--sarao-superficie);
+	border: 1px solid var(--sarao-borde);
+	border-radius: var(--sarao-radio);
+}
+
+// Una compra de un evento terminado: sin relleno de superficie, borde punteado
+// y el nombre en el tono suave, para distinguirla de un vistazo
+.compra.pasada {
+	background: transparent;
+	border-style: dashed;
+	border-color: var(--sarao-borde-control);
+}
+
+// Una compra de un evento cancelado: contorno rojo, sin relleno, para que se
+// distinga de las que sirven para entrar
+.compra.cancelada {
+	background: transparent;
+	border-color: var(--sarao-error);
+}
+
+.compra.cancelada .etiqueta {
+	border-color: var(--sarao-error);
+	background: var(--sarao-error-fondo);
+	color: var(--sarao-error);
+}
+
+.compra.pasada h3,
+.compra.pasada .cuando,
+.compra.pasada .tipo {
+	color: var(--sarao-texto-suave);
+}
+
+.encabezado {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--sarao-espacio-2);
+}
+
+h3 {
+	min-width: 0;
+	margin: 0;
+	font-size: 17px;
+	font-weight: 700;
+	overflow-wrap: anywhere;
+	text-wrap: balance;
+}
+
+.cuando {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--sarao-espacio-1) var(--sarao-espacio-3);
+	font-size: 14px;
+}
+
+.numero {
+	font-variant-numeric: tabular-nums;
+}
+
+.lugar,
+.ayuda {
+	color: var(--sarao-texto-suave);
+}
+
+.lugar {
+	font-size: 14px;
+	overflow-wrap: anywhere;
+}
+
+.ayuda {
+	font-size: 12.5px;
+}
+
+.tipo {
+	font-size: 14px;
+	font-weight: 600;
+	overflow-wrap: anywhere;
+}
+
+// Las etiquetas: la del evento en aviso, las de las entradas según su estado
+.etiqueta,
+.terminado,
+.estado {
+	padding: 2px var(--sarao-espacio-2);
+	border: 1px solid var(--sarao-borde-control);
+	border-radius: var(--sarao-radio-control);
+	color: var(--sarao-texto-suave);
+	font-size: 12.5px;
+	font-weight: 600;
+}
+
+.etiqueta {
+	border-color: var(--sarao-aviso);
+	background: var(--sarao-aviso-fondo);
+	color: var(--sarao-aviso);
+}
+
+.estado[data-estado='ACTIVA'] {
+	border-color: var(--sarao-exito);
+	background: var(--sarao-exito-fondo);
+	color: var(--sarao-exito);
+}
+
+.estado[data-estado='UTILIZADA'] {
+	border-color: var(--sarao-neutro);
+	color: var(--sarao-neutro);
+}
+
+.estado[data-estado='DEVUELTA'] {
+	border-color: var(--sarao-error);
+	background: var(--sarao-error-fondo);
+	color: var(--sarao-error);
+}
+
+.entradas {
+	display: flex;
+	flex-direction: column;
+	margin-top: var(--sarao-espacio-2);
+	border-top: 1px solid var(--sarao-borde);
+}
+
+// Cada fila es el blanco del enlace: alto cómodo para tocar
+.entradas li {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--sarao-espacio-3);
+	min-height: 44px;
+	border-bottom: 1px solid var(--sarao-borde);
+}
+
+.entradas li:last-child {
+	border-bottom: 0;
+}
+
+.entradas a {
+	font-weight: 600;
+}
+
+a:hover {
+	color: var(--sarao-ambar-fuerte);
+	text-decoration: underline;
+}
+
+.vacio {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: var(--sarao-espacio-3);
+}
+
+.cargando {
+	color: var(--sarao-texto-suave);
+}

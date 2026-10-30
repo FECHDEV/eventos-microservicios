@@ -1,0 +1,157 @@
+// Sistema de diseño de Sarao. Los valores y su motivo están en
+// docs/decisiones.md → "Sistema de diseño (frontend)".
+// Ningún componente escribe un color a mano: todos salen de acá.
+//
+// Tres estilos (adultos, jóvenes, niños), cada uno con noche y día: seis
+// paletas, todas con el contraste medido (decisiones.md → «Tres estilos y modo
+// día/noche»). Adultos y noche están en :root; los demás los activa core/tema
+// con data-estilo y data-tema="claro" en <html>. El día no es la noche invertida.
+
+:root {
+	// Color
+	--sarao-fondo: #0b1020;
+	--sarao-superficie: #151b2e;
+	--sarao-superficie-alta: #1c2440;
+	--sarao-texto: #f4f6ff;
+	--sarao-texto-suave: #a7b0cc;
+	--sarao-ambar: #f5b301;
+	--sarao-ambar-fuerte: #d99a00;
+	--sarao-borde: #2b3350;
+	--sarao-borde-control: #6b7799;
+	--sarao-exito: #4ade80;
+	--sarao-aviso: #fbbf24;
+	--sarao-error: #fca5a5;
+	--sarao-neutro: #94a3b8;
+	// El texto sobre un fondo ámbar (botones principales, logotipo)
+	--sarao-sobre-ambar: #0b1020;
+	// Lo que oscurece la página detrás de un diálogo
+	--sarao-velo: rgb(11 16 32 / 0.75);
+
+	// Fondos tenues de las etiquetas de estado
+	--sarao-exito-fondo: #0e2418;
+	--sarao-aviso-fondo: #2a2008;
+	--sarao-error-fondo: #2a1620;
+
+	// El código QR: oscuro sobre claro, como piden los lectores, sea cual sea el
+	// tema de la interfaz
+	--sarao-qr-claro: #ffffff;
+	--sarao-qr-oscuro: #000000;
+
+	// Espaciado, en múltiplos de 4 px
+	--sarao-espacio-1: 4px;
+	--sarao-espacio-2: 8px;
+	--sarao-espacio-3: 12px;
+	--sarao-espacio-4: 16px;
+	--sarao-espacio-6: 24px;
+	--sarao-espacio-8: 32px;
+	--sarao-espacio-12: 48px;
+
+	// Forma
+	--sarao-radio: 10px;
+	--sarao-radio-control: 8px;
+	--sarao-ancho-maximo: 1120px;
+	--sarao-ancho-formulario: 420px;
+
+	// Tipografía
+	--sarao-familia-titulos: Sora, system-ui, -apple-system, sans-serif;
+	--sarao-familia-texto: Inter, system-ui, -apple-system, sans-serif;
+
+	// Movimiento
+	--sarao-transicion: 180ms ease;
+}
+
+// Modo claro: solo cambian los colores. El ámbar se oscurece porque el del modo
+// oscuro no llega a 4.5:1 sobre blanco, y entonces el texto sobre él va blanco
+:root[data-tema='claro'] {
+	color-scheme: light;
+
+	--sarao-fondo: #f6f7fb;
+	--sarao-superficie: #ffffff;
+	--sarao-superficie-alta: #eef1f8;
+	--sarao-texto: #141a2e;
+	--sarao-texto-suave: #4a5370;
+	--sarao-ambar: #a84b06;
+	--sarao-ambar-fuerte: #92400e;
+	--sarao-borde: #dde2ee;
+	--sarao-borde-control: #7a849e;
+	--sarao-exito: #166534;
+	--sarao-aviso: #854d0e;
+	--sarao-error: #b91c1c;
+	--sarao-neutro: #5b6577;
+	--sarao-sobre-ambar: #ffffff;
+	--sarao-velo: rgb(20 26 46 / 0.45);
+
+	--sarao-exito-fondo: #dcfce7;
+	--sarao-aviso-fondo: #fef3c7;
+	--sarao-error-fondo: #fee2e2;
+}
+
+// Jóvenes: violeta y cian, más redondeado, títulos en Space Grotesk
+:root[data-estilo='jovenes'] {
+	--sarao-fondo: #120a24;
+	--sarao-superficie: #1c1236;
+	--sarao-superficie-alta: #261a47;
+	--sarao-texto: #f5f3ff;
+	--sarao-texto-suave: #b9b0d9;
+	--sarao-ambar: #22d3ee;
+	--sarao-ambar-fuerte: #06b6d4;
+	--sarao-borde: #33275a;
+	--sarao-borde-control: #7c6fa8;
+	--sarao-neutro: #a3a0c2;
+	--sarao-sobre-ambar: #120a24;
+	--sarao-velo: rgb(18 10 36 / 0.75);
+
+	--sarao-radio: 14px;
+	--sarao-radio-control: 10px;
+	--sarao-familia-titulos: 'Space Grotesk', system-ui, -apple-system, sans-serif;
+}
+
+:root[data-estilo='jovenes'][data-tema='claro'] {
+	--sarao-fondo: #f7f5ff;
+	--sarao-superficie: #ffffff;
+	--sarao-superficie-alta: #efeafe;
+	--sarao-texto: #1a1033;
+	--sarao-texto-suave: #4f4670;
+	--sarao-ambar: #6d28d9;
+	--sarao-ambar-fuerte: #5b21b6;
+	--sarao-borde: #e2dcf5;
+	--sarao-borde-control: #7f76a3;
+	--sarao-neutro: #5d5878;
+	--sarao-sobre-ambar: #ffffff;
+	--sarao-velo: rgb(26 16 51 / 0.45);
+}
+
+// Niños: turquesa profundo y coral, muy redondeado, títulos en Fredoka
+:root[data-estilo='ninos'] {
+	--sarao-fondo: #0b1f2a;
+	--sarao-superficie: #12303f;
+	--sarao-superficie-alta: #183d4f;
+	--sarao-texto: #f0fbff;
+	--sarao-texto-suave: #a9cbd8;
+	--sarao-ambar: #ff8a65;
+	--sarao-ambar-fuerte: #ff7043;
+	--sarao-borde: #24495c;
+	--sarao-borde-control: #6b97aa;
+	--sarao-neutro: #9fb6c1;
+	--sarao-sobre-ambar: #0b1f2a;
+	--sarao-velo: rgb(11 31 42 / 0.75);
+
+	--sarao-radio: 20px;
+	--sarao-radio-control: 14px;
+	--sarao-familia-titulos: Fredoka, system-ui, -apple-system, sans-serif;
+}
+
+:root[data-estilo='ninos'][data-tema='claro'] {
+	--sarao-fondo: #fff9ec;
+	--sarao-superficie: #ffffff;
+	--sarao-superficie-alta: #fff1d6;
+	--sarao-texto: #22303c;
+	--sarao-texto-suave: #4d5b68;
+	--sarao-ambar: #c2410c;
+	--sarao-ambar-fuerte: #9a3412;
+	--sarao-borde: #f1e3c6;
+	--sarao-borde-control: #8a7f6c;
+	--sarao-neutro: #5b6577;
+	--sarao-sobre-ambar: #ffffff;
+	--sarao-velo: rgb(34 48 60 / 0.45);
+}

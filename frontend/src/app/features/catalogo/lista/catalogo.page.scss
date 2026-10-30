@@ -1,0 +1,199 @@
+// Los campos, la paginación, los avisos y el botón secundario vienen de
+// _lista.scss; acá quedan los filtros en fila y las tarjetas de los eventos
+@use '../../../../styles/lista';
+
+:host {
+	display: flex;
+	flex-direction: column;
+	gap: var(--sarao-espacio-6);
+}
+
+h1 {
+	text-wrap: balance;
+}
+
+// Texto, desde, hasta y los botones en una fila; en el celular, apilados
+.filtros {
+	display: grid;
+	grid-template-columns: minmax(200px, 2fr) repeat(2, minmax(140px, 1fr)) auto;
+	align-items: start;
+	gap: var(--sarao-espacio-3);
+}
+
+.acciones {
+	display: flex;
+	gap: var(--sarao-espacio-2);
+	// Alineados con los controles, no con las etiquetas
+	padding-top: 22px;
+}
+
+input[aria-invalid='true'] {
+	border-color: var(--sarao-error);
+	border-width: 2px;
+}
+
+.error {
+	margin: 0;
+	color: var(--sarao-error);
+	font-size: 12.5px;
+	font-weight: 500;
+}
+
+.principal {
+	font: inherit;
+	font-size: 14px;
+	font-weight: 600;
+	min-height: 44px;
+	padding: var(--sarao-espacio-2) var(--sarao-espacio-4);
+	border: 1px solid transparent;
+	border-radius: var(--sarao-radio-control);
+	background: var(--sarao-ambar);
+	color: var(--sarao-sobre-ambar);
+	cursor: pointer;
+	transition: background-color var(--sarao-transicion);
+}
+
+.principal:hover {
+	background: var(--sarao-ambar-fuerte);
+}
+
+.tarjetas {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+	gap: var(--sarao-espacio-4);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.tarjeta {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	overflow: hidden;
+	border: 1px solid var(--sarao-borde);
+	border-radius: var(--sarao-radio);
+	background: var(--sarao-superficie);
+	transition: border-color var(--sarao-transicion);
+}
+
+.tarjeta:hover,
+.tarjeta:focus-within {
+	border-color: var(--sarao-borde-control);
+}
+
+// La foto es la única fuente de color fuerte; sin ella, un fondo neutro del
+// mismo tamaño para que la grilla no salte
+.tarjeta img,
+.sin-imagen {
+	display: block;
+	width: 100%;
+	height: auto;
+	aspect-ratio: 16 / 9;
+	object-fit: cover;
+}
+
+.sin-imagen {
+	background: var(--sarao-superficie-alta);
+}
+
+.cuerpo {
+	display: flex;
+	flex-direction: column;
+	gap: var(--sarao-espacio-2);
+	padding: var(--sarao-espacio-4);
+	min-width: 0;
+}
+
+h2 {
+	margin: 0;
+	font-size: 17px;
+	overflow-wrap: anywhere;
+}
+
+// Toda la tarjeta lleva al detalle: el enlace del nombre se estira sobre ella
+h2 a {
+	color: var(--sarao-texto);
+	text-decoration: none;
+}
+
+h2 a::after {
+	content: '';
+	position: absolute;
+	inset: 0;
+}
+
+h2 a:hover {
+	color: var(--sarao-ambar);
+}
+
+h2 a:focus-visible {
+	outline: none;
+}
+
+.tarjeta:has(h2 a:focus-visible) {
+	outline: 2px solid var(--sarao-ambar);
+	outline-offset: 2px;
+}
+
+.cuando,
+.lugar {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--sarao-espacio-1) var(--sarao-espacio-3);
+	margin: 0;
+	font-size: 14px;
+}
+
+.lugar {
+	color: var(--sarao-texto-suave);
+	overflow-wrap: anywhere;
+}
+
+.ayuda {
+	color: var(--sarao-texto-suave);
+	font-size: 12.5px;
+}
+
+.marcas {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--sarao-espacio-2);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.marca {
+	padding: 2px var(--sarao-espacio-2);
+	border: 1px solid var(--sarao-borde-control);
+	border-radius: var(--sarao-radio-control);
+	font-size: 12.5px;
+	font-weight: 600;
+}
+
+.postergado {
+	border-color: var(--sarao-aviso);
+	background: var(--sarao-aviso-fondo);
+	color: var(--sarao-aviso);
+}
+
+.cerrada {
+	color: var(--sarao-texto-suave);
+}
+
+@media (max-width: 720px) {
+	.filtros {
+		grid-template-columns: 1fr 1fr;
+	}
+
+	.campo.texto {
+		grid-column: 1 / -1;
+	}
+
+	.acciones {
+		grid-column: 1 / -1;
+		padding-top: 0;
+	}
+}

@@ -1,0 +1,208 @@
+// La tabla, los avisos y el botón secundario vienen de _lista.scss; acá quedan
+// la portada, el encabezado del evento y sus condiciones
+@use '../../../../styles/lista';
+@use '../../../../styles/pagina';
+
+:host {
+	@include pagina.pagina-angosta(880px);
+	display: flex;
+	flex-direction: column;
+	gap: var(--sarao-espacio-6);
+}
+
+.volver {
+	align-self: flex-start;
+	color: var(--sarao-texto-suave);
+	font-size: 14px;
+	text-decoration: none;
+}
+
+.volver:hover {
+	color: var(--sarao-ambar);
+}
+
+.evento {
+	display: flex;
+	flex-direction: column;
+	gap: var(--sarao-espacio-6);
+}
+
+// La foto es la única fuente de color fuerte; sin ella, un fondo neutro del
+// mismo tamaño
+.portada {
+	display: block;
+	width: 100%;
+	height: auto;
+	aspect-ratio: 16 / 9;
+	object-fit: cover;
+	border-radius: var(--sarao-radio);
+}
+
+.sin-imagen {
+	background: var(--sarao-superficie-alta);
+}
+
+.encabezado {
+	display: flex;
+	flex-direction: column;
+	gap: var(--sarao-espacio-2);
+}
+
+h1 {
+	font-size: 30px;
+	text-wrap: balance;
+	overflow-wrap: anywhere;
+}
+
+h2 {
+	font-size: 18px;
+}
+
+.cuando,
+.lugar {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--sarao-espacio-1) var(--sarao-espacio-3);
+	margin: 0;
+}
+
+.lugar {
+	color: var(--sarao-texto-suave);
+	overflow-wrap: anywhere;
+}
+
+.ayuda {
+	color: var(--sarao-texto-suave);
+	font-size: 12.5px;
+}
+
+.marcas {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--sarao-espacio-2);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.marca {
+	padding: 2px var(--sarao-espacio-2);
+	border: 1px solid var(--sarao-borde-control);
+	border-radius: var(--sarao-radio-control);
+	color: var(--sarao-texto-suave);
+	font-size: 12.5px;
+	font-weight: 600;
+}
+
+.marca.abierta {
+	border-color: var(--sarao-exito);
+	background: var(--sarao-exito-fondo);
+	color: var(--sarao-exito);
+}
+
+.postergado {
+	border-color: var(--sarao-aviso);
+	background: var(--sarao-aviso-fondo);
+	color: var(--sarao-aviso);
+}
+
+.descripcion {
+	display: flex;
+	flex-direction: column;
+	gap: var(--sarao-espacio-3);
+	overflow-wrap: anywhere;
+}
+
+.descripcion p {
+	margin: 0;
+	line-height: 1.6;
+}
+
+.condiciones {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+	gap: var(--sarao-espacio-3);
+	margin: 0;
+}
+
+.condiciones div {
+	padding: var(--sarao-espacio-3) var(--sarao-espacio-4);
+	border: 1px solid var(--sarao-borde);
+	border-radius: var(--sarao-radio);
+	background: var(--sarao-superficie);
+}
+
+dt {
+	color: var(--sarao-texto-suave);
+	font-size: 12.5px;
+}
+
+dd {
+	margin: 0;
+	font-weight: 600;
+}
+
+.entradas {
+	display: flex;
+	flex-direction: column;
+	gap: var(--sarao-espacio-3);
+}
+
+.disponibilidad {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--sarao-espacio-2);
+	color: var(--sarao-exito);
+	font-weight: 600;
+}
+
+.forma {
+	width: 10px;
+	height: 10px;
+	border: 2px solid currentColor;
+	border-radius: 50%;
+	background: currentColor;
+}
+
+.agotado {
+	color: var(--sarao-texto-suave);
+}
+
+.agotado .forma {
+	background: transparent;
+}
+
+.accion {
+	text-align: right;
+}
+
+// En el celular cada fila es un bloque: un tipo agotado no deja un renglón vacío
+@media (max-width: 640px) {
+	.accion:not(:has(a)) {
+		display: none;
+	}
+}
+
+// El paso siguiente del catálogo: ámbar, como la acción principal de la marca
+.comprar {
+	display: inline-flex;
+	align-items: center;
+	min-height: 44px;
+	padding: 0 var(--sarao-espacio-4);
+	border-radius: var(--sarao-radio-control);
+	background: var(--sarao-ambar);
+	color: var(--sarao-sobre-ambar);
+	font-size: 14px;
+	font-weight: 600;
+	text-decoration: none;
+	transition: background-color var(--sarao-transicion);
+}
+
+.comprar:hover {
+	background: var(--sarao-ambar-fuerte);
+}
+
+.comprar:focus-visible {
+	outline: 2px solid var(--sarao-ambar);
+	outline-offset: 2px;
+}

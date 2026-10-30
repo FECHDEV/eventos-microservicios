@@ -1,0 +1,63 @@
+@if (entrada(); as entrada) {
+  <section class="tarjeta" aria-labelledby="titulo-entrada">
+    <h1 id="titulo-entrada">Entrada {{ entrada.numero }} de {{ entrada.cantidad }}</h1>
+
+    <div class="evento">
+      <div class="encabezado">
+        <p class="nombre">{{ entrada.nombreEvento }}</p>
+        @if (etiqueta(entrada.estadoEvento); as etiqueta) {
+          <span class="etiqueta">{{ etiqueta }}</span>
+        }
+      </div>
+      <p class="cuando">
+        <span class="numero">{{ fecha(entrada.fecha) }}</span>
+        <span class="numero">{{ hora(entrada.horaInicio) }}–{{ hora(entrada.horaFin) }}</span>
+        @if (terminaAlDiaSiguiente(entrada.horaInicio, entrada.horaFin)) {
+          <span class="ayuda">termina al día siguiente</span>
+        }
+      </p>
+      <p class="lugar">{{ entrada.lugar }}</p>
+    </div>
+
+    <dl class="detalle">
+      <div>
+        <dt>Entrada</dt>
+        <dd>{{ entrada.tipoEntrada }}</dd>
+      </div>
+      <div>
+        <dt>Estado</dt>
+        <dd>{{ estado(entrada.estado) }}</dd>
+      </div>
+      <div>
+        <dt>Emitida</dt>
+        <dd class="numero">{{ emitida(entrada.fechaEmision) }}</dd>
+      </div>
+    </dl>
+
+    @if (entrada.codigoQr; as codigo) {
+      <div class="codigo">
+        <app-codigo-qr
+          [valor]="codigo"
+          [etiqueta]="'Código QR de la entrada ' + entrada.numero + ' de ' + entrada.nombreEvento"
+        />
+        <p class="ayuda">Muéstralo en la entrada del evento.</p>
+      </div>
+    } @else {
+      <p class="sin-qr">{{ motivoSinQr(entrada) }}</p>
+    }
+
+    <a routerLink="/mis-entradas">Volver a mis entradas</a>
+  </section>
+} @else if (noEncontrada()) {
+  <div class="tarjeta" role="status">
+    <p>No encontramos esa entrada.</p>
+    <a routerLink="/mis-entradas">Volver a mis entradas</a>
+  </div>
+} @else if (errorDeCarga()) {
+  <div class="tarjeta">
+    <p class="aviso" role="alert">{{ errorDeCarga() }}</p>
+    <button type="button" class="boton" (click)="recurso.reload()">Reintentar</button>
+  </div>
+} @else {
+  <p class="cargando" role="status">Cargando la entrada…</p>
+}

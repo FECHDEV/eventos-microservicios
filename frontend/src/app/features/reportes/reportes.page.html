@@ -1,0 +1,250 @@
+<h1>Reportes</h1>
+
+<form class="filtros" aria-label="Filtros del reporte" (submit)="generar($event)" novalidate>
+  <fieldset class="tipos">
+    <legend>Tipo de reporte</legend>
+    @for (tipo of tipos; track tipo) {
+      <label class="tipo">
+        <input type="radio" [value]="tipo" [formField]="formulario.tipo" />
+        {{ nombresDeReporte[tipo] }}
+      </label>
+    }
+  </fieldset>
+
+  <div class="campos">
+    @if (muestra('desde')) {
+      <div class="campo">
+        @let errorDesde = mensaje('desde');
+        <label for="desde">{{ formulario.tipo().value() === 'CLIENTES' ? 'Registrados desde' : 'Desde' }}</label>
+        <input
+          id="desde"
+          type="date"
+          autocomplete="off"
+          [formField]="formulario.desde"
+          [attr.aria-invalid]="errorDesde ? 'true' : null"
+          [attr.aria-describedby]="errorDesde ? 'error-desde' : null"
+        />
+        @if (errorDesde) {
+          <p class="error" id="error-desde">{{ errorDesde }}</p>
+        }
+      </div>
+    }
+
+    @if (muestra('hasta')) {
+      <div class="campo">
+        @let errorHasta = mensaje('hasta');
+        <label for="hasta">{{ formulario.tipo().value() === 'CLIENTES' ? 'Registrados hasta' : 'Hasta' }}</label>
+        <input
+          id="hasta"
+          type="date"
+          autocomplete="off"
+          [formField]="formulario.hasta"
+          [attr.aria-invalid]="errorHasta ? 'true' : null"
+          [attr.aria-describedby]="errorHasta ? 'error-hasta' : null"
+        />
+        @if (errorHasta) {
+          <p class="error" id="error-hasta">{{ errorHasta }}</p>
+        }
+      </div>
+    }
+
+    @if (muestra('idEvento')) {
+      <div class="campo">
+        @let errorEvento = mensaje('idEvento');
+        <label for="idEvento">Evento</label>
+        <select
+          id="idEvento"
+          [formField]="formulario.idEvento"
+          (change)="elegirEvento()"
+          [attr.aria-invalid]="errorEvento ? 'true' : null"
+          [attr.aria-describedby]="errorEvento ? 'error-idEvento' : null"
+        >
+          <option value="">{{ opcionesCargando() ? 'Cargando…' : 'Todos' }}</option>
+          @for (evento of eventos(); track evento.idEvento) {
+            <option [value]="evento.idEvento">{{ evento.nombre }} ({{ fecha(evento.fecha) }})</option>
+          }
+        </select>
+        @if (errorEvento) {
+          <p class="error" id="error-idEvento">{{ errorEvento }}</p>
+        }
+      </div>
+    }
+
+    @if (muestra('idTipoEntrada')) {
+      <div class="campo">
+        @let errorTipo = mensaje('idTipoEntrada');
+        <label for="idTipoEntrada">Tipo de entrada</label>
+        <select
+          id="idTipoEntrada"
+          [formField]="formulario.idTipoEntrada"
+          [attr.aria-invalid]="errorTipo ? 'true' : null"
+          [attr.aria-describedby]="errorTipo ? 'error-idTipoEntrada' : 'ayuda-idTipoEntrada'"
+        >
+          <option value="">Todos</option>
+          @for (tipo of tiposDelEvento(); track tipo.idTipoEntrada) {
+            <option [value]="tipo.idTipoEntrada">{{ tipo.nombre }}</option>
+          }
+        </select>
+        @if (errorTipo) {
+          <p class="error" id="error-idTipoEntrada">{{ errorTipo }}</p>
+        } @else if (formulario.idEvento().value() === '') {
+          <p class="ayuda" id="ayuda-idTipoEntrada">Elige primero un evento.</p>
+        }
+      </div>
+    }
+
+    @if (muestra('estado')) {
+      <div class="campo">
+        @let errorEstado = mensaje('estado');
+        <label for="estado">Estado</label>
+        <select
+          id="estado"
+          [formField]="formulario.estado"
+          [attr.aria-invalid]="errorEstado ? 'true' : null"
+          [attr.aria-describedby]="errorEstado ? 'error-estado' : null"
+        >
+          <option value="">Todos</option>
+          <option value="ACTIVA">Activa</option>
+          <option value="UTILIZADA">Utilizada</option>
+          <option value="DEVUELTA">Devuelta</option>
+        </select>
+        @if (errorEstado) {
+          <p class="error" id="error-estado">{{ errorEstado }}</p>
+        }
+      </div>
+    }
+
+    @if (muestra('idPersonal')) {
+      <div class="campo">
+        @let errorPersonal = mensaje('idPersonal');
+        <label for="idPersonal">Personal</label>
+        <select
+          id="idPersonal"
+          [formField]="formulario.idPersonal"
+          [attr.aria-invalid]="errorPersonal ? 'true' : null"
+          [attr.aria-describedby]="errorPersonal ? 'error-idPersonal' : null"
+        >
+          <option value="">{{ opcionesCargando() ? 'Cargando…' : 'Todos' }}</option>
+          @for (persona of personal(); track persona.idUsuario) {
+            <option [value]="persona.idUsuario">{{ persona.nombre }}</option>
+          }
+        </select>
+        @if (errorPersonal) {
+          <p class="error" id="error-idPersonal">{{ errorPersonal }}</p>
+        }
+      </div>
+    }
+  </div>
+
+  @if (errorDeOpciones()) {
+    <div class="tarjeta-error">
+      <p class="aviso" role="alert">No se pudieron cargar los eventos.</p>
+      <button type="button" class="secundario" (click)="reintentarOpciones()">Reintentar</button>
+    </div>
+  }
+
+  <div class="acciones">
+    <button type="submit" class="principal" [disabled]="generando()">
+      {{ generando() ? 'Generando…' : 'Generar reporte' }}
+    </button>
+  </div>
+</form>
+
+<div class="avisos">
+  <div role="status">
+    @if (sinResultados()) {
+      <p class="aviso informativo">{{ sinResultados() }}</p>
+    }
+  </div>
+  <div role="alert">
+    @if (aviso()) {
+      <p class="aviso">{{ aviso() }}</p>
+    }
+    @if (errorDeDescarga()) {
+      <p class="aviso">{{ errorDeDescarga() }}</p>
+    }
+  </div>
+</div>
+
+@if (reporte(); as reporte) {
+  <section class="reporte" aria-labelledby="titulo-reporte">
+    <div class="encabezado">
+      <div>
+        <h2 id="titulo-reporte" tabindex="-1">{{ reporte.titulo }}</h2>
+        <p class="bajada">{{ generado() }} · {{ criteriosAplicados() }}</p>
+      </div>
+      <div class="descargas">
+        <button type="button" class="secundario" [disabled]="descargando() !== null" (click)="descargar('pdf')">
+          {{ descargando() === 'pdf' ? 'Descargando…' : 'Descargar PDF' }}
+        </button>
+        <button type="button" class="secundario" [disabled]="descargando() !== null" (click)="descargar('excel')">
+          {{ descargando() === 'excel' ? 'Descargando…' : 'Descargar Excel' }}
+        </button>
+      </div>
+    </div>
+
+    <app-tabla-de-reporte [tabla]="reporte.resumen" titulo="Resumen" />
+    <p class="cuenta">{{ filasDelDetalle() }}</p>
+    <app-tabla-de-reporte [tabla]="reporte.detalle" titulo="Detalle" />
+
+    <details class="correo">
+      <summary>Enviar por correo</summary>
+      <form class="envio" aria-label="Enviar el reporte por correo" (submit)="enviarPorCorreo($event)" novalidate>
+        <div class="campo">
+          @let errorDestinatarios = mensajeDeDestinatarios();
+          <label for="destinatarios">Destinatarios</label>
+          <input
+            id="destinatarios"
+            type="email"
+            multiple
+            autocomplete="off"
+            spellcheck="false"
+            [attr.placeholder]="dominio() ? 'ventas@' + dominio() + ', gerencia@' + dominio() + '…' : null"
+            [formField]="formularioEnvio.destinatarios"
+            [attr.aria-invalid]="errorDestinatarios ? 'true' : null"
+            [attr.aria-describedby]="errorDestinatarios ? 'error-destinatarios' : 'ayuda-destinatarios'"
+          />
+          @if (errorDestinatarios) {
+            <p class="error" id="error-destinatarios">{{ errorDestinatarios }}</p>
+          } @else {
+            <p class="ayuda" id="ayuda-destinatarios">
+              @if (dominio()) {
+                Hasta 10 buzones &#64;{{ dominio() }}, separados por comas.
+              } @else {
+                Hasta 10 buzones del dominio de correo del sitio, separados por comas.
+              }
+            </p>
+          }
+        </div>
+
+        <div class="campo">
+          <label for="formatoEnvio">Formato</label>
+          <select id="formatoEnvio" [formField]="formularioEnvio.formato">
+            <option value="PDF">PDF</option>
+            <option value="EXCEL">Excel</option>
+            <option value="AMBOS">PDF y Excel</option>
+          </select>
+        </div>
+
+        <div class="acciones">
+          <button type="submit" class="secundario" [disabled]="enviando()">
+            {{ enviando() ? 'Enviando…' : 'Enviar por correo' }}
+          </button>
+        </div>
+
+        <div class="avisos">
+          <div role="status">
+            @if (confirmacion()) {
+              <p class="aviso informativo">{{ confirmacion() }}</p>
+            }
+          </div>
+          <div role="alert">
+            @if (avisoDeEnvio()) {
+              <p class="aviso">{{ avisoDeEnvio() }}</p>
+            }
+          </div>
+        </div>
+      </form>
+    </details>
+  </section>
+}

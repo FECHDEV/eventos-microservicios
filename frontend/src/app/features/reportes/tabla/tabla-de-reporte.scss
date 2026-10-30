@@ -1,0 +1,32 @@
+// La tabla sale de _lista.scss; acá quedan el título visible, las cifras a la
+// derecha y el pie con los totales
+@use '../../../../styles/lista';
+
+:host {
+	display: block;
+}
+
+caption {
+	caption-side: top;
+	padding: var(--sarao-espacio-3) var(--sarao-espacio-4);
+	text-align: left;
+	font-family: var(--sarao-familia-titulos);
+	font-size: 18px;
+	font-weight: 600;
+	border-bottom: 1px solid var(--sarao-borde);
+}
+
+// Las cifras centradas bajo su título, con dígitos de ancho fijo para compararlas.
+// El título también: `thead th` de _lista.scss lo deja a la izquierda y es más
+// específico que `th.numero`
+thead th.numero,
+td.numero {
+	text-align: center;
+	white-space: nowrap;
+}
+
+tfoot td {
+	font-weight: 700;
+	border-top: 1px solid var(--sarao-borde-control);
+	border-bottom: none;
+}

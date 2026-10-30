@@ -1,0 +1,89 @@
+// El botón secundario, los avisos y los estados vacíos vienen de _lista.scss
+@use '../../../../styles/lista';
+
+:host {
+	display: flex;
+	flex-direction: column;
+	gap: var(--sarao-espacio-6);
+}
+
+.volver {
+	align-self: flex-start;
+	color: var(--sarao-texto-suave);
+	font-size: 14px;
+	text-decoration: none;
+}
+
+.volver:hover {
+	color: var(--sarao-ambar);
+}
+
+.encabezado {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--sarao-espacio-4);
+}
+
+.imagen {
+	width: 160px;
+	aspect-ratio: 16 / 9;
+	border-radius: var(--sarao-radio);
+}
+
+.datos {
+	display: flex;
+	flex-direction: column;
+	gap: var(--sarao-espacio-2);
+	min-width: 0;
+}
+
+h1 {
+	overflow-wrap: anywhere;
+}
+
+.resumen {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--sarao-espacio-2) var(--sarao-espacio-4);
+	margin: 0;
+	color: var(--sarao-texto-suave);
+	font-size: 14px;
+}
+
+// Las pestañas son enlaces: la actual se marca con un subrayado ámbar y con
+// aria-current, no solo con el color
+.pestanas {
+	display: flex;
+	gap: var(--sarao-espacio-1);
+	overflow-x: auto;
+	border-bottom: 1px solid var(--sarao-borde);
+}
+
+.pestanas a {
+	display: inline-flex;
+	align-items: center;
+	min-height: 44px;
+	padding: 0 var(--sarao-espacio-4);
+	border-bottom: 3px solid transparent;
+	color: var(--sarao-texto-suave);
+	font-size: 14px;
+	font-weight: 600;
+	text-decoration: none;
+	white-space: nowrap;
+}
+
+.pestanas a:hover {
+	color: var(--sarao-texto);
+}
+
+.pestanas a.activa {
+	border-bottom-color: var(--sarao-ambar);
+	color: var(--sarao-texto);
+}
+
+@media (max-width: 640px) {
+	.imagen {
+		width: 100%;
+	}
+}

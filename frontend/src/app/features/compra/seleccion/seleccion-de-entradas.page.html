@@ -1,0 +1,93 @@
+<a class="volver" [routerLink]="urlDelEvento()">← Volver al evento</a>
+
+@if (noALaVenta()) {
+  <div class="tarjeta vacio" role="status">
+    <p>Este tipo de entrada no está a la venta.</p>
+    <a [routerLink]="urlDelEvento()">Volver al evento</a>
+  </div>
+} @else if (evento() && tipo()) {
+  @let elEvento = evento()!;
+  @let elTipo = tipo()!;
+  <section class="tarjeta" aria-labelledby="titulo-compra">
+    <h1 id="titulo-compra">Comprar entradas</h1>
+
+    <div class="evento">
+      <p class="nombre">{{ elEvento.nombre }}</p>
+      <p class="cuando">
+        <span class="numero">{{ fecha(elEvento.fecha) }}</span>
+        <span class="numero">{{ hora(elEvento.horaInicio) }}–{{ hora(elEvento.horaFin) }}</span>
+        @if (terminaAlDiaSiguiente(elEvento.horaInicio, elEvento.horaFin)) {
+          <span class="ayuda">termina al día siguiente</span>
+        }
+      </p>
+      <p class="lugar">{{ elEvento.lugar }}</p>
+    </div>
+
+    <dl class="elegido">
+      <div>
+        <dt>Entrada</dt>
+        <dd>{{ elTipo.nombre }}</dd>
+      </div>
+      <div>
+        <dt>Precio por entrada</dt>
+        <dd class="numero">{{ precio(elTipo.precio) }}</dd>
+      </div>
+      @if (elEvento.restriccionEdad !== null) {
+        <div>
+          <dt>Edad</dt>
+          <dd>Desde {{ elEvento.restriccionEdad }} años</dd>
+        </div>
+      }
+      @if (elEvento.limiteCompra !== null) {
+        <div>
+          <dt>Límite</dt>
+          <dd>Hasta {{ elEvento.limiteCompra }} entradas por cliente</dd>
+        </div>
+      }
+    </dl>
+
+    <!-- Siempre presente: un lector de pantalla anuncia lo que aparece dentro,
+         pero no una región que se crea junto con su texto -->
+    <div role="alert">
+      @if (aviso()) {
+        <p class="aviso">{{ aviso() }}</p>
+      }
+    </div>
+
+    <form novalidate (submit)="reservar($event)">
+      <div class="campo">
+        @let errorCantidad = mensajeDeCantidad();
+        <label for="cantidad">Cantidad</label>
+        <input
+          id="cantidad"
+          type="text"
+          inputmode="numeric"
+          autocomplete="off"
+          [formField]="formulario.cantidad"
+          [attr.aria-invalid]="errorCantidad ? 'true' : null"
+          [attr.aria-describedby]="errorCantidad ? 'error-cantidad' : null"
+        />
+        @if (errorCantidad) {
+          <p class="error" id="error-cantidad">{{ errorCantidad }}</p>
+        }
+      </div>
+
+      <p class="total" aria-live="polite">
+        @if (total()) {
+          Total: <strong class="numero">{{ total() }}</strong>
+        }
+      </p>
+
+      <button type="submit" class="boton" [disabled]="enviando()">
+        {{ enviando() ? 'Reservando…' : 'Reservar' }}
+      </button>
+    </form>
+  </section>
+} @else if (errorDeCarga()) {
+  <div class="tarjeta">
+    <p class="aviso" role="alert">{{ errorDeCarga() }}</p>
+    <button type="button" class="boton" (click)="recurso.reload()">Reintentar</button>
+  </div>
+} @else {
+  <p class="cargando" role="status">Cargando…</p>
+}

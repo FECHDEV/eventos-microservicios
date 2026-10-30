@@ -1,0 +1,30 @@
+<div class="contenedor-tabla">
+	<table>
+		<caption>{{ titulo() }}</caption>
+		<thead>
+			<tr>
+				@for (columna of tabla().columnas; track $index) {
+					<th scope="col" [class.numero]="esNumerica(columna.tipo)">{{ columna.titulo }}</th>
+				}
+			</tr>
+		</thead>
+		<tbody>
+			@for (fila of tabla().filas; track $index) {
+				<tr>
+					@for (columna of tabla().columnas; track $index; let i = $index) {
+						<td [class.numero]="esNumerica(columna.tipo)">{{ formatear(fila[i], columna.tipo) }}</td>
+					}
+				</tr>
+			}
+		</tbody>
+		@if (tabla().totales; as totales) {
+			<tfoot>
+				<tr>
+					@for (columna of tabla().columnas; track $index; let i = $index) {
+						<td [class.numero]="esNumerica(columna.tipo)">{{ totales[i] === null ? '' : formatear(totales[i], columna.tipo) }}</td>
+					}
+				</tr>
+			</tfoot>
+		}
+	</table>
+</div>

@@ -1,0 +1,121 @@
+<a class="volver" routerLink="/">← Todos los eventos</a>
+
+@if (evento(); as evento) {
+  <article class="evento">
+    @if (evento.tieneImagen) {
+      <img
+        class="portada"
+        [src]="urlDeImagen(evento.idEvento)"
+        [alt]="'Imagen de ' + evento.nombre"
+        width="1600"
+        height="900"
+        fetchpriority="high"
+      />
+    } @else {
+      <div class="portada sin-imagen" aria-hidden="true"></div>
+    }
+
+    <header class="encabezado">
+      <h1>{{ evento.nombre }}</h1>
+      <p class="cuando">
+        <span class="numero">{{ fecha(evento.fecha) }}</span>
+        <span class="numero">{{ hora(evento.horaInicio) }}–{{ hora(evento.horaFin) }}</span>
+        @if (terminaAlDiaSiguiente(evento.horaInicio, evento.horaFin)) {
+          <span class="ayuda">termina al día siguiente</span>
+        }
+      </p>
+      <p class="lugar">{{ evento.lugar }}</p>
+      <ul class="marcas">
+        @if (evento.fechaOriginal; as original) {
+          <li class="marca postergado">Postergado · antes el {{ fecha(original) }}</li>
+        }
+        <li class="marca" [class.abierta]="evento.ventaAbierta">
+          {{ evento.ventaAbierta ? 'Venta abierta' : 'Venta cerrada' }}
+        </li>
+      </ul>
+    </header>
+
+    @if (parrafos().length > 0) {
+      <div class="descripcion">
+        @for (parrafo of parrafos(); track $index) {
+          <p>{{ parrafo }}</p>
+        }
+      </div>
+    }
+
+    <dl class="condiciones">
+      <div>
+        <dt>Edad</dt>
+        <dd>
+          {{ evento.restriccionEdad === null ? 'Sin restricción de edad' : 'Desde ' + evento.restriccionEdad + ' años' }}
+        </dd>
+      </div>
+      <div>
+        <dt>Compra</dt>
+        <dd>
+          {{ evento.limiteCompra === null ? 'Sin límite de entradas' : 'Hasta ' + evento.limiteCompra + ' entradas por cliente' }}
+        </dd>
+      </div>
+    </dl>
+
+    <section class="entradas" aria-labelledby="titulo-entradas">
+      <h2 id="titulo-entradas">Entradas</h2>
+      @if (evento.tiposEntrada.length === 0) {
+        <p class="vacio">Este evento todavía no tiene entradas a la venta.</p>
+      } @else {
+        <table>
+          <caption class="solo-lectores">Tipos de entrada de {{ evento.nombre }}</caption>
+          <thead>
+            <tr>
+              <th scope="col">Tipo</th>
+              <th scope="col" class="numero">Precio</th>
+              <th scope="col">Disponibilidad</th>
+              @if (puedeComprar() && evento.ventaAbierta) {
+                <th scope="col"><span class="solo-lectores">Comprar</span></th>
+              }
+            </tr>
+          </thead>
+          <tbody>
+            @for (tipo of evento.tiposEntrada; track tipo.idTipoEntrada) {
+              <tr>
+                <th scope="row" data-etiqueta="Tipo">{{ tipo.nombre }}</th>
+                <td class="numero" data-etiqueta="Precio">{{ precio(tipo.precio) }}</td>
+                <td data-etiqueta="Disponibilidad">
+                  <!-- La forma distingue sin depender del color: círculo lleno o vacío -->
+                  <span class="disponibilidad" [class.agotado]="!tipo.disponible">
+                    <span class="forma" aria-hidden="true"></span>
+                    {{ tipo.disponible ? 'Disponible' : 'Agotado' }}
+                  </span>
+                </td>
+                @if (puedeComprar() && evento.ventaAbierta) {
+                  <td class="accion">
+                    @if (tipo.disponible) {
+                      <a
+                        class="comprar"
+                        [routerLink]="['/catalogo', evento.idEvento, 'entradas', tipo.idTipoEntrada]"
+                        [attr.aria-label]="'Comprar ' + tipo.nombre"
+                        >Comprar</a
+                      >
+                    }
+                  </td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </section>
+  </article>
+} @else if (noEncontrado()) {
+  <div class="vacio" role="status">
+    <p>No encontramos ese evento.</p>
+    <a routerLink="/">Ver los eventos disponibles</a>
+  </div>
+} @else if (errorDeCarga()) {
+  <div class="tarjeta-error">
+    <p class="aviso" role="alert">{{ errorDeCarga() }}</p>
+    <button type="button" class="secundario" (click)="recurso.reload()">Reintentar</button>
+  </div>
+} @else {
+  <p class="cargando" role="status">Cargando el evento…</p>
+}

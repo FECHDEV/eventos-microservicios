@@ -1,0 +1,164 @@
+// Los avisos, el botón secundario y los estados vacíos vienen de _lista.scss;
+// acá quedan el encabezado del evento y la tarjeta de cada compra
+@use '../../../../styles/lista';
+@use '../../../../styles/pagina';
+
+:host {
+	@include pagina.pagina-angosta(720px);
+	display: flex;
+	flex-direction: column;
+	gap: var(--sarao-espacio-6);
+}
+
+p {
+	margin: 0;
+}
+
+.encabezado {
+	display: flex;
+	flex-direction: column;
+	gap: var(--sarao-espacio-2);
+}
+
+.volver {
+	align-self: flex-start;
+	font-size: 14px;
+}
+
+h1 {
+	overflow-wrap: anywhere;
+	text-wrap: balance;
+}
+
+.cuando {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--sarao-espacio-1) var(--sarao-espacio-3);
+	font-size: 14px;
+}
+
+.ayuda,
+.lugar {
+	color: var(--sarao-texto-suave);
+}
+
+.ayuda {
+	font-size: 12.5px;
+}
+
+.lugar {
+	overflow-wrap: anywhere;
+}
+
+.numero {
+	font-variant-numeric: tabular-nums;
+}
+
+section {
+	display: flex;
+	flex-direction: column;
+	gap: var(--sarao-espacio-3);
+}
+
+// Una línea separa las devueltas de las pendientes
+section + section {
+	padding-top: var(--sarao-espacio-6);
+	border-top: 1px solid var(--sarao-borde-control);
+}
+
+h2 {
+	margin: 0;
+	scroll-margin-top: var(--sarao-espacio-6);
+	color: var(--sarao-texto-suave);
+	font-size: 14px;
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+}
+
+.compra {
+	display: flex;
+	flex-direction: column;
+	gap: var(--sarao-espacio-2);
+	padding: var(--sarao-espacio-4);
+	background: var(--sarao-superficie);
+	border: 1px solid var(--sarao-borde);
+	border-radius: var(--sarao-radio);
+}
+
+// Ya devuelta: sin relleno y con el texto suave, solo para consultar
+.compra.devuelta {
+	background: transparent;
+	border-style: dashed;
+	border-color: var(--sarao-borde-control);
+	color: var(--sarao-texto-suave);
+}
+
+h3 {
+	min-width: 0;
+	margin: 0;
+	font-size: 17px;
+	font-weight: 700;
+	overflow-wrap: anywhere;
+}
+
+.contacto,
+.compra-detalle {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--sarao-espacio-1) var(--sarao-espacio-3);
+	font-size: 14px;
+	overflow-wrap: anywhere;
+}
+
+.entradas {
+	display: flex;
+	flex-direction: column;
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	border-top: 1px solid var(--sarao-borde);
+}
+
+.entradas li {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--sarao-espacio-3);
+	min-height: 52px;
+	border-bottom: 1px solid var(--sarao-borde);
+}
+
+.devueltas {
+	font-size: 14px;
+}
+
+// La acción de la compra entera, con el ámbar de la marca
+.principal {
+	align-self: flex-start;
+	font: inherit;
+	font-size: 14px;
+	font-weight: 600;
+	min-height: 44px;
+	padding: var(--sarao-espacio-2) var(--sarao-espacio-4);
+	border: 1px solid transparent;
+	border-radius: var(--sarao-radio-control);
+	background: var(--sarao-ambar);
+	color: var(--sarao-sobre-ambar);
+	cursor: pointer;
+	transition: background-color var(--sarao-transicion);
+}
+
+.principal:hover:not([disabled]) {
+	background: var(--sarao-ambar-fuerte);
+}
+
+.principal[disabled] {
+	opacity: 0.6;
+	cursor: default;
+}
+
+a:hover {
+	color: var(--sarao-ambar-fuerte);
+	text-decoration: underline;
+}

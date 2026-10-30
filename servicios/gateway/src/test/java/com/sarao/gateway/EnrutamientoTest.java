@@ -106,11 +106,22 @@ class EnrutamientoTest {
 	@Test
 	void losEncabezadosDeIdentidadDelClienteNoLleganALosServicios() throws Exception {
 		var respuesta = pedir("/api/cuenta", "X-Usuario-Id", "1", "X-Usuario-Rol", "ADMINISTRADOR", "X-Clave-Servicio",
-				"adivinada", "X-Forwarded-For", "1.2.3.4");
+				"adivinada");
 
 		assertThat(respuesta.body()).startsWith("/api/cuenta|null|null|null|");
-		assertThat(respuesta.body()).doesNotContain("1.2.3.4");
-		assertThat(respuesta.body()).endsWith("|127.0.0.1,127.0.0.1");
+	}
+
+	// Lo que escribe nginx: lo que mandó el cliente, y al final la IP real. Vale la última que no sea interna
+	@Test
+	void laIpInventadaPorElClienteNoLlegaALosServicios() throws Exception {
+		var respuesta = pedir("/api/cuenta", "X-Forwarded-For", "9.9.9.9, 1.2.3.4");
+
+		assertThat(respuesta.body()).contains("1.2.3.4").doesNotContain("9.9.9.9");
+	}
+
+	@Test
+	void sinProxyLaIpEsLaDeLaConexion() throws Exception {
+		assertThat(pedir("/api/cuenta").body()).endsWith("|127.0.0.1,127.0.0.1");
 	}
 
 	private HttpResponse<String> pedir(String ruta, String... encabezados) throws Exception {

@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Sarao</title>
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b1020">
+  <!-- Aplica el estilo y el modo antes de pintar: sin esto la página aparece
+       un instante con el de por defecto y después cambia. Repite la lectura de
+       core/tema/almacen-tema.ts y la tabla de colores de tema.service.ts; desde
+       ahí sigue TemaService -->
+  <script>
+    try {
+      var raiz = document.documentElement;
+      var estilo = localStorage.getItem('sarao.estilo');
+      var modo = localStorage.getItem('sarao.modo');
+      if (modo !== 'automatico' && modo !== 'dia' && modo !== 'noche') {
+        modo = localStorage.getItem('sarao.tema') === 'claro' ? 'dia' : 'noche';
+      }
+      if (estilo !== 'ninos' && estilo !== 'jovenes') {
+        estilo = 'adultos';
+      }
+      var hora = new Date().getHours();
+      var claro = modo === 'dia' || (modo === 'automatico' && hora >= 6 && hora < 19);
+      var barra = {
+        adultos: ['#0b1020', '#f6f7fb'],
+        jovenes: ['#120a24', '#f7f5ff'],
+        ninos: ['#0b1f2a', '#fff9ec']
+      };
+      if (estilo !== 'adultos') {
+        raiz.dataset.estilo = estilo;
+      }
+      if (claro) {
+        raiz.dataset.tema = 'claro';
+      }
+      document.querySelector('meta[name="theme-color"]').content = barra[estilo][claro ? 1 : 0];
+    } catch (e) {}
+  </script>
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <!-- Fuentes desde el HTML y no con @import en el CSS: así el navegador las
+       pide en paralelo en vez de esperar a descargar la hoja de estilos -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700&family=Space+Grotesk:wght@600;700&family=Fredoka:wght@600;700&family=Inter:wght@400;500;600&display=swap">
+</head>
+<body>
+  <app-root></app-root>
+</body>
+</html>

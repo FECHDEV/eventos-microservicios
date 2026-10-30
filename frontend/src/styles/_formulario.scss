@@ -1,0 +1,132 @@
+// Piezas visuales que comparten las pantallas con formulario (inicio de sesión
+// y registro). Se incluye con @use desde el .scss de cada componente, así los
+// estilos siguen alcanzando solo a ese componente.
+// Todos los valores salen de _tokens.scss.
+@use 'pagina';
+
+.tarjeta {
+	@include pagina.pagina-angosta(var(--sarao-ancho-formulario));
+	display: flex;
+	flex-direction: column;
+	gap: var(--sarao-espacio-4);
+	padding: var(--sarao-espacio-6);
+	background: var(--sarao-superficie);
+	border: 1px solid var(--sarao-borde);
+	border-radius: var(--sarao-radio);
+}
+
+h1 {
+	font-size: 22px;
+	font-weight: 700;
+	text-wrap: balance;
+}
+
+.bajada {
+	margin: 0;
+	color: var(--sarao-texto-suave);
+	font-size: 14px;
+}
+
+.aviso {
+	margin: 0;
+	padding: var(--sarao-espacio-3);
+	border: 1px solid var(--sarao-error);
+	border-left-width: 4px;
+	border-radius: var(--sarao-radio-control);
+	background: var(--sarao-error-fondo);
+	color: var(--sarao-error);
+	font-size: 14px;
+}
+
+.aviso.exito {
+	border-color: var(--sarao-exito);
+	background: var(--sarao-exito-fondo);
+	color: var(--sarao-exito);
+}
+
+form {
+	display: flex;
+	flex-direction: column;
+	gap: var(--sarao-espacio-4);
+}
+
+.campo {
+	display: flex;
+	flex-direction: column;
+	gap: var(--sarao-espacio-1);
+}
+
+label {
+	font-size: 13px;
+	font-weight: 600;
+}
+
+.opcional {
+	color: var(--sarao-texto-suave);
+	font-weight: 400;
+}
+
+input {
+	font: inherit;
+	font-size: 14px;
+	min-height: 44px;
+	padding: var(--sarao-espacio-3);
+	border: 1px solid var(--sarao-borde-control);
+	border-radius: var(--sarao-radio-control);
+	background: var(--sarao-fondo);
+	color: var(--sarao-texto);
+	width: 100%;
+}
+
+input[aria-invalid='true'] {
+	border-color: var(--sarao-error);
+	border-width: 2px;
+}
+
+.error {
+	margin: 0;
+	color: var(--sarao-error);
+	font-size: 12.5px;
+	font-weight: 500;
+}
+
+.boton {
+	font: inherit;
+	font-weight: 600;
+	font-size: 14px;
+	min-height: 44px;
+	padding: var(--sarao-espacio-3) var(--sarao-espacio-4);
+	border: 1px solid transparent;
+	border-radius: var(--sarao-radio-control);
+	background: var(--sarao-ambar);
+	color: var(--sarao-sobre-ambar);
+	cursor: pointer;
+	transition: background-color var(--sarao-transicion);
+}
+
+.boton:hover:not([disabled]) {
+	background: var(--sarao-ambar-fuerte);
+}
+
+.boton[disabled] {
+	opacity: 0.6;
+	cursor: default;
+}
+
+// Enlace al otro lado del circuito: de iniciar sesión a registrarse y al revés
+.enlace-cruzado {
+	margin: 0;
+	text-align: center;
+	font-size: 14px;
+	color: var(--sarao-texto-suave);
+}
+
+.enlace-cruzado a {
+	color: var(--sarao-ambar);
+	font-weight: 600;
+}
+
+.enlace-cruzado a:hover {
+	color: var(--sarao-ambar-fuerte);
+	text-decoration: underline;
+}

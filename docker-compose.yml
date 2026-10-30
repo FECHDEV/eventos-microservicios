@@ -1,7 +1,7 @@
 # Sarao en Docker.
 #   cp .env.example .env    (y completar los valores)
 #   docker compose up -d --build
-# La API queda en http://localhost/api (o el puerto de SARAO_PUERTO).
+# El sitio queda en http://localhost (o el puerto de SARAO_PUERTO).
 
 services:
   base:
@@ -51,9 +51,15 @@ services:
     environment:
       EVENTOS_SEGURIDAD_URL: http://seguridad:8081
       EVENTOS_CLAVE_SERVICIO: ${EVENTOS_CLAVE_SERVICIO}
-    # shortcut: publicado directo mientras no exista el frontend, con HU-09 pasa detrás de nginx y activa server.forward-headers-strategy
+    # Sin puertos publicados: se llega por nginx, bajo /api
+
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    depends_on:
+      - gateway
     ports:
-      - "${SARAO_PUERTO:-80}:8080"
+      - "${SARAO_PUERTO:-80}:80"
 
 volumes:
   datos-mysql:

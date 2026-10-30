@@ -1,0 +1,126 @@
+// La tabla, la paginación, los avisos y el botón secundario vienen de
+// _lista.scss, y la insignia de estado de EstadoDeEvento; acá quedan el
+// encabezado, la miniatura y el horario
+@use '../../../../styles/lista';
+
+:host {
+	display: flex;
+	flex-direction: column;
+	gap: var(--sarao-espacio-6);
+}
+
+.encabezado {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--sarao-espacio-3);
+}
+
+// La acción principal de la pantalla, con el ámbar de la marca
+.principal {
+	display: inline-flex;
+	align-items: center;
+	min-height: 44px;
+	padding: var(--sarao-espacio-2) var(--sarao-espacio-4);
+	border-radius: var(--sarao-radio-control);
+	background: var(--sarao-ambar);
+	color: var(--sarao-sobre-ambar);
+	font-size: 14px;
+	font-weight: 600;
+	text-decoration: none;
+	transition: background-color var(--sarao-transicion);
+}
+
+.principal:hover {
+	background: var(--sarao-ambar-fuerte);
+}
+
+.filtros {
+	max-width: 240px;
+}
+
+.celda-miniatura {
+	width: 88px;
+}
+
+.miniatura {
+	width: 72px;
+	aspect-ratio: 16 / 9;
+	border-radius: var(--sarao-radio-control);
+}
+
+tbody th a {
+	color: var(--sarao-texto);
+	font-weight: 600;
+	text-decoration: none;
+}
+
+tbody th a:hover {
+	color: var(--sarao-ambar);
+	text-decoration: underline;
+}
+
+// La acción explícita de cada fila, además del enlace en el nombre
+.celda-accion {
+	text-align: right;
+}
+
+.editar {
+	display: inline-flex;
+	align-items: center;
+	min-height: 36px;
+	padding: var(--sarao-espacio-1) var(--sarao-espacio-3);
+	border: 1px solid var(--sarao-borde-control);
+	border-radius: var(--sarao-radio-control);
+	color: var(--sarao-texto);
+	font-size: 14px;
+	font-weight: 600;
+	text-decoration: none;
+	transition:
+		border-color var(--sarao-transicion),
+		background-color var(--sarao-transicion);
+}
+
+.editar:hover {
+	border-color: var(--sarao-texto-suave);
+	background: var(--sarao-superficie-alta);
+}
+
+.horario {
+	display: inline-flex;
+	flex-direction: column;
+}
+
+.ayuda {
+	color: var(--sarao-texto-suave);
+	font-size: 12.5px;
+}
+
+@media (max-width: 640px) {
+	.filtros {
+		max-width: none;
+	}
+
+	// En el bloque del celular la miniatura va arriba, a lo ancho
+	.celda-miniatura {
+		width: auto;
+	}
+
+	.miniatura {
+		width: 100%;
+	}
+
+	.horario {
+		align-items: flex-end;
+	}
+
+	// Sin etiqueta: el botón va solo, a la derecha
+	.celda-accion {
+		justify-content: flex-end;
+	}
+
+	.celda-accion::before {
+		content: none;
+	}
+}

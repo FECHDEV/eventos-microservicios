@@ -1,0 +1,176 @@
+// La tarjeta, los avisos y el botón vienen de _formulario.scss; acá queda lo
+// propio de la reserva: el evento, el detalle, la cuenta, el cobro y el resultado
+@use '../../../../styles/formulario';
+@use '../../../../styles/pagina';
+
+:host {
+	@include pagina.pagina-angosta(var(--sarao-ancho-formulario));
+	display: flex;
+	flex-direction: column;
+	gap: var(--sarao-espacio-4);
+}
+
+.evento {
+	display: flex;
+	flex-direction: column;
+	gap: var(--sarao-espacio-1);
+}
+
+p {
+	margin: 0;
+}
+
+.nombre {
+	font-size: 17px;
+	font-weight: 700;
+	overflow-wrap: anywhere;
+}
+
+.cuando {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--sarao-espacio-1) var(--sarao-espacio-3);
+	font-size: 14px;
+}
+
+.lugar {
+	color: var(--sarao-texto-suave);
+	font-size: 14px;
+	overflow-wrap: anywhere;
+}
+
+.ayuda {
+	color: var(--sarao-texto-suave);
+	font-size: 12.5px;
+}
+
+.detalle {
+	display: flex;
+	flex-direction: column;
+	gap: var(--sarao-espacio-2);
+	margin: 0;
+	padding: var(--sarao-espacio-3) 0;
+	border-block: 1px solid var(--sarao-borde);
+}
+
+.detalle div {
+	display: flex;
+	justify-content: space-between;
+	gap: var(--sarao-espacio-3);
+}
+
+dt {
+	color: var(--sarao-texto-suave);
+	font-size: 14px;
+}
+
+dd {
+	margin: 0;
+	font-weight: 600;
+	text-align: right;
+}
+
+.detalle .total dt,
+.detalle .total dd {
+	color: var(--sarao-texto);
+	font-size: 16px;
+	font-weight: 700;
+}
+
+.numero {
+	font-variant-numeric: tabular-nums;
+}
+
+// El tiempo que queda: ámbar, lo único que cambia en la pantalla
+.cuenta {
+	font-size: 16px;
+}
+
+.cuenta strong {
+	color: var(--sarao-ambar);
+	font-size: 22px;
+}
+
+// El vencimiento y los resultados del pago que no son una compra confirmada
+.resultado {
+	display: flex;
+	flex-direction: column;
+	gap: var(--sarao-espacio-2);
+	padding: var(--sarao-espacio-3);
+	border: 1px solid var(--sarao-aviso);
+	border-left-width: 4px;
+	border-radius: var(--sarao-radio-control);
+	background: var(--sarao-aviso-fondo);
+	color: var(--sarao-aviso);
+}
+
+.resultado.exito {
+	border-color: var(--sarao-exito);
+	background: var(--sarao-exito-fondo);
+	color: var(--sarao-exito);
+	font-weight: 600;
+}
+
+.cobro {
+	display: flex;
+	flex-direction: column;
+	gap: var(--sarao-espacio-3);
+}
+
+.cobro h2 {
+	margin: 0;
+	font-size: 15px;
+	font-weight: 600;
+	text-wrap: balance;
+}
+
+// Herramienta de pruebas del simulador: se distingue del flujo real
+.pruebas {
+	display: flex;
+	flex-direction: column;
+	gap: var(--sarao-espacio-2);
+	padding: var(--sarao-espacio-3);
+	border: 1px dashed var(--sarao-borde-control);
+	border-radius: var(--sarao-radio-control);
+}
+
+.titulo-pruebas {
+	color: var(--sarao-texto-suave);
+	font-size: 12.5px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+.acciones {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--sarao-espacio-2);
+}
+
+.secundario {
+	font: inherit;
+	font-size: 14px;
+	font-weight: 600;
+	min-height: 44px;
+	padding: var(--sarao-espacio-2) var(--sarao-espacio-4);
+	border: 1px solid var(--sarao-borde-control);
+	border-radius: var(--sarao-radio-control);
+	background: transparent;
+	color: var(--sarao-texto);
+	cursor: pointer;
+}
+
+.secundario:hover:not([disabled]) {
+	border-color: var(--sarao-texto-suave);
+	background: var(--sarao-superficie-alta);
+}
+
+.secundario[disabled] {
+	opacity: 0.5;
+	cursor: default;
+}
+
+.cargando {
+	color: var(--sarao-texto-suave);
+}

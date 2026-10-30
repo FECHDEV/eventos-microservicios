@@ -12,8 +12,8 @@ Orden de arriba abajo por prioridad. Estado: Pendiente, En curso o Hecha.
 | HU-05 | Como usuario, quiero contraseñas con reglas de complejidad, para proteger mi cuenta. | Req. 6 | Seguridad | 1 | En curso |
 | HU-06 | Como usuario, quiero recuperar mi contraseña, para volver a entrar si la olvido. | CU-03 | Seguridad | 1 | Hecha |
 | HU-07 | Como usuario, quiero gestionar mis datos personales, para mantenerlos al día. | CU-04 | Seguridad | 1 | Hecha |
-| HU-08 | Como administrador, quiero gestionar usuarios y roles, para controlar quién hace qué. | CU-09, req. 5 | Seguridad | 1 | En curso |
-| HU-09 | Como visitante, quiero la interfaz de Sarao con sus temas y su menú, para usar el sitio con comodidad. | Req. 2 | Frontend | 1 | Pendiente |
+| HU-08 | Como administrador, quiero gestionar usuarios y roles, para controlar quién hace qué. | CU-09, req. 5 | Seguridad | 1 | Hecha |
+| HU-09 | Como visitante, quiero la interfaz de Sarao con sus temas y su menú, para usar el sitio con comodidad. | Req. 2 | Frontend | 1 | En curso |
 | HU-10 | Como administrador, quiero gestionar eventos, para publicarlos. | CU-10 | Eventos y Venta | 2 | Pendiente |
 | HU-11 | Como administrador, quiero gestionar tipos de entrada, para definir precios y cupos. | CU-11 | Eventos y Venta | 2 | Pendiente |
 | HU-12 | Como administrador, quiero gestionar el estado del evento, para postergarlo, cancelarlo o cerrar ventas. | CU-12 | Eventos y Venta | 2 | Pendiente |

@@ -1,0 +1,36 @@
+// La tabla, los avisos y el botón secundario vienen de _lista.scss; acá quedan
+// la bajada y el horario, como en la lista de eventos
+@use '../../../../styles/lista';
+
+:host {
+	display: flex;
+	flex-direction: column;
+	gap: var(--sarao-espacio-4);
+}
+
+.bajada {
+	margin: 0;
+	color: var(--sarao-texto-suave);
+	font-size: 14px;
+}
+
+.horario {
+	display: inline-flex;
+	flex-direction: column;
+}
+
+.ayuda {
+	color: var(--sarao-texto-suave);
+	font-size: 12.5px;
+}
+
+a:hover {
+	color: var(--sarao-ambar-fuerte);
+	text-decoration: underline;
+}
+
+@media (max-width: 640px) {
+	.horario {
+		align-items: flex-end;
+	}
+}

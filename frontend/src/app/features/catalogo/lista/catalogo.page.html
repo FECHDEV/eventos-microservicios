@@ -1,0 +1,143 @@
+<h1>Próximos eventos</h1>
+
+<form class="filtros" role="search" aria-label="Buscar eventos" (submit)="buscar($event)" novalidate>
+  <div class="campo texto">
+    @let errorTexto = mensaje('texto');
+    <label for="texto">Buscar</label>
+    <input
+      id="texto"
+      type="search"
+      autocomplete="off"
+      placeholder="Nombre o lugar…"
+      [formField]="formulario.texto"
+      [attr.aria-invalid]="errorTexto ? 'true' : null"
+      [attr.aria-describedby]="errorTexto ? 'error-texto' : null"
+    />
+    @if (errorTexto) {
+      <p class="error" id="error-texto">{{ errorTexto }}</p>
+    }
+  </div>
+
+  <div class="campo">
+    @let errorDesde = mensaje('desde');
+    <label for="desde">Desde</label>
+    <input
+      id="desde"
+      type="date"
+      autocomplete="off"
+      [formField]="formulario.desde"
+      [attr.aria-invalid]="errorDesde ? 'true' : null"
+      [attr.aria-describedby]="errorDesde ? 'error-desde' : null"
+    />
+    @if (errorDesde) {
+      <p class="error" id="error-desde">{{ errorDesde }}</p>
+    }
+  </div>
+
+  <div class="campo">
+    @let errorHasta = mensaje('hasta');
+    <label for="hasta">Hasta</label>
+    <input
+      id="hasta"
+      type="date"
+      autocomplete="off"
+      [formField]="formulario.hasta"
+      [attr.aria-invalid]="errorHasta ? 'true' : null"
+      [attr.aria-describedby]="errorHasta ? 'error-hasta' : null"
+    />
+    @if (errorHasta) {
+      <p class="error" id="error-hasta">{{ errorHasta }}</p>
+    }
+  </div>
+
+  <div class="acciones">
+    <button type="submit" class="principal">Buscar</button>
+    <button type="button" class="secundario" (click)="limpiar()">Limpiar</button>
+  </div>
+</form>
+
+@if (pagina(); as pagina) {
+  @if (pagina.contenido.length === 0 && pagina.pagina > 0 && pagina.totalElementos > 0) {
+    <div class="vacio" role="status">
+      <p>Esta página no existe.</p>
+      <button type="button" class="secundario" (click)="irAPagina(0)">Ir a la primera página</button>
+    </div>
+  } @else if (pagina.contenido.length === 0 && hayFiltros()) {
+    <div class="vacio" role="status">
+      <p>No encontramos eventos con esos criterios.</p>
+      <button type="button" class="secundario" (click)="limpiar()">Limpiar la búsqueda</button>
+    </div>
+  } @else if (pagina.contenido.length === 0) {
+    <p class="vacio" role="status">Todavía no hay eventos disponibles.</p>
+  } @else {
+    <ul class="tarjetas">
+      @for (evento of pagina.contenido; track evento.idEvento) {
+        <li>
+          <article class="tarjeta">
+            @if (evento.tieneImagen) {
+              <img [src]="urlDeImagen(evento.idEvento)" alt="" width="640" height="360" loading="lazy" />
+            } @else {
+              <div class="sin-imagen" aria-hidden="true"></div>
+            }
+            <div class="cuerpo">
+              <h2>
+                <a [routerLink]="['/catalogo', evento.idEvento]">{{ evento.nombre }}</a>
+              </h2>
+              <p class="cuando">
+                <span class="numero">{{ fecha(evento.fecha) }}</span>
+                <span class="numero">{{ hora(evento.horaInicio) }}–{{ hora(evento.horaFin) }}</span>
+                @if (terminaAlDiaSiguiente(evento.horaInicio, evento.horaFin)) {
+                  <span class="ayuda">termina al día siguiente</span>
+                }
+              </p>
+              <p class="lugar">{{ evento.lugar }}</p>
+              @if (evento.fechaOriginal || !evento.ventaAbierta) {
+                <ul class="marcas">
+                  @if (evento.fechaOriginal; as original) {
+                    <li class="marca postergado">Postergado · antes el {{ fecha(original) }}</li>
+                  }
+                  @if (!evento.ventaAbierta) {
+                    <li class="marca cerrada">Venta cerrada</li>
+                  }
+                </ul>
+              }
+            </div>
+          </article>
+        </li>
+      }
+    </ul>
+  }
+
+  @if (pagina.totalElementos > 0) {
+    <nav class="paginacion" aria-label="Páginas del catálogo">
+      <button
+        type="button"
+        class="secundario"
+        [disabled]="pagina.pagina === 0"
+        (click)="irAPagina(pagina.pagina - 1)"
+      >
+        Anterior
+      </button>
+      <p class="numero" aria-live="polite">
+        Página {{ pagina.pagina + 1 }} de {{ pagina.totalPaginas || 1 }} ·
+        {{ cantidad(pagina.totalElementos) }} {{ pagina.totalElementos === 1 ? 'evento' : 'eventos' }}
+      </p>
+      <button
+        type="button"
+        class="secundario"
+        [disabled]="pagina.pagina + 1 >= pagina.totalPaginas"
+        (click)="irAPagina(pagina.pagina + 1)"
+      >
+        Siguiente
+      </button>
+    </nav>
+  }
+} @else if (errorDeCarga()) {
+  <div class="tarjeta-error">
+    <p class="aviso" role="alert">{{ errorDeCarga() }}</p>
+    <button type="button" class="secundario" (click)="listado.reload()">Reintentar</button>
+  </div>
+} @else if (!listado.error()) {
+  <!-- Con un filtro rechazado no hay lista ni tarjeta de error: el aviso va bajo el campo -->
+  <p class="cargando" role="status">Cargando eventos…</p>
+}

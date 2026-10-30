@@ -1,0 +1,66 @@
+<h1>Mis entradas</h1>
+
+@if (secciones(); as secciones) {
+  @for (seccion of secciones; track seccion.id) {
+    <section [attr.aria-labelledby]="'titulo-' + seccion.id">
+      <h2 [id]="'titulo-' + seccion.id">{{ seccion.titulo }}</h2>
+
+      <ul class="compras">
+        @for (compra of seccion.compras; track compra.idReserva) {
+          <li>
+            <article
+              class="compra"
+              [class.pasada]="seccion.clase === 'pasada'"
+              [class.cancelada]="seccion.clase === 'cancelada'"
+              [attr.aria-labelledby]="'compra-' + compra.idReserva"
+            >
+              <div class="encabezado">
+                <h3 [id]="'compra-' + compra.idReserva">{{ compra.nombreEvento }}</h3>
+                @if (etiqueta(compra.estadoEvento); as etiqueta) {
+                  <span class="etiqueta">{{ etiqueta }}</span>
+                }
+                @if (seccion.clase === 'pasada') {
+                  <span class="terminado">Terminado</span>
+                }
+              </div>
+              <p class="cuando">
+                <span class="numero">{{ fecha(compra.fecha) }}</span>
+                <span class="numero">{{ hora(compra.horaInicio) }}–{{ hora(compra.horaFin) }}</span>
+                @if (terminaAlDiaSiguiente(compra.horaInicio, compra.horaFin)) {
+                  <span class="ayuda">termina al día siguiente</span>
+                }
+              </p>
+              <p class="lugar">{{ compra.lugar }}</p>
+              <p class="tipo">{{ compra.tipoEntrada }} × {{ compra.cantidad }}</p>
+
+              <ul class="entradas">
+                @for (entrada of compra.entradas; track entrada.idEntrada) {
+                  <li>
+                    <a
+                      [routerLink]="['/mis-entradas', entrada.idEntrada]"
+                      [attr.aria-label]="'Entrada ' + entrada.numero + ' de ' + compra.nombreEvento"
+                      >Entrada {{ entrada.numero }}</a
+                    >
+                    <span class="estado" [attr.data-estado]="entrada.estado">{{ estado(entrada.estado) }}</span>
+                  </li>
+                }
+              </ul>
+            </article>
+          </li>
+        }
+      </ul>
+    </section>
+  } @empty {
+    <div class="vacio" role="status">
+      <p>No tienes entradas para mostrar.</p>
+      <a routerLink="/">Ver el catálogo</a>
+    </div>
+  }
+} @else if (errorDeCarga()) {
+  <div class="vacio">
+    <p class="aviso" role="alert">{{ errorDeCarga() }}</p>
+    <button type="button" class="boton" (click)="recurso.reload()">Reintentar</button>
+  </div>
+} @else {
+  <p class="cargando" role="status">Cargando tus entradas…</p>
+}

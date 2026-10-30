@@ -1,0 +1,24 @@
+// Con sus propios colores (_tokens.scss): oscuro sobre claro aunque cambie el
+// tema. Ocupa el ancho del padre hasta un máximo, siempre centrado
+:host {
+	display: block;
+	width: 100%;
+	max-width: 280px;
+	margin-inline: auto;
+	aspect-ratio: 1;
+}
+
+svg {
+	display: block;
+	width: 100%;
+	height: 100%;
+	border-radius: var(--sarao-radio-control);
+}
+
+.claro {
+	fill: var(--sarao-qr-claro);
+}
+
+.oscuro {
+	fill: var(--sarao-qr-oscuro);
+}

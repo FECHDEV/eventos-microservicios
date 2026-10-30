@@ -1,0 +1,86 @@
+<!-- Siempre presentes: un lector de pantalla anuncia lo que aparece dentro,
+     pero no una región que se crea junto con su texto -->
+<div class="avisos">
+  <div role="alert">
+    @if (aviso()) {
+      <p class="aviso">
+        {{ aviso() }}
+        @if (faltanTipos()) {
+          <a routerLink="../tipos">Agregar tipos de entrada</a>
+        }
+      </p>
+    }
+  </div>
+  <div role="status">
+    @if (exito()) {
+      <p class="aviso exito">{{ exito() }}</p>
+    }
+  </div>
+</div>
+
+@if (cancelado()) {
+  <p class="aviso-neutro">
+    Este evento está cancelado. Es definitivo: no se edita ni vende entradas, y las ya vendidas quedan
+    registradas para la devolución.
+  </p>
+} @else {
+  <div class="acciones">
+    @if (puedeActivarse()) {
+      <section class="accion" aria-labelledby="titulo-activar">
+        <h2 id="titulo-activar">Activar</h2>
+        @if (postergado()) {
+          <p>
+            Vuelve a abrir la venta con la fecha nueva. Las entradas usadas antes de la postergación vuelven a estar
+            activas.
+          </p>
+        } @else {
+          <p>Abre la venta de entradas. Necesita al menos un tipo de entrada.</p>
+        }
+        <button type="button" class="boton" [disabled]="procesando()" (click)="activar()">Activar</button>
+      </section>
+    }
+
+    @if (puedePostergarse()) {
+      <section class="accion" aria-labelledby="titulo-postergar">
+        <h2 id="titulo-postergar">Postergar</h2>
+        <p>Mueve el evento a otra fecha. Las entradas vendidas siguen valiendo para la fecha nueva.</p>
+        <form class="postergacion" (submit)="postergar($event)" novalidate>
+          <div class="campo">
+            @let errorFecha = mensajeDeFecha();
+            <label for="fecha-nueva">Fecha nueva</label>
+            <input
+              id="fecha-nueva"
+              type="date"
+              autocomplete="off"
+              [formField]="formulario.fecha"
+              [attr.aria-invalid]="errorFecha ? 'true' : null"
+              [attr.aria-describedby]="errorFecha ? 'error-fecha-nueva' : null"
+            />
+            @if (errorFecha) {
+              <p class="error" id="error-fecha-nueva">{{ errorFecha }}</p>
+            }
+          </div>
+          <button type="submit" class="secundario" [disabled]="procesando()">Postergar</button>
+        </form>
+      </section>
+    }
+
+    @if (puedeCerrarLaVenta()) {
+      <section class="accion" aria-labelledby="titulo-cerrar">
+        <h2 id="titulo-cerrar">Cerrar la venta</h2>
+        <p>Nadie más podrá comprar entradas. El estado del evento no cambia.</p>
+        <button type="button" class="secundario" [disabled]="procesando()" (click)="cerrarVenta()">
+          Cerrar la venta
+        </button>
+      </section>
+    }
+
+    <section class="accion peligro" aria-labelledby="titulo-cancelar">
+      <h2 id="titulo-cancelar">Cancelar el evento</h2>
+      <p>Es definitivo. Las entradas vendidas quedan registradas para la devolución, que se hace fuera del sistema.</p>
+      <button type="button" class="peligroso" [disabled]="procesando()" (click)="cancelar()">Cancelar evento</button>
+    </section>
+  </div>
+}
+
+<app-dialogo-confirmacion />

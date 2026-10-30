@@ -1,0 +1,124 @@
+@if (reserva(); as reserva) {
+  <section class="tarjeta" aria-labelledby="titulo-reserva">
+    <h1 id="titulo-reserva">Tu reserva</h1>
+
+    <div class="evento">
+      <p class="nombre">{{ reserva.nombreEvento }}</p>
+      <p class="cuando">
+        <span class="numero">{{ fecha(reserva.fecha) }}</span>
+        <span class="numero">{{ hora(reserva.horaInicio) }}–{{ hora(reserva.horaFin) }}</span>
+        @if (terminaAlDiaSiguiente(reserva.horaInicio, reserva.horaFin)) {
+          <span class="ayuda">termina al día siguiente</span>
+        }
+      </p>
+      <p class="lugar">{{ reserva.lugar }}</p>
+    </div>
+
+    <dl class="detalle">
+      <div>
+        <dt>Entrada</dt>
+        <dd>{{ reserva.tipoEntrada }}</dd>
+      </div>
+      <div>
+        <dt>Cantidad</dt>
+        <dd class="numero">{{ cantidad(reserva.cantidad) }}</dd>
+      </div>
+      <div>
+        <dt>Precio por entrada</dt>
+        <dd class="numero">{{ precio(reserva.precioUnitario) }}</dd>
+      </div>
+      <div class="total">
+        <dt>Total</dt>
+        <dd class="numero">{{ precio(reserva.total) }}</dd>
+      </div>
+    </dl>
+
+    <!-- Siempre presente: anuncia el vencimiento y el resultado del pago cuando aparecen -->
+    <div role="status">
+      @if (confirmada()) {
+        <div class="resultado exito">
+          <p>{{ textoConfirmada() }}</p>
+        </div>
+      } @else if (paraDevolucion()) {
+        <div class="resultado">
+          <p>
+            Tu pago llegó cuando la reserva ya había vencido y no quedaban entradas. Te devolveremos el dinero.
+          </p>
+        </div>
+      } @else if (conError()) {
+        <div class="resultado">
+          <p>El pago no se pudo completar y liberamos tus entradas.</p>
+          <a [routerLink]="['/catalogo', reserva.idEvento]">Volver al evento</a>
+        </div>
+      } @else if (cobroFallido(); as rechazo) {
+        <div class="resultado">
+          <p>{{ mensaje(rechazo) }}</p>
+          <a [routerLink]="['/catalogo', reserva.idEvento]">Volver al evento</a>
+        </div>
+      } @else if (vencida()) {
+        <div class="resultado">
+          <p>La reserva venció y las entradas se liberaron.</p>
+          <a [routerLink]="['/catalogo', reserva.idEvento]">Volver al evento</a>
+        </div>
+      }
+    </div>
+
+    @if (contando()) {
+      <!-- timer no se anuncia a cada segundo: un lector de pantalla lo lee cuando se llega -->
+      <p class="cuenta" role="timer">
+        Vence en <strong class="numero">{{ cuenta() }}</strong>
+      </p>
+      <p class="ayuda">Te guardamos estas entradas durante 10 minutos.</p>
+    }
+
+    @if (errorDelPago(); as rechazo) {
+      <p class="aviso" role="alert">{{ mensaje(rechazo) }}</p>
+      @if (!pago() && !sinCobro()) {
+        <button type="button" class="boton" (click)="consultarAlAbrir()">Reintentar</button>
+      }
+    }
+
+    @if (ofrecePagar()) {
+      <button type="button" class="boton" [disabled]="pagando()" (click)="pagar()">
+        {{ pagando() ? 'Generando el cobro…' : 'Pagar' }}
+      </button>
+    }
+
+    @if (esperandoPago() && pago(); as cobro) {
+      <section class="cobro" aria-labelledby="titulo-cobro">
+        <h2 id="titulo-cobro" tabindex="-1">Escanea este código con la app de tu banco</h2>
+        <app-codigo-qr [valor]="cobro.codigoQr" etiqueta="Código QR del cobro" />
+        @if (cobro.urlPasarela) {
+          <a [href]="cobro.urlPasarela" target="_blank" rel="noopener noreferrer">Abrir la página de pago</a>
+        }
+        <p class="ayuda">Cuando llegue el pago, esta pantalla se actualiza sola.</p>
+
+        @if (cobro.simulador) {
+          <div class="pruebas" role="group" aria-labelledby="titulo-pruebas">
+            <p id="titulo-pruebas" class="titulo-pruebas">Herramienta de pruebas</p>
+            <div class="acciones">
+              <button type="button" class="secundario" [disabled]="simulando()" (click)="simular('PAGADO')">
+                Simular pago
+              </button>
+              <button type="button" class="secundario" [disabled]="simulando()" (click)="simular('ERROR')">
+                Simular error
+              </button>
+            </div>
+          </div>
+        }
+      </section>
+    }
+  </section>
+} @else if (noEncontrada()) {
+  <div class="tarjeta" role="status">
+    <p>No encontramos esa reserva.</p>
+    <a routerLink="/">Ver los eventos</a>
+  </div>
+} @else if (errorDeCarga()) {
+  <div class="tarjeta">
+    <p class="aviso" role="alert">{{ errorDeCarga() }}</p>
+    <button type="button" class="boton" (click)="recurso.reload()">Reintentar</button>
+  </div>
+} @else {
+  <p class="cargando" role="status">Cargando la reserva…</p>
+}
