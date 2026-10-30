@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.TypeMismatchException;
+import org.springframework.dao.PessimisticLockingFailureException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -47,6 +48,15 @@ public class ManejadorErrores extends ResponseEntityExceptionHandler {
 		ProblemDetail problema = ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN,
 				"No tiene permiso para acceder a este recurso.");
 		problema.setProperty("codigo", "ACCESO_DENEGADO");
+		return problema;
+	}
+
+	// CU-09 bloquea filas a propósito: si la espera se agota, el conflicto sale en el formato de la API y se puede reintentar
+	@ExceptionHandler(PessimisticLockingFailureException.class)
+	public ProblemDetail manejarFalloDeBloqueo(PessimisticLockingFailureException ex) {
+		ProblemDetail problema = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT,
+				"Otra operación está modificando esos datos. Vuelva a intentarlo.");
+		problema.setProperty("codigo", "OPERACION_SIMULTANEA");
 		return problema;
 	}
 
