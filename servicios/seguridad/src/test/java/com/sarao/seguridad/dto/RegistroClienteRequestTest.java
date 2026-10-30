@@ -136,6 +136,28 @@ class RegistroClienteRequestTest {
 	}
 
 	@Test
+	void contrasenaEnBlancoDaUnSoloError() {
+		assertThat(validator.validate(conContrasena("   "))).hasSize(1);
+	}
+
+	@Test
+	void contrasenaConSaltoDeLineaCumpleLaRegla() {
+		assertThat(camposInvalidos(conContrasena("Secreta12\nabc"))).isEmpty();
+	}
+
+	@Test
+	void telefonoEnBlancoLargoCuentaComoAusente() {
+		var solicitud = new RegistroClienteRequest("Ana", "Rojas", "ana@mail.com", "Secreta12", " ".repeat(25), NACIMIENTO);
+		assertThat(solicitud.telefono()).isNull();
+		assertThat(camposInvalidos(solicitud)).isEmpty();
+	}
+
+	@Test
+	void toStringNoExponeLaContrasena() {
+		assertThat(conContrasena("Secreta12").toString()).doesNotContain("Secreta12");
+	}
+
+	@Test
 	void telefonoEsOpcional() {
 		var solicitud = new RegistroClienteRequest("Ana", "Rojas", "ana@mail.com", "Secreta12", null, NACIMIENTO);
 		assertThat(camposInvalidos(solicitud)).isEmpty();

@@ -34,7 +34,8 @@ public class Usuario {
 	@Column(nullable = false, length = 80)
 	private String apellido;
 
-	@Column(nullable = false, length = 120, unique = true)
+	// Binaria: con la colación de la base, josé@mail.com y jose@mail.com serían la misma cuenta. El valor ya llega normalizado
+	@Column(nullable = false, unique = true, columnDefinition = "varchar(120) character set utf8mb4 collate utf8mb4_bin")
 	private String correo;
 
 	@Column(nullable = false, length = 255)

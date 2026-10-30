@@ -30,8 +30,8 @@ public record RegistroClienteRequest(
 		@Size(max = 120, message = "admite hasta 120 caracteres")
 		String correo,
 
-		@NotBlank(message = "es obligatoria")
-		@Pattern(regexp = ReglasContrasena.PATRON, message = ReglasContrasena.MENSAJE)
+		@NotNull(message = "es obligatoria")
+		@Pattern(regexp = ReglasContrasena.PATRON, flags = Pattern.Flag.DOTALL, message = ReglasContrasena.MENSAJE)
 		@MaximoBytesUtf8(value = 72, message = "admite hasta 72 bytes")
 		String contrasena,
 
@@ -44,5 +44,12 @@ public record RegistroClienteRequest(
 
 	public RegistroClienteRequest {
 		correo = correo == null ? null : Usuario.normalizarCorreo(correo);
+		telefono = telefono == null || telefono.isBlank() ? null : telefono;
+	}
+
+	// La contraseña nunca llega a un registro
+	@Override
+	public String toString() {
+		return "RegistroClienteRequest[correo=" + correo + "]";
 	}
 }

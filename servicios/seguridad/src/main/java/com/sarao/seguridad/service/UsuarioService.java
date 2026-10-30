@@ -6,7 +6,6 @@ import java.time.LocalDateTime;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import com.sarao.seguridad.dto.RegistroClienteRequest;
 import com.sarao.seguridad.entity.Usuario;
@@ -22,7 +21,7 @@ public class UsuarioService {
 	private final PasswordEncoder passwordEncoder;
 	private final Clock clock;
 
-	@Transactional
+	// Sin @Transactional: el hash BCrypt no retiene una conexión, y la restricción UNIQUE resuelve la carrera
 	public Usuario registrarCliente(RegistroClienteRequest solicitud) {
 		String correo = Usuario.normalizarCorreo(solicitud.correo());
 		if (usuarioRepository.existsByCorreo(correo)) {
