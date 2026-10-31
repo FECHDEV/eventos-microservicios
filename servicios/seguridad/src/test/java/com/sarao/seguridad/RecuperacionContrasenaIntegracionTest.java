@@ -1,10 +1,8 @@
 package com.sarao.seguridad;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.BDDMockito.willAnswer;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.never;
@@ -24,13 +22,15 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.event.EventListener;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.test.web.servlet.assertj.MvcTestResult;
 
@@ -40,7 +40,6 @@ import com.jayway.jsonpath.JsonPath;
 
 import com.sarao.seguridad.dto.SolicitudRecuperacionRequest;
 import com.sarao.seguridad.repository.UsuarioRepository;
-import com.sarao.seguridad.repository.RecuperacionContrasenaRepository;
 import com.sarao.seguridad.service.NotificadorCorreo;
 import com.sarao.seguridad.service.RecuperacionSolicitada;
 import com.sarao.seguridad.service.RecuperacionContrasenaService;
@@ -49,6 +48,7 @@ import com.sarao.seguridad.service.TokenRecuperacion;
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@Import(RecuperacionContrasenaIntegracionTest.SolicitudLenta.class)
 class RecuperacionContrasenaIntegracionTest {
 
 	private static final String REGISTRO = """
@@ -73,12 +73,20 @@ class RecuperacionContrasenaIntegracionTest {
 	@Autowired
 	private RecuperacionContrasenaService recuperacionContrasenaService;
 
-	@MockitoSpyBean
-	private RecuperacionContrasenaRepository recuperacionRepository;
-
 	// Solo captura el token: el correo real es de Notificaciones
 	@MockitoBean
 	private NotificadorCorreo notificadorCorreo;
+
+	// Demora la transacción después de guardar el token: sin el bloqueo de la cuenta, una solicitud simultánea no vería el
+	// token que esta todavía no confirmó
+	@TestConfiguration
+	static class SolicitudLenta {
+
+		@EventListener
+		void demorar(RecuperacionSolicitada solicitud) throws InterruptedException {
+			Thread.sleep(300);
+		}
+	}
 
 	@BeforeEach
 	void registrarAna() {
@@ -274,12 +282,6 @@ class RecuperacionContrasenaIntegracionTest {
 
 	@Test
 	void dosSolicitudesSimultaneasDejanUnSoloTokenVigente() throws Exception {
-		// El guardado tarda: sin el bloqueo de la cuenta, la segunda solicitud no ve el token que la primera no confirmó
-		willAnswer(invocacion -> {
-			Object guardado = invocacion.callRealMethod();
-			Thread.sleep(300);
-			return guardado;
-		}).given(recuperacionRepository).save(any());
 		CountDownLatch largada = new CountDownLatch(1);
 		ExecutorService hilos = Executors.newFixedThreadPool(2);
 		try {
