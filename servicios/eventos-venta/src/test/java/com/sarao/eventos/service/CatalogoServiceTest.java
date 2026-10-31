@@ -5,11 +5,13 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.inOrder;
 
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.EnumSet;
@@ -19,6 +21,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
@@ -56,11 +59,15 @@ class CatalogoServiceTest {
 	@Mock
 	private AlmacenImagenes almacenImagenes;
 
+	@Mock
+	private LiberacionDeReservas liberacionDeReservas;
+
 	private CatalogoService servicio;
 
 	@BeforeEach
 	void crearServicio() {
-		servicio = new CatalogoService(eventoRepository, tipoEntradaRepository, almacenImagenes, RELOJ);
+		servicio = new CatalogoService(eventoRepository, tipoEntradaRepository, almacenImagenes, liberacionDeReservas,
+				RELOJ);
 	}
 
 	private static Evento evento(EstadoEvento estado, LocalDate fecha) {
@@ -234,6 +241,21 @@ class CatalogoServiceTest {
 			assertThatThrownBy(() -> servicio.obtener(pedido)).isInstanceOf(EventoNoEncontradoException.class);
 		}
 		then(tipoEntradaRepository).shouldHaveNoInteractions();
+		// Un evento oculto no llega a bloquear nada
+		then(liberacionDeReservas).shouldHaveNoInteractions();
+	}
+
+	// CU-06 RF-17 y RF-21: las vencidas se liberan antes de leer la disponibilidad de los tipos
+	@Test
+	void elDetalleLiberaLasVencidasAntesDeLeerLosTipos() {
+		given(eventoRepository.findById(5L)).willReturn(Optional.of(evento(EstadoEvento.ACTIVO, HOY.plusDays(10))));
+		given(tipoEntradaRepository.findByEvento_IdEventoOrderByIdTipoEntrada(5L)).willReturn(List.of());
+
+		servicio.obtener(5L);
+
+		InOrder orden = inOrder(liberacionDeReservas, tipoEntradaRepository);
+		orden.verify(liberacionDeReservas).liberarVencidas(5L, LocalDateTime.of(2026, 9, 18, 23, 30));
+		orden.verify(tipoEntradaRepository).findByEvento_IdEventoOrderByIdTipoEntrada(5L);
 	}
 
 	// --- Imagen (RF-17) ---

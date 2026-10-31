@@ -36,6 +36,7 @@ public class CatalogoService {
 	private final EventoRepository eventoRepository;
 	private final TipoEntradaRepository tipoEntradaRepository;
 	private final AlmacenImagenes almacenImagenes;
+	private final LiberacionDeReservas liberacionDeReservas;
 	private final Clock clock;
 
 	@Transactional(readOnly = true)
@@ -51,10 +52,12 @@ public class CatalogoService {
 				ahora.toLocalTime(), limpio.isEmpty() ? null : patron(limpio), desde, hasta, paginacion);
 	}
 
-	// shortcut: lee la disponible tal cual; con HU-15 libera antes las reservas vencidas (CU-06 RF-17 y RF-21)
-	@Transactional(readOnly = true)
+	// Escribe: libera las reservas vencidas del evento antes de leer si sus tipos quedan disponibles (CU-06 RF-17 y
+	// RF-21). Un evento que no se muestra corta antes, sin bloquear nada
+	@Transactional
 	public EventoDelCatalogo obtener(Long idEvento) {
 		Evento evento = buscarVisible(idEvento);
+		liberacionDeReservas.liberarVencidas(idEvento, LocalDateTime.now(clock));
 		return new EventoDelCatalogo(evento, tipoEntradaRepository.findByEvento_IdEventoOrderByIdTipoEntrada(idEvento));
 	}
 

@@ -5,11 +5,16 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 
 import java.math.BigDecimal;
+import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 
@@ -18,6 +23,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -46,7 +52,13 @@ class GestionTiposEntradaServiceTest {
 	@Mock
 	private TipoEntradaRepository tipoEntradaRepository;
 
+	@Mock
+	private LiberacionDeReservas liberacionDeReservas;
+
 	// 21/09/2026 a las 20:00 en La Paz
+	private static final Clock RELOJ = Clock.fixed(Instant.parse("2026-09-22T00:00:00Z"),
+			ZoneId.of("America/La_Paz"));
+	private static final LocalDateTime AHORA = LocalDateTime.of(2026, 9, 21, 20, 0);
 
 	private GestionTiposEntradaService servicio;
 
@@ -54,7 +66,8 @@ class GestionTiposEntradaServiceTest {
 
 	@BeforeEach
 	void crearServicio() {
-		servicio = new GestionTiposEntradaService(eventoRepository, tipoEntradaRepository);
+		servicio = new GestionTiposEntradaService(eventoRepository, tipoEntradaRepository, liberacionDeReservas,
+				RELOJ);
 	}
 
 	private Evento evento(EstadoEvento estado) {
@@ -91,6 +104,33 @@ class GestionTiposEntradaServiceTest {
 		given(tipoEntradaRepository.findByEvento_IdEventoOrderByIdTipoEntrada(5L)).willReturn(tipos);
 
 		assertThat(servicio.listar(5L)).isEqualTo(tipos);
+	}
+
+	// CU-06 RF-17: la lista del Administrador muestra la disponible ya liberada
+	@Test
+	void listarLiberaLasVencidasAntesDeLeer() {
+		given(eventoRepository.existsById(5L)).willReturn(true);
+		given(tipoEntradaRepository.findByEvento_IdEventoOrderByIdTipoEntrada(5L)).willReturn(List.of());
+
+		servicio.listar(5L);
+
+		InOrder orden = inOrder(liberacionDeReservas, tipoEntradaRepository);
+		orden.verify(liberacionDeReservas).liberarVencidas(5L, AHORA);
+		orden.verify(tipoEntradaRepository).findByEvento_IdEventoOrderByIdTipoEntrada(5L);
+	}
+
+	// CU-06, caso límite: el mínimo de la cantidad total descuenta primero las reservas vencidas. Orden: evento,
+	// liberar, tipo
+	@Test
+	void modificarLiberaConElEventoBloqueadoAntesDeTomarElTipo() {
+		general(evento(EstadoEvento.ACTIVO), 70);
+
+		servicio.modificar(5L, 3L, solicitud("General", "50", 100));
+
+		InOrder orden = inOrder(eventoRepository, liberacionDeReservas, tipoEntradaRepository);
+		orden.verify(eventoRepository).findConBloqueoByIdEvento(5L);
+		orden.verify(liberacionDeReservas).liberarVencidasConElEventoBloqueado(5L, AHORA);
+		orden.verify(tipoEntradaRepository).findConBloqueoByIdTipoEntradaAndEvento_IdEvento(3L, 5L);
 	}
 
 	@Test

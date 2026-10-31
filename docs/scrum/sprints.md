@@ -29,8 +29,6 @@ con 232 pruebas, gateway con 8 y frontend con 900.
 
 **Pendientes para las próximas historias** (de las revisiones del sprint):
 
-- **HU-15:** el frontend guarda el rol de la sesión y no lo refresca al cambiar, aunque el
-  backend lo aplica de inmediato. Viene del sistema base.
 - **HU-17:** enviar los correos después del commit. Con correo real, una falla o la demora
   revelarían qué cuentas existen.
 - **HU-18:** al vencer la reserva, la pantalla deja de consultar el pago y no muestra un pago tardío.
@@ -38,8 +36,6 @@ con 232 pruebas, gateway con 8 y frontend con 900.
 - **HU-22:** límite de frecuencia en nginx para las rutas públicas de escritura (`/api/visitas`).
 - **HU-22:** healthcheck de Seguridad en compose, y revisar la IP real según lo que quede delante
   de nginx. Sin Caddy, un cliente por IPv6 llega con IP interna y puede inventar su IP.
-- **HU-15:** liberar las reservas vencidas al listar y modificar tipos de entrada y en el detalle del
-  catálogo (CU-06 RF-17 y RF-21).
 - **HU-16:** CU-12 FA-02, reactivar las entradas utilizadas al activar un postergado (RF-26 a RF-32).
 - **Sin historia:** un 401 en una pestaña borra la sesión de las demás, y cerrar sesión no se
   propaga entre pestañas. Viene del sistema base.

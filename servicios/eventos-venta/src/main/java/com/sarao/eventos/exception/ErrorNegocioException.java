@@ -1,5 +1,7 @@
 package com.sarao.eventos.exception;
 
+import java.util.Map;
+
 import org.springframework.http.HttpStatus;
 
 import lombok.Getter;
@@ -14,5 +16,10 @@ public abstract class ErrorNegocioException extends RuntimeException {
 		super(mensaje);
 		this.codigo = codigo;
 		this.estadoHttp = estadoHttp;
+	}
+
+	// Datos para explicar el rechazo, además del mensaje
+	public Map<String, Object> propiedades() {
+		return Map.of();
 	}
 }

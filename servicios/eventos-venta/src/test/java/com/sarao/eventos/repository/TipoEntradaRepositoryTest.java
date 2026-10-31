@@ -145,4 +145,17 @@ class TipoEntradaRepositoryTest {
 		assertThat(tipoEntradaRepository.existsByEvento_IdEvento(jazz.getIdEvento())).isTrue();
 		assertThat(tipoEntradaRepository.existsByEvento_IdEvento(feria.getIdEvento())).isFalse();
 	}
+
+	// CU-06 FA-04: la disponible se suma en la base, sobre el valor actual
+	@Test
+	void devolverDisponibilidadSumaALaDisponible() {
+		TipoEntrada general = guardado(jazz, "General");
+		ReflectionTestUtils.setField(general, "cantidadDisponible", 90);
+		em.flush();
+
+		assertThat(tipoEntradaRepository.devolverDisponibilidad(general.getIdTipoEntrada(), 4)).isEqualTo(1);
+
+		assertThat(tipoEntradaRepository.findById(general.getIdTipoEntrada()).orElseThrow().getCantidadDisponible())
+				.isEqualTo(94);
+	}
 }

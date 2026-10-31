@@ -54,6 +54,7 @@ services:
       EVENTOS_EVENTOS_DB_PASSWORD: ${EVENTOS_EVENTOS_DB_PASSWORD}
       EVENTOS_CLAVE_SERVICIO: ${EVENTOS_CLAVE_SERVICIO}
       EVENTOS_IMAGENES_DIRECTORIO: /datos/imagenes
+      EVENTOS_SEGURIDAD_URL: http://seguridad:8081
     volumes:
       - imagenes-eventos:/datos/imagenes
 

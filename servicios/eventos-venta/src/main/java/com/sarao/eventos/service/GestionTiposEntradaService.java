@@ -1,5 +1,7 @@
 package com.sarao.eventos.service;
 
+import java.time.Clock;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -24,14 +26,17 @@ public class GestionTiposEntradaService {
 
 	private final EventoRepository eventoRepository;
 	private final TipoEntradaRepository tipoEntradaRepository;
+	private final LiberacionDeReservas liberacionDeReservas;
+	private final Clock clock;
 
-	// En cualquier estado del evento, también cancelado (RF-5)
-	// shortcut: no libera las reservas vencidas, porque no hay reservas; las libera con HU-15 (CU-06 RF-17)
-	@Transactional(readOnly = true)
+	// En cualquier estado del evento, también cancelado (RF-5). Escribe: la disponible que se muestra ya descuenta las
+	// reservas vencidas (CU-06 RF-17)
+	@Transactional
 	public List<TipoEntrada> listar(Long idEvento) {
 		if (!eventoRepository.existsById(idEvento)) {
 			throw new EventoNoEncontradoException();
 		}
+		liberacionDeReservas.liberarVencidas(idEvento, LocalDateTime.now(clock));
 		return tipoEntradaRepository.findByEvento_IdEventoOrderByIdTipoEntrada(idEvento);
 	}
 
@@ -50,7 +55,9 @@ public class GestionTiposEntradaService {
 	@Transactional
 	public TipoEntrada modificar(Long idEvento, Long idTipoEntrada, TipoEntradaRequest solicitud) {
 		GestionEventosService.buscarEditable(eventoRepository, idEvento);
-		// shortcut: el mínimo todavía incluye las reservas vencidas; las libera acá con HU-15 (CU-06 RF-17)
+		// El mínimo (lo vendido y reservado) no cuenta las reservas vencidas (CU-06 RF-17). Se libera con el evento ya
+		// bloqueado y antes de tomar el tipo, que así se lee después de la liberación
+		liberacionDeReservas.liberarVencidasConElEventoBloqueado(idEvento, LocalDateTime.now(clock));
 		TipoEntrada tipo = tipoEntradaRepository.findConBloqueoByIdTipoEntradaAndEvento_IdEvento(idTipoEntrada, idEvento)
 				.orElseThrow(TipoEntradaNoEncontradoException::new);
 		String nombre = solicitud.nombre().strip();

@@ -90,6 +90,8 @@ class EnrutamientoTest {
 	void losEventosLleganASuServicioConLaIdentidad() throws Exception {
 		assertThat(pedir("/api/eventos/5/activacion", "Authorization", "Bearer valido").body())
 				.startsWith("/api/eventos/5/activacion|7|CLIENTE|clave-de-pruebas|");
+		assertThat(pedir("/api/reservas/40", "Authorization", "Bearer valido").body())
+				.startsWith("/api/reservas/40|7|CLIENTE|clave-de-pruebas|");
 	}
 
 	// CU-05 RF-2: el catálogo no consulta la sesión, ni siquiera con Seguridad caída

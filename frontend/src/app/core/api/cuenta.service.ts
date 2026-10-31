@@ -1,10 +1,11 @@
-import { HttpClient, httpResource, HttpResourceRef } from '@angular/common/http';
+import { HttpClient, HttpContext, httpResource, HttpResourceRef } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 
 import { CambioDeContrasena, DatosPersonales } from '../modelos/cuenta';
 import { Sesion } from '../modelos/sesion';
 import { Usuario } from '../modelos/usuario';
+import { MANEJA_SU_401 } from '../http/errores.interceptor';
 import { comoErrorApi } from './autenticacion.service';
 
 // Llamadas a /api/cuenta (CU-04). La cuenta siempre es la de la sesión: el
@@ -17,6 +18,13 @@ export class CuentaService {
 	// pantalla, y la petición vive mientras viva ella
 	datosPersonales(): HttpResourceRef<Usuario | undefined> {
 		return httpResource<Usuario>(() => '/api/cuenta/datos-personales');
+	}
+
+	// Una promesa y no un httpResource: se lee una vez al abrir el sitio, sin pantalla
+	// que muestre la carga. Un 401 lo decide quien llama: puede estar en una página pública
+	leerDatos(): Promise<Usuario> {
+		const context = new HttpContext().set(MANEJA_SU_401, true);
+		return firstValueFrom(this.http.get<Usuario>('/api/cuenta/datos-personales', { context }));
 	}
 
 	// Limpio como en el registro; el teléfono vacío viaja como null (RF-8)
