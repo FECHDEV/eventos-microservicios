@@ -4,10 +4,8 @@ import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Set;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -15,7 +13,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.sarao.eventos.entity.EstadoEvento;
 import com.sarao.eventos.entity.Evento;
 import com.sarao.eventos.exception.CamposInvalidosException;
 import com.sarao.eventos.exception.CamposInvalidosException.CampoInvalido;
@@ -29,7 +26,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class CatalogoService {
 
-	private static final Set<EstadoEvento> VISIBLES = EnumSet.of(EstadoEvento.ACTIVO, EstadoEvento.POSTERGADO);
 	private static final int TAMANO_POR_DEFECTO = 12;
 	private static final int TAMANO_MAXIMO = 48;
 	private static final Sort ORDEN = Sort.by(Sort.Direction.ASC, "fecha", "horaInicio", "idEvento");
@@ -51,7 +47,7 @@ public class CatalogoService {
 		// El offset tiene que entrar en un int: una página más alta también queda vacía, con los totales correctos
 		PageRequest paginacion = PageRequest.of(Math.min(Math.max(pagina, 0), Integer.MAX_VALUE / tamanoValido),
 				tamanoValido, ORDEN);
-		return eventoRepository.buscarEnElCatalogo(VISIBLES, ahora.toLocalDate(), ahora.toLocalDate().minusDays(1),
+		return eventoRepository.buscarEnElCatalogo(Evento.ESTADOS_EN_CATALOGO, ahora.toLocalDate(), ahora.toLocalDate().minusDays(1),
 				ahora.toLocalTime(), limpio.isEmpty() ? null : patron(limpio), desde, hasta, paginacion);
 	}
 
@@ -62,7 +58,7 @@ public class CatalogoService {
 		return new EventoDelCatalogo(evento, tipoEntradaRepository.findByEvento_IdEventoOrderByIdTipoEntrada(idEvento));
 	}
 
-	@Transactional(readOnly = true)
+	// Sin transacción: la conexión no queda tomada mientras se lee el archivo
 	public ImagenEvento leerImagen(Long idEvento) {
 		return GestionEventosService.leerImagenDe(almacenImagenes, buscarVisible(idEvento));
 	}

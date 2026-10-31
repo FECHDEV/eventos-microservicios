@@ -1,8 +1,10 @@
 package com.sarao.eventos.controller;
 
+import java.time.Duration;
 import java.time.LocalDate;
 
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.CacheControl;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,6 +26,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class CatalogoController {
 
+	private static final Duration CACHE_DE_IMAGEN = Duration.ofMinutes(5);
+
 	private final CatalogoService catalogoService;
 
 	@GetMapping
@@ -43,7 +47,8 @@ public class CatalogoController {
 	@GetMapping("/{idEvento}/imagen")
 	public ResponseEntity<byte[]> imagen(@PathVariable Long idEvento) {
 		ImagenEvento imagen = catalogoService.leerImagen(idEvento);
-		return ResponseEntity.ok().contentType(MediaType.parseMediaType(imagen.formato().tipoDeContenido()))
-				.body(imagen.contenido());
+		// Corto: un evento que deja de mostrarse tiene que dar 404 pronto (CU-05 RF-17)
+		return ResponseEntity.ok().cacheControl(CacheControl.maxAge(CACHE_DE_IMAGEN).cachePublic())
+				.contentType(MediaType.parseMediaType(imagen.formato().tipoDeContenido())).body(imagen.contenido());
 	}
 }

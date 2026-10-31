@@ -188,5 +188,14 @@ class CatalogoControllerTest {
 		assertThat(resultado).hasStatus(HttpStatus.OK);
 		assertThat(resultado).hasContentType(MediaType.IMAGE_PNG);
 		assertThat(resultado.getResponse().getContentAsByteArray()).isEqualTo(png);
+		assertThat(resultado.getResponse().getHeader("Cache-Control")).isEqualTo("max-age=300, public");
+	}
+
+	// RF-1: HEAD también es lectura
+	@Test
+	void headSeAtiendeSinSesion() {
+		given(catalogoService.buscar(null, null, null, 0, 12)).willReturn(new PageImpl<>(List.of()));
+
+		assertThat(mvc.head().uri(CATALOGO).exchange()).hasStatus(HttpStatus.OK);
 	}
 }
