@@ -104,6 +104,14 @@ class EnrutamientoTest {
 	}
 
 	@Test
+	void lasVisitasSeAtiendenSinConsultarLaSesion() throws Exception {
+		var respuesta = pedir("/api/visitas/PORTADA", "Authorization", "Bearer falla");
+
+		assertThat(respuesta.statusCode()).isEqualTo(200);
+		assertThat(respuesta.body()).startsWith("/api/visitas/PORTADA|null|null|null|");
+	}
+
+	@Test
 	void losEncabezadosDeIdentidadDelClienteNoLleganAlCatalogo() throws Exception {
 		var respuesta = pedir("/api/catalogo/5", "X-Usuario-Id", "1", "X-Usuario-Rol", "ADMINISTRADOR",
 				"X-Clave-Servicio", "adivinada");
