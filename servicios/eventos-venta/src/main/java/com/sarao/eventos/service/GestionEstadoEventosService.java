@@ -9,12 +9,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.sarao.eventos.dto.PostergacionRequest;
+import com.sarao.eventos.entity.EstadoEvento;
 import com.sarao.eventos.entity.Evento;
 import com.sarao.eventos.exception.CambioDeEstadoNoPermitidoException;
 import com.sarao.eventos.exception.CamposInvalidosException;
 import com.sarao.eventos.exception.CamposInvalidosException.CampoInvalido;
 import com.sarao.eventos.exception.EventoSinTiposDeEntradaException;
 import com.sarao.eventos.exception.VentaYaCerradaException;
+import com.sarao.eventos.repository.EntradaRepository;
 import com.sarao.eventos.repository.EventoRepository;
 import com.sarao.eventos.repository.TipoEntradaRepository;
 import lombok.RequiredArgsConstructor;
@@ -28,9 +30,12 @@ public class GestionEstadoEventosService {
 
 	private final EventoRepository eventoRepository;
 	private final TipoEntradaRepository tipoEntradaRepository;
+	private final EntradaRepository entradaRepository;
 	private final Clock clock;
 
-	// shortcut: informa 0 entradas reactivadas, porque no hay entradas; FA-02 se agrega con HU-16 (RF-26 a RF-32)
+	// FA-02: activar un postergado reactiva, en la misma transacción, las entradas usadas antes de la postergación;
+	// mientras estuvo postergado ninguna pudo usarse (decisiones.md → Reactivar entradas utilizadas). Va después de
+	// activar: el update en bloque escribe primero la activación
 	@Transactional
 	public EventoActivado activar(Long idEvento) {
 		Evento evento = GestionEventosService.buscarEditable(eventoRepository, idEvento);
@@ -41,8 +46,10 @@ public class GestionEstadoEventosService {
 		if (evento.esBorrador() && !tipoEntradaRepository.existsByEvento_IdEvento(idEvento)) {
 			throw new EventoSinTiposDeEntradaException();
 		}
+		boolean estabaPostergado = evento.getEstado() == EstadoEvento.POSTERGADO;
 		evento.activar();
-		return new EventoActivado(evento, 0);
+		int reactivadas = estabaPostergado ? entradaRepository.reactivarUtilizadasDelEvento(idEvento) : 0;
+		return new EventoActivado(evento, reactivadas);
 	}
 
 	@Transactional

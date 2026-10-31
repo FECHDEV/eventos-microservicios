@@ -83,6 +83,7 @@ class ReservaIntegracionTest {
 
 	@AfterEach
 	void limpiar() {
+		jdbc.update("DELETE FROM entrada");
 		jdbc.update("DELETE FROM reserva");
 		jdbc.update("DELETE FROM tipo_entrada");
 		jdbc.update("DELETE FROM evento");

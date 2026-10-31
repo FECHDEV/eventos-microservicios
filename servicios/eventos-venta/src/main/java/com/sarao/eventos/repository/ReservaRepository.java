@@ -44,7 +44,8 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long> {
 			""")
 	int expirar(@Param("idReserva") Long idReserva);
 
-	// Vigentes por plazo, no solo por estado: una vencida sin marcar no cuenta (CU-06 RF-18)
+	// Vigentes por plazo, no solo por estado: una vencida sin marcar no cuenta (CU-06 RF-18). Las entradas emitidas se
+	// suman aparte (EntradaRepository.cantidadEmitidaAlCliente, CU-07 RF-21)
 	@Query("""
 			select coalesce(sum(r.cantidad), 0) from Reserva r
 			where r.idCliente = :idCliente
