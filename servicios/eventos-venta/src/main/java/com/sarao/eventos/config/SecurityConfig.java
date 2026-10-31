@@ -39,6 +39,8 @@ public class SecurityConfig {
 						// CU-06: comprar es del Cliente, el único con fecha de nacimiento para validar la edad
 						// (decisiones.md → Adquirir entradas (CU-06))
 						.requestMatchers("/api/reservas/**").hasRole("CLIENTE")
+						// CU-08: sus entradas las consulta el Cliente, y solo las suyas (ConsultaDeEntradas)
+						.requestMatchers("/api/entradas/**").hasRole("CLIENTE")
 						.anyRequest().denyAll())
 				// El 401 y el 403 pasan por ManejadorErrores para salir con el mismo formato que el resto de la API
 				.exceptionHandling(errores -> errores

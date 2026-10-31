@@ -38,6 +38,7 @@ import com.sarao.eventos.exception.LimiteCompraExcedidoException;
 import com.sarao.eventos.exception.ReservaNoEncontradaException;
 import com.sarao.eventos.exception.TipoEntradaNoEncontradoException;
 import com.sarao.eventos.exception.VentaCerradaException;
+import com.sarao.eventos.repository.EntradaRepository;
 import com.sarao.eventos.repository.EventoRepository;
 import com.sarao.eventos.repository.ReservaRepository;
 import com.sarao.eventos.repository.TipoEntradaRepository;
@@ -63,14 +64,17 @@ class ReservaServiceTest {
 	private ReservaRepository reservaRepository;
 
 	@Mock
+	private EntradaRepository entradaRepository;
+
+	@Mock
 	private LiberacionDeReservas liberacionDeReservas;
 
 	private ReservaService servicio;
 
 	@BeforeEach
 	void crearServicio() {
-		servicio = new ReservaService(eventoRepository, tipoEntradaRepository, reservaRepository, liberacionDeReservas,
-				RELOJ);
+		servicio = new ReservaService(eventoRepository, tipoEntradaRepository, reservaRepository, entradaRepository,
+				liberacionDeReservas, RELOJ);
 	}
 
 	// Activo el 04/10 de 22:00 a 03:00, id 5
@@ -255,6 +259,17 @@ class ReservaServiceTest {
 		guardarDevuelveLoMismo();
 
 		assertThat(reservar(1).reserva().getCantidad()).isEqualTo(1);
+	}
+
+	// CU-07 RF-21: las entradas ya emitidas de una compra anterior cuentan en el límite
+	@Test
+	void lasEntradasYaEmitidasCuentanEnElLimite() {
+		general(evento(null, 4), 10);
+		given(reservaRepository.cantidadVigenteDelCliente(7L, 5L, AHORA)).willReturn(1L);
+		given(entradaRepository.cantidadEmitidaAlCliente(7L, 5L)).willReturn(2L);
+
+		assertThatThrownBy(() -> reservar(2)).isInstanceOfSatisfying(LimiteCompraExcedidoException.class,
+				error -> assertThat(error.propiedades()).containsEntry("puedeAgregar", 1));
 	}
 
 	@Test

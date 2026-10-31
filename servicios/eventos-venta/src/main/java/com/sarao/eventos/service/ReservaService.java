@@ -18,6 +18,7 @@ import com.sarao.eventos.exception.LimiteCompraExcedidoException;
 import com.sarao.eventos.exception.ReservaNoEncontradaException;
 import com.sarao.eventos.exception.TipoEntradaNoEncontradoException;
 import com.sarao.eventos.exception.VentaCerradaException;
+import com.sarao.eventos.repository.EntradaRepository;
 import com.sarao.eventos.repository.EventoRepository;
 import com.sarao.eventos.repository.ReservaRepository;
 import com.sarao.eventos.repository.TipoEntradaRepository;
@@ -32,6 +33,7 @@ public class ReservaService {
 	private final EventoRepository eventoRepository;
 	private final TipoEntradaRepository tipoEntradaRepository;
 	private final ReservaRepository reservaRepository;
+	private final EntradaRepository entradaRepository;
 	private final LiberacionDeReservas liberacionDeReservas;
 	private final Clock clock;
 
@@ -64,8 +66,9 @@ public class ReservaService {
 			throw new EdadNoPermitidaException(evento.getRestriccionEdad());
 		}
 		if (evento.getLimiteCompra() != null) {
-			// shortcut: cuenta solo las reservas vigentes; las entradas emitidas se suman cuando existan (CU-07 RF-21)
-			int yaComprometidas = (int) reservaRepository.cantidadVigenteDelCliente(idCliente, idEvento, ahora);
+			// CU-07 RF-21: las entradas emitidas del Cliente en el evento, más sus reservas vigentes
+			int yaComprometidas = (int) (reservaRepository.cantidadVigenteDelCliente(idCliente, idEvento, ahora)
+					+ entradaRepository.cantidadEmitidaAlCliente(idCliente, idEvento));
 			if (!evento.verificarLimiteCompra(yaComprometidas, cantidad)) {
 				throw new LimiteCompraExcedidoException(evento.getLimiteCompra(),
 						evento.cuantasPuedeAgregar(yaComprometidas));

@@ -401,6 +401,9 @@ queda sin entradas y se devuelve fuera del sistema.
 
 ## 2.6. Tabla `entrada`
 
+En microservicios, `id_pago` es un id sin llave foránea y se agrega `id_reserva`, FK a `reserva`
+(`decisiones.md` → «La entrada conoce su reserva»).
+
 | Columna | Tipo | Modificadores |
 |---|---|---|
 | id_entrada | BIGINT | PK, AUTO_INCREMENT |

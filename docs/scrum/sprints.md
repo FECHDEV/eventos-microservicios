@@ -36,6 +36,5 @@ con 232 pruebas, gateway con 8 y frontend con 900.
 - **HU-22:** límite de frecuencia en nginx para las rutas públicas de escritura (`/api/visitas`).
 - **HU-22:** healthcheck de Seguridad en compose, y revisar la IP real según lo que quede delante
   de nginx. Sin Caddy, un cliente por IPv6 llega con IP interna y puede inventar su IP.
-- **HU-16:** CU-12 FA-02, reactivar las entradas utilizadas al activar un postergado (RF-26 a RF-32).
 - **Sin historia:** un 401 en una pestaña borra la sesión de las demás, y cerrar sesión no se
   propaga entre pestañas. Viene del sistema base.

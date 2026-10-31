@@ -52,7 +52,7 @@ gateway y tres bases. El reparto de casos de uso y tablas está en `CLAUDE.md`.
 - **Toda llamada interna lleva plazos.** Una caída de Pagos no tumba el catálogo.
 - **Relaciones entre servicios por identificador:** `Evento`, `Reserva`,
   `Entrada`, `Acceso` y `Reporte` hacia `Usuario`; `Pago` hacia `Reserva`;
-  `Entrada` guarda solo el id del pago.
+  `Entrada` guarda el id del pago y una llave foránea a su reserva, en la misma base.
 - **Datos de otro servicio en listas y reportes:** se piden en lote, nunca una
   llamada por fila.
 
@@ -732,6 +732,14 @@ La conexión fija `innodb_lock_wait_timeout=5` (31/10/2026): quien no obtiene un
 bloqueo a los 5 segundos recibe 409 `OPERACION_SIMULTANEA` (CU-06 RF-14), en vez de
 retener hilo y conexión los 50 segundos por defecto de MySQL. Va en la URL de la
 conexión porque MySQL no aplica `jakarta.persistence.lock.timeout`.
+
+### La entrada conoce su reserva
+
+**Amplía el modelo de datos (31/10/2026, decidido con el usuario).** En el sistema
+base, una entrada llegaba a su compra por el pago: `entrada → pago → reserva`. Pago
+ahora vive en otro servicio, y la entrada guarda de él solo el id. Para agrupar las
+entradas por compra sin llamar a Pagos, `entrada` gana `id_reserva`, con llave foránea
+dentro de `eventos_db`. Así «Mis entradas» sigue funcionando con Pagos caído.
 
 ### Reactivar entradas utilizadas: cuando exista la Venta
 

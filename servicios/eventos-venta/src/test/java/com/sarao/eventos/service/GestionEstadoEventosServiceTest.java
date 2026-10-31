@@ -33,6 +33,7 @@ import com.sarao.eventos.exception.EventoCanceladoException;
 import com.sarao.eventos.exception.EventoNoEncontradoException;
 import com.sarao.eventos.exception.EventoSinTiposDeEntradaException;
 import com.sarao.eventos.exception.VentaYaCerradaException;
+import com.sarao.eventos.repository.EntradaRepository;
 import com.sarao.eventos.repository.EventoRepository;
 import com.sarao.eventos.repository.TipoEntradaRepository;
 
@@ -52,13 +53,16 @@ class GestionEstadoEventosServiceTest {
 	@Mock
 	private TipoEntradaRepository tipoEntradaRepository;
 
+	@Mock
+	private EntradaRepository entradaRepository;
+
 	private GestionEstadoEventosService servicio;
 
 	private final Long admin = 1L;
 
 	@BeforeEach
 	void crearServicio() {
-		servicio = new GestionEstadoEventosService(eventoRepository, tipoEntradaRepository, RELOJ);
+		servicio = new GestionEstadoEventosService(eventoRepository, tipoEntradaRepository, entradaRepository, RELOJ);
 	}
 
 	private Evento evento(EstadoEvento estado) {
@@ -89,6 +93,8 @@ class GestionEstadoEventosServiceTest {
 		assertThat(borrador.getEstado()).isEqualTo(EstadoEvento.ACTIVO);
 		assertThat(borrador.isVentaAbierta()).isTrue();
 		assertThat(activado.entradasReactivadas()).isZero();
+		// RF-29: desde borrador no hay nada que reactivar
+		then(entradaRepository).shouldHaveNoInteractions();
 	}
 
 	@Test
@@ -100,25 +106,32 @@ class GestionEstadoEventosServiceTest {
 		assertThat(borrador.getEstado()).isEqualTo(EstadoEvento.BORRADOR);
 	}
 
-	// RF-7: un postergado vuelve a ACTIVO sin revisar los tipos
+	// RF-7 y FA-02 (RF-26, RF-30, RF-31): un postergado vuelve a ACTIVO sin revisar los tipos y reactiva sus entradas
+	// usadas. La reactivación va después de activar: el update en bloque escribe primero la activación
 	@Test
-	void activarUnPostergadoNoRevisaLosTipos() {
+	void activarUnPostergadoReactivaSusEntradasUsadas() {
 		Evento postergado = evento(EstadoEvento.POSTERGADO);
+		given(entradaRepository.reactivarUtilizadasDelEvento(5L)).willAnswer(invocacion -> {
+			assertThat(postergado.getEstado()).isEqualTo(EstadoEvento.ACTIVO);
+			return 2;
+		});
 
 		EventoActivado activado = servicio.activar(5L);
 
 		assertThat(activado.evento()).isSameAs(postergado);
 		assertThat(postergado.getEstado()).isEqualTo(EstadoEvento.ACTIVO);
 		assertThat(postergado.isVentaAbierta()).isTrue();
-		assertThat(activado.entradasReactivadas()).isZero();
+		assertThat(activado.entradasReactivadas()).isEqualTo(2);
 		then(tipoEntradaRepository).shouldHaveNoInteractions();
 	}
 
+	// RF-30: si no se puede activar, no se reactiva nada
 	@Test
-	void activarUnEventoYaActivoEs409() {
+	void activarUnEventoYaActivoEs409YNoReactivaEntradas() {
 		evento(EstadoEvento.ACTIVO);
 
 		assertThatThrownBy(() -> servicio.activar(5L)).isInstanceOf(CambioDeEstadoNoPermitidoException.class);
+		then(entradaRepository).shouldHaveNoInteractions();
 	}
 
 	@Test
