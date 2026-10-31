@@ -47,17 +47,21 @@ public class IdentidadDeSesion {
 
 	ServerRequest aplicar(ServerRequest peticion) {
 		Optional<Identidad> identidad = token(peticion).flatMap(this::consultar);
+		ServerRequest anonima = sinIdentidad(peticion);
+		return identidad.map(usuario -> ServerRequest.from(anonima).headers(encabezados -> {
+			encabezados.set(CLAVE, claveServicio);
+			encabezados.set(ID_USUARIO, usuario.idUsuario().toString());
+			encabezados.set(ROL, usuario.rol());
+		}).build()).orElse(anonima);
+	}
+
+	static ServerRequest sinIdentidad(ServerRequest peticion) {
 		return ServerRequest.from(peticion).headers(encabezados -> {
 			// Lo que mande el cliente nunca llega a los servicios
 			encabezados.remove(CLAVE);
 			encabezados.remove(ID_USUARIO);
 			encabezados.remove(ROL);
 			encabezados.set("X-Forwarded-For", peticion.servletRequest().getRemoteAddr());
-			identidad.ifPresent(usuario -> {
-				encabezados.set(CLAVE, claveServicio);
-				encabezados.set(ID_USUARIO, usuario.idUsuario().toString());
-				encabezados.set(ROL, usuario.rol());
-			});
 		}).build();
 	}
 

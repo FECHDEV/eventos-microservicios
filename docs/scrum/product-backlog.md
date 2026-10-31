@@ -14,10 +14,10 @@ Orden de arriba abajo por prioridad. Estado: Pendiente, En curso o Hecha.
 | HU-07 | Como usuario, quiero gestionar mis datos personales, para mantenerlos al día. | CU-04 | Seguridad | 1 | Hecha |
 | HU-08 | Como administrador, quiero gestionar usuarios y roles, para controlar quién hace qué. | CU-09, req. 5 | Seguridad | 1 | Hecha |
 | HU-09 | Como visitante, quiero la interfaz de Sarao con sus temas y su menú, para usar el sitio con comodidad. | Req. 2 | Frontend | 1 | Hecha |
-| HU-10 | Como administrador, quiero gestionar eventos, para publicarlos. | CU-10 | Eventos y Venta | 2 | En curso |
-| HU-11 | Como administrador, quiero gestionar tipos de entrada, para definir precios y cupos. | CU-11 | Eventos y Venta | 2 | En curso |
-| HU-12 | Como administrador, quiero gestionar el estado del evento, para postergarlo, cancelarlo o cerrar ventas. | CU-12 | Eventos y Venta | 2 | En curso |
-| HU-13 | Como visitante, quiero consultar y buscar eventos, para encontrar uno que me interese. | CU-05, req. 4 | Eventos y Venta | 2 | Pendiente |
+| HU-10 | Como administrador, quiero gestionar eventos, para publicarlos. | CU-10 | Eventos y Venta | 2 | Hecha |
+| HU-11 | Como administrador, quiero gestionar tipos de entrada, para definir precios y cupos. | CU-11 | Eventos y Venta | 2 | Hecha |
+| HU-12 | Como administrador, quiero gestionar el estado del evento, para postergarlo, cancelarlo o cerrar ventas. | CU-12 | Eventos y Venta | 2 | Hecha |
+| HU-13 | Como visitante, quiero consultar y buscar eventos, para encontrar uno que me interese. | CU-05, req. 4 | Eventos y Venta | 2 | En curso |
 | HU-14 | Como visitante, quiero ver el contador de visitas en el pie de cada página, para conocer el alcance del sitio. | Req. 3 | Eventos y Venta | 2 | Pendiente |
 | HU-15 | Como cliente, quiero reservar entradas, para asegurar mi cupo mientras pago. | CU-06 | Eventos y Venta | 2 | Pendiente |
 | HU-16 | Como cliente, quiero consultar mis entradas, para presentarlas en el evento. | CU-08 | Eventos y Venta | 2 | Pendiente |

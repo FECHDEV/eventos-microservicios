@@ -135,4 +135,34 @@ class EventoEstadoTest {
 	}
 
 	// --- Validación de entradas (CU-15) ---
+
+	// --- Catálogo (CU-05 RF-3 y RF-4) ---
+
+	@Test
+	void seMuestranLosActivosYLosPostergados() {
+		LocalDateTime antes = FECHA.minusDays(1).atTime(12, 0);
+
+		assertThat(enEstado(EstadoEvento.ACTIVO).seMuestraEnElCatalogo(antes)).isTrue();
+		assertThat(enEstado(EstadoEvento.POSTERGADO).seMuestraEnElCatalogo(antes)).isTrue();
+		assertThat(enEstado(EstadoEvento.BORRADOR).seMuestraEnElCatalogo(antes)).isFalse();
+		assertThat(enEstado(EstadoEvento.CANCELADO).seMuestraEnElCatalogo(antes)).isFalse();
+	}
+
+	// Se muestra hasta el instante en que termina, no incluido: la misma cuenta que termino
+	@Test
+	void dejaDeMostrarseAlTerminar() {
+		Evento deTarde = visibleDe(LocalTime.of(18, 0), LocalTime.of(20, 0));
+
+		assertThat(deTarde.seMuestraEnElCatalogo(FECHA.atTime(19, 59))).isTrue();
+		assertThat(deTarde.seMuestraEnElCatalogo(FECHA.atTime(20, 0))).isFalse();
+	}
+
+	// De 22:00 a 03:00 termina al día siguiente (decisiones.md → Fecha y horario)
+	@Test
+	void unEventoQueCruzaLaMedianocheSeMuestraHastaElDiaSiguiente() {
+		Evento nocturno = visibleDe(LocalTime.of(22, 0), LocalTime.of(3, 0));
+
+		assertThat(nocturno.seMuestraEnElCatalogo(FECHA.plusDays(1).atTime(2, 59))).isTrue();
+		assertThat(nocturno.seMuestraEnElCatalogo(FECHA.plusDays(1).atTime(3, 0))).isFalse();
+	}
 }

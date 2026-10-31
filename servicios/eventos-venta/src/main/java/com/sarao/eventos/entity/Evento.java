@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Objects;
+import java.util.Set;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -26,6 +27,8 @@ public class Evento {
 
 	// La última que admite DATE en MySQL: una posterior fallaría al guardarse
 	public static final LocalDate FECHA_MAXIMA = LocalDate.of(9999, 12, 31);
+
+	public static final Set<EstadoEvento> ESTADOS_EN_CATALOGO = Set.of(EstadoEvento.ACTIVO, EstadoEvento.POSTERGADO);
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -154,6 +157,12 @@ public class Evento {
 	// CU-05 y CU-08: el evento terminó al llegar su hora de fin, al día siguiente si cruza la medianoche
 	public boolean termino(LocalDateTime ahora) {
 		return !ahora.isBefore(finDeLaVenta());
+	}
+
+	// CU-05: el catálogo muestra los activos y postergados que todavía no terminaron (decisiones.md → Catálogo de
+	// eventos). EventoRepository.buscarEnElCatalogo repite esta regla en JPQL para la lista
+	public boolean seMuestraEnElCatalogo(LocalDateTime ahora) {
+		return ESTADOS_EN_CATALOGO.contains(estado) && !termino(ahora);
 	}
 
 	public boolean estaCancelado() {
