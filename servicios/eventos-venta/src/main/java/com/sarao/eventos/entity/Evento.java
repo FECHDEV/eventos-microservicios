@@ -156,6 +156,12 @@ public class Evento {
 		return !ahora.isBefore(finDeLaVenta());
 	}
 
+	// CU-05: el catálogo muestra los activos y postergados que todavía no terminaron (decisiones.md → Catálogo de
+	// eventos). EventoRepository.buscarEnElCatalogo repite esta regla en JPQL para la lista
+	public boolean seMuestraEnElCatalogo(LocalDateTime ahora) {
+		return (estado == EstadoEvento.ACTIVO || estado == EstadoEvento.POSTERGADO) && !termino(ahora);
+	}
+
 	public boolean estaCancelado() {
 		return estado == EstadoEvento.CANCELADO;
 	}

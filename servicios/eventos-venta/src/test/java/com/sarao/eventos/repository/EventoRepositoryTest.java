@@ -3,8 +3,11 @@ package com.sarao.eventos.repository;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +28,8 @@ import com.sarao.eventos.entity.Evento;
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class EventoRepositoryTest {
 
+	private static final Set<EstadoEvento> VISIBLES = EnumSet.of(EstadoEvento.ACTIVO, EstadoEvento.POSTERGADO);
+	private static final LocalDateTime AHORA = LocalDateTime.of(2026, 10, 4, 20, 0);
 	private static final Sort ORDEN = Sort.by(Sort.Direction.ASC, "fecha", "horaInicio", "idEvento");
 
 	@Autowired
@@ -166,5 +171,111 @@ class EventoRepositoryTest {
 				.containsExactly(pasado.getIdEvento());
 		assertThat(eventoRepository.idsConLaVentaAbiertaHasta(LocalDate.of(2026, 12, 1)))
 				.containsExactlyInAnyOrder(pasado.getIdEvento(), futuro.getIdEvento());
+	}
+
+	// --- Catálogo (CU-05) ---
+
+	private void guardar(String nombre, LocalDate fecha, LocalTime inicio, LocalTime fin, String lugar,
+			EstadoEvento estado) {
+		Evento evento = Evento.registrar(admin, nombre, null, fecha, inicio, fin, lugar, null, null);
+		ReflectionTestUtils.setField(evento, "estado", estado);
+		em.persist(evento);
+	}
+
+	private void guardarActivo(String nombre, LocalDate fecha, LocalTime inicio, LocalTime fin) {
+		guardar(nombre, fecha, inicio, fin, "Teatro Municipal", EstadoEvento.ACTIVO);
+	}
+
+	private List<String> catalogo(LocalDateTime ahora, String patron, LocalDate desde, LocalDate hasta) {
+		em.flush();
+		em.clear();
+		return eventoRepository.buscarEnElCatalogo(VISIBLES, ahora.toLocalDate(), ahora.toLocalDate().minusDays(1),
+				ahora.toLocalTime(), patron, desde, hasta, PageRequest.of(0, 50, ORDEN)).map(Evento::getNombre)
+				.getContent();
+	}
+
+	private List<String> catalogo() {
+		return catalogo(AHORA, null, null, null);
+	}
+
+	@Test
+	void elCatalogoTraeSoloActivosYPostergados() {
+		LocalDate manana = AHORA.toLocalDate().plusDays(1);
+		guardar("Activo", manana, LocalTime.of(10, 0), LocalTime.of(12, 0), "Teatro", EstadoEvento.ACTIVO);
+		guardar("Postergado", manana, LocalTime.of(11, 0), LocalTime.of(12, 0), "Teatro", EstadoEvento.POSTERGADO);
+		guardar("Borrador", manana, LocalTime.of(12, 0), LocalTime.of(13, 0), "Teatro", EstadoEvento.BORRADOR);
+		guardar("Cancelado", manana, LocalTime.of(13, 0), LocalTime.of(14, 0), "Teatro", EstadoEvento.CANCELADO);
+
+		assertThat(catalogo()).containsExactly("Activo", "Postergado");
+	}
+
+	// Los mismos bordes que Evento.seMuestraEnElCatalogo, a las 20:00 del 04/10
+	@Test
+	void elCatalogoNoTraeLosQueYaTerminaron() {
+		LocalDate hoy = AHORA.toLocalDate();
+		LocalDate ayer = hoy.minusDays(1);
+		guardarActivo("Terminó a las 19", hoy, LocalTime.of(17, 0), LocalTime.of(19, 0));
+		guardarActivo("Termina justo a las 20", hoy, LocalTime.of(18, 0), LocalTime.of(20, 0));
+		guardarActivo("Termina a las 21", hoy, LocalTime.of(19, 0), LocalTime.of(21, 0));
+		guardarActivo("Hoy de noche hasta mañana", hoy, LocalTime.of(22, 0), LocalTime.of(3, 0));
+		guardarActivo("Ayer de día", ayer, LocalTime.of(10, 0), LocalTime.of(12, 0));
+		guardarActivo("Ayer de noche hasta hoy a las 3", ayer, LocalTime.of(22, 0), LocalTime.of(3, 0));
+		guardarActivo("Mañana", hoy.plusDays(1), LocalTime.of(10, 0), LocalTime.of(12, 0));
+
+		assertThat(catalogo()).containsExactly("Termina a las 21", "Hoy de noche hasta mañana", "Mañana");
+	}
+
+	@Test
+	void unEventoDeAyerQueCruzaLaMedianocheSigueHastaQueTermina() {
+		LocalDate ayer = AHORA.toLocalDate().minusDays(1);
+		guardarActivo("Nocturno", ayer, LocalTime.of(22, 0), LocalTime.of(3, 0));
+
+		assertThat(catalogo(AHORA.toLocalDate().atTime(2, 59), null, null, null)).containsExactly("Nocturno");
+		assertThat(catalogo(AHORA.toLocalDate().atTime(3, 0), null, null, null)).isEmpty();
+	}
+
+	// El patrón llega en minúsculas y con los comodines del texto escapados con '!' (CatalogoService)
+	@Test
+	void elTextoSeBuscaEnElNombreYEnElLugarSinDistinguirMayusculas() {
+		LocalDate manana = AHORA.toLocalDate().plusDays(1);
+		guardar("Noche de JAZZ", manana, LocalTime.of(10, 0), LocalTime.of(12, 0), "Teatro", EstadoEvento.ACTIVO);
+		guardar("Feria", manana, LocalTime.of(11, 0), LocalTime.of(12, 0), "Jazz Club", EstadoEvento.ACTIVO);
+		guardar("Rock", manana, LocalTime.of(12, 0), LocalTime.of(13, 0), "Estadio", EstadoEvento.ACTIVO);
+		guardar("Oferta 100%", manana, LocalTime.of(13, 0), LocalTime.of(14, 0), "Estadio", EstadoEvento.ACTIVO);
+
+		assertThat(catalogo(AHORA, "%jazz%", null, null)).containsExactly("Noche de JAZZ", "Feria");
+		assertThat(catalogo(AHORA, "%!%%", null, null)).containsExactly("Oferta 100%");
+	}
+
+	@Test
+	void elRangoDeFechasIncluyeLosExtremos() {
+		LocalDate base = AHORA.toLocalDate().plusDays(10);
+		guardarActivo("Antes", base.minusDays(1), LocalTime.of(10, 0), LocalTime.of(12, 0));
+		guardarActivo("Desde", base, LocalTime.of(10, 0), LocalTime.of(12, 0));
+		guardarActivo("Hasta", base.plusDays(2), LocalTime.of(10, 0), LocalTime.of(12, 0));
+		guardarActivo("Después", base.plusDays(3), LocalTime.of(10, 0), LocalTime.of(12, 0));
+
+		assertThat(catalogo(AHORA, null, base, base.plusDays(2))).containsExactly("Desde", "Hasta");
+		assertThat(catalogo(AHORA, null, base.plusDays(2), null)).containsExactly("Hasta", "Después");
+		assertThat(catalogo(AHORA, null, null, base)).containsExactly("Antes", "Desde");
+	}
+
+	// RF-11: un rango hacia atrás no trae terminados
+	@Test
+	void unRangoConFechasPasadasNoTraeEventosTerminados() {
+		LocalDate ayer = AHORA.toLocalDate().minusDays(1);
+		guardarActivo("Ayer", ayer, LocalTime.of(10, 0), LocalTime.of(12, 0));
+
+		assertThat(catalogo(AHORA, null, ayer.minusDays(5), ayer)).isEmpty();
+	}
+
+	@Test
+	void elCatalogoOrdenaPorFechaYHora() {
+		LocalDate manana = AHORA.toLocalDate().plusDays(1);
+		guardarActivo("Pasado mañana", manana.plusDays(1), LocalTime.of(9, 0), LocalTime.of(10, 0));
+		guardarActivo("Mañana tarde", manana, LocalTime.of(18, 0), LocalTime.of(19, 0));
+		guardarActivo("Mañana temprano", manana, LocalTime.of(8, 0), LocalTime.of(9, 0));
+
+		assertThat(catalogo()).containsExactly("Mañana temprano", "Mañana tarde", "Pasado mañana");
 	}
 }

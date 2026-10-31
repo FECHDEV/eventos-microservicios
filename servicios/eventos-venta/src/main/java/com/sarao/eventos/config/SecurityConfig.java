@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -29,6 +30,8 @@ public class SecurityConfig {
 						// El despacho interno a /error no pasa por el filtro de identidad: sin esto, cualquier error de una
 						// petición autenticada terminaría como 401
 						.dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
+						// CU-05: el catálogo se consulta sin sesión. Solo GET: cualquier otro método sigue rechazado
+						.requestMatchers(HttpMethod.GET, "/api/catalogo/**").permitAll()
 						.requestMatchers("/api/eventos/**").hasRole("ADMINISTRADOR")
 						.anyRequest().denyAll())
 				// El 401 y el 403 pasan por ManejadorErrores para salir con el mismo formato que el resto de la API

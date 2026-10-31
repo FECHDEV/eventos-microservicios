@@ -46,7 +46,14 @@ public class IdentidadDeSesion {
 	}
 
 	ServerRequest aplicar(ServerRequest peticion) {
-		Optional<Identidad> identidad = token(peticion).flatMap(this::consultar);
+		return conIdentidad(peticion, token(peticion).flatMap(this::consultar), claveServicio);
+	}
+
+	static ServerRequest sinIdentidad(ServerRequest peticion) {
+		return conIdentidad(peticion, Optional.empty(), null);
+	}
+
+	private static ServerRequest conIdentidad(ServerRequest peticion, Optional<Identidad> identidad, String claveServicio) {
 		return ServerRequest.from(peticion).headers(encabezados -> {
 			// Lo que mande el cliente nunca llega a los servicios
 			encabezados.remove(CLAVE);

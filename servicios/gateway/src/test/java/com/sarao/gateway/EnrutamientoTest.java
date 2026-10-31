@@ -8,6 +8,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.List;
 import java.util.Objects;
 
 import org.junit.jupiter.api.AfterAll;
@@ -89,6 +90,25 @@ class EnrutamientoTest {
 	void losEventosLleganASuServicioConLaIdentidad() throws Exception {
 		assertThat(pedir("/api/eventos/5/activacion", "Authorization", "Bearer valido").body())
 				.startsWith("/api/eventos/5/activacion|7|CLIENTE|clave-de-pruebas|");
+	}
+
+	// CU-05 RF-2: el catálogo no consulta la sesión, ni siquiera con Seguridad caída
+	@Test
+	void elCatalogoSeAtiendeSinConsultarLaSesion() throws Exception {
+		for (String token : List.of("Bearer valido", "Bearer otro", "Bearer falla")) {
+			var respuesta = pedir("/api/catalogo", "Authorization", token);
+
+			assertThat(respuesta.statusCode()).isEqualTo(200);
+			assertThat(respuesta.body()).startsWith("/api/catalogo|null|null|null|");
+		}
+	}
+
+	@Test
+	void losEncabezadosDeIdentidadDelClienteNoLleganAlCatalogo() throws Exception {
+		var respuesta = pedir("/api/catalogo/5", "X-Usuario-Id", "1", "X-Usuario-Rol", "ADMINISTRADOR",
+				"X-Clave-Servicio", "adivinada");
+
+		assertThat(respuesta.body()).startsWith("/api/catalogo/5|null|null|null|");
 	}
 
 	// HU-10: el aviso de imagen demasiado grande lo da el servicio, así que el gateway no puede cortar antes

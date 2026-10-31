@@ -27,6 +27,12 @@ public class RutasConfig {
 						.route(path("/api/eventos/**"), http())
 						.before(uri(venta))
 						.before(identidad::aplicar)
+						.build())
+				// Público: no consulta la sesión, así un token vencido o una caída de Seguridad no afectan al catálogo
+				.and(route("catalogo")
+						.route(path("/api/catalogo/**"), http())
+						.before(uri(venta))
+						.before(IdentidadDeSesion::sinIdentidad)
 						.build());
 	}
 }
