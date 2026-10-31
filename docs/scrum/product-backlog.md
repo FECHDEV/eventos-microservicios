@@ -21,7 +21,7 @@ Orden de arriba abajo por prioridad. Estado: Pendiente, En curso o Hecha.
 | HU-14 | Como visitante, quiero ver el contador de visitas en el pie de cada página, para conocer el alcance del sitio. | Req. 3 | Eventos y Venta | 2 | Hecha |
 | HU-15 | Como cliente, quiero reservar entradas, para asegurar mi cupo mientras pago. | CU-06 | Eventos y Venta | 2 | Hecha |
 | HU-16 | Como cliente, quiero consultar mis entradas, para presentarlas en el evento. | CU-08 | Eventos y Venta | 2 | Hecha |
-| HU-17 | Como sistema, quiero enviar los correos desde un servicio propio, para que una falla de correo no afecte la compra. | Transversal | Notificaciones | 3 | Pendiente |
+| HU-17 | Como sistema, quiero enviar los correos desde un servicio propio, para que una falla de correo no afecte la compra. | Transversal | Notificaciones | 3 | En curso |
 | HU-18 | Como cliente, quiero pagar con QR, para confirmar mi compra. | CU-07 | Pagos | 3 | Pendiente |
 | HU-19 | Como personal autorizado, quiero validar entradas, para controlar el acceso. | CU-15 | Eventos y Venta | 4 | Pendiente |
 | HU-20 | Como administrador, quiero generar reportes y enviarlos en PDF por correo, para analizar el negocio. | CU-14, req. 7 | Eventos y Venta | 4 | Pendiente |

@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.then;
-import static org.mockito.BDDMockito.willAnswer;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.never;
 
@@ -27,7 +26,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.test.web.servlet.assertj.MvcTestResult;
 
@@ -61,7 +60,7 @@ class RecuperacionContrasenaIntegracionTest {
 	private RecuperacionContrasenaService recuperacionContrasenaService;
 
 	// Deja pasar la llamada al simulador y permite leer el token, que la base no guarda
-	@MockitoSpyBean
+	@MockitoBean
 	private NotificadorCorreo notificadorCorreo;
 
 	@BeforeEach
@@ -247,11 +246,6 @@ class RecuperacionContrasenaIntegracionTest {
 
 	@Test
 	void dosSolicitudesSimultaneasDejanUnSoloTokenVigente() throws Exception {
-		// El envío tarda: sin bloqueo, la segunda solicitud no ve el token que la primera todavía no confirmó
-		willAnswer(invocacion -> {
-			Thread.sleep(300);
-			return invocacion.callRealMethod();
-		}).given(notificadorCorreo).enviarRecuperacion(anyString(), anyString(), anyString());
 		CountDownLatch largada = new CountDownLatch(1);
 		ExecutorService hilos = Executors.newFixedThreadPool(2);
 		try {

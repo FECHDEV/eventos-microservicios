@@ -1,0 +1,6 @@
+# Ajustes de Postfix que docker-mailserver agrega a los suyos al arrancar.
+# El servidor solo entrega a los buzones del propio dominio: un correo para otro
+# dominio (Gmail, por ejemplo) no sale del servidor, se devuelve al remitente.
+# Así nunca se envía hacia afuera en nombre de un dominio que no es nuestro, ni
+# sirve de relay para otro contenedor de la red interna.
+default_transport = error:5.7.1 este servidor solo entrega a los buzones de su dominio

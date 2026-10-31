@@ -29,8 +29,6 @@ con 232 pruebas, gateway con 8 y frontend con 900.
 
 **Pendientes para las próximas historias** (de las revisiones del sprint):
 
-- **HU-17:** enviar los correos después del commit. Con correo real, una falla o la demora
-  revelarían qué cuentas existen.
 - **HU-18:** al vencer la reserva, la pantalla deja de consultar el pago y no muestra un pago tardío.
 - **HU-19:** el lector de QR reintenta sin pausa tras un error del servidor.
 - **HU-22:** límite de frecuencia en nginx para las rutas públicas de escritura (`/api/visitas`).

@@ -20,7 +20,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        servicio: [gateway, seguridad, eventos-venta]
+        servicio: [gateway, seguridad, eventos-venta, notificaciones]
     defaults:
       run:
         working-directory: servicios/${{ matrix.servicio }}

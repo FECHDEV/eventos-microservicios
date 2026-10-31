@@ -40,6 +40,21 @@ services:
       # Solo hacen falta en el primer arranque: sin administrador y sin ellas, Seguridad no arranca
       EVENTOS_ADMIN_CORREO: ${EVENTOS_ADMIN_CORREO:-}
       EVENTOS_ADMIN_PASSWORD: ${EVENTOS_ADMIN_PASSWORD:-}
+      EVENTOS_NOTIFICACIONES_URL: http://notificaciones:8083
+
+  notificaciones:
+    build:
+      context: ./servicios/notificaciones
+      dockerfile: ../Dockerfile
+    restart: unless-stopped
+    environment:
+      EVENTOS_CLAVE_SERVICIO: ${EVENTOS_CLAVE_SERVICIO}
+      # simulador por defecto. Con smtp hay que levantar también el perfil correo
+      EVENTOS_CORREO_PROVEEDOR: ${EVENTOS_CORREO_PROVEEDOR:-simulador}
+      EVENTOS_CORREO_HOST: correo
+      EVENTOS_CORREO_REMITENTE: Sarao <no-responder@${EVENTOS_CORREO_DOMINIO:-mail.com}>
+      EVENTOS_SITIO_URL: ${EVENTOS_SITIO_URL:-http://localhost}
+    # Sin puertos publicados y sin ruta en el gateway: solo lo llaman los otros servicios
 
   eventos-venta:
     build:
@@ -80,6 +95,61 @@ services:
     ports:
       - "${SARAO_PUERTO:-80}:80"
 
+  # Servidor de correo (Postfix + Dovecot) para los buzones del propio dominio, con
+  # docker compose --profile correo up -d. Todo se entrega dentro del servidor: sin
+  # puerto 25 publicado, ni MX, SPF o DKIM. Los buzones se crean con:
+  #   docker compose exec correo setup email add usuario@dominio
+  correo:
+    image: ghcr.io/docker-mailserver/docker-mailserver:15
+    profiles: [correo]
+    restart: unless-stopped
+    hostname: mail.${EVENTOS_CORREO_DOMINIO:-mail.com}
+    environment:
+      # Notificaciones envía sin contraseña, pero solo desde la red interna de Docker
+      PERMIT_DOCKER: connected-networks
+      # No recibe correo de afuera: sin antispam, antivirus ni listas grises
+      ENABLE_RSPAMD: 0
+      ENABLE_SPAMASSASSIN: 0
+      ENABLE_CLAMAV: 0
+      ENABLE_AMAVIS: 0
+      ENABLE_POSTGREY: 0
+      ENABLE_FAIL2BAN: 0
+      ENABLE_OPENDKIM: 0
+      ENABLE_OPENDMARC: 0
+      ENABLE_POLICYD_SPF: 0
+      TZ: America/La_Paz
+    volumes:
+      - correo-buzones:/var/mail
+      - correo-estado:/var/mail-state
+      - correo-config:/tmp/docker-mailserver
+      - ./correo/postfix-main.cf:/tmp/docker-mailserver/postfix-main.cf:ro
+    # Sin puertos publicados: Notificaciones y el webmail llegan por la red interna
+
+  # Webmail para leer los buzones del dominio
+  webmail:
+    image: roundcube/roundcubemail:1.7.4-apache
+    profiles: [correo]
+    restart: unless-stopped
+    depends_on:
+      - correo
+    environment:
+      ROUNDCUBEMAIL_DEFAULT_HOST: correo
+      ROUNDCUBEMAIL_DEFAULT_PORT: 143
+      ROUNDCUBEMAIL_SMTP_SERVER: correo
+      ROUNDCUBEMAIL_SMTP_PORT: 25
+      ROUNDCUBEMAIL_DB_TYPE: sqlite
+      ROUNDCUBEMAIL_SKIN: elastic
+    volumes:
+      - webmail-datos:/var/roundcube/db
+      - ./correo/roundcube-envio.php:/var/roundcube/config/envio.php:ro
+    # Solo en esta máquina: va por HTTP. En un servidor se publica detrás del proxy con HTTPS
+    ports:
+      - "127.0.0.1:${SARAO_WEBMAIL_PUERTO:-8025}:80"
+
 volumes:
   datos-mysql:
   imagenes-eventos:
+  correo-buzones:
+  correo-estado:
+  correo-config:
+  webmail-datos:
