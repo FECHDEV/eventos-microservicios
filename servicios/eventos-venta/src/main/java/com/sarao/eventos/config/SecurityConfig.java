@@ -36,6 +36,9 @@ public class SecurityConfig {
 						// El contador del pie de cada página, también sin sesión. Solo sumar una visita
 						.requestMatchers(HttpMethod.POST, "/api/visitas/*").permitAll()
 						.requestMatchers("/api/eventos/**").hasRole("ADMINISTRADOR")
+						// CU-06: comprar es del Cliente, el único con fecha de nacimiento para validar la edad
+						// (decisiones.md → Adquirir entradas (CU-06))
+						.requestMatchers("/api/reservas/**").hasRole("CLIENTE")
 						.anyRequest().denyAll())
 				// El 401 y el 403 pasan por ManejadorErrores para salir con el mismo formato que el resto de la API
 				.exceptionHandling(errores -> errores

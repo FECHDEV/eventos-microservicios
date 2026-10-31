@@ -13,6 +13,7 @@ import {
 } from '@angular/router';
 import { catchError, concat, distinctUntilChanged, filter, map, of, switchMap } from 'rxjs';
 
+import { CuentaService } from './core/api/cuenta.service';
 import { VisitasService } from './core/api/visitas.service';
 import { MARCA } from './core/marca';
 import { FiltrosDelCatalogo } from './core/modelos/catalogo';
@@ -50,6 +51,18 @@ export class AppComponent {
   private readonly router = inject(Router);
   private readonly temas = inject(TemaService);
   private readonly visitas = inject(VisitasService);
+  private readonly cuenta = inject(CuentaService);
+
+  // El rol guardado puede haber cambiado (CU-09): el backend ya aplica el nuevo, y
+  // el menú lo toma al abrir el sitio. Si falla, sigue el guardado
+  constructor() {
+    if (this.sesion.autenticado()) {
+      this.cuenta.leerDatos().then(
+        (usuario) => this.sesion.actualizarUsuario(usuario),
+        () => undefined,
+      );
+    }
+  }
 
   protected readonly marca = MARCA;
   protected readonly autenticado = this.sesion.autenticado;

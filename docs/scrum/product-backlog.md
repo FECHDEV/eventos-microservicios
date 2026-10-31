@@ -18,8 +18,8 @@ Orden de arriba abajo por prioridad. Estado: Pendiente, En curso o Hecha.
 | HU-11 | Como administrador, quiero gestionar tipos de entrada, para definir precios y cupos. | CU-11 | Eventos y Venta | 2 | Hecha |
 | HU-12 | Como administrador, quiero gestionar el estado del evento, para postergarlo, cancelarlo o cerrar ventas. | CU-12 | Eventos y Venta | 2 | Hecha |
 | HU-13 | Como visitante, quiero consultar y buscar eventos, para encontrar uno que me interese. | CU-05, req. 4 | Eventos y Venta | 2 | Hecha |
-| HU-14 | Como visitante, quiero ver el contador de visitas en el pie de cada página, para conocer el alcance del sitio. | Req. 3 | Eventos y Venta | 2 | En curso |
-| HU-15 | Como cliente, quiero reservar entradas, para asegurar mi cupo mientras pago. | CU-06 | Eventos y Venta | 2 | Pendiente |
+| HU-14 | Como visitante, quiero ver el contador de visitas en el pie de cada página, para conocer el alcance del sitio. | Req. 3 | Eventos y Venta | 2 | Hecha |
+| HU-15 | Como cliente, quiero reservar entradas, para asegurar mi cupo mientras pago. | CU-06 | Eventos y Venta | 2 | En curso |
 | HU-16 | Como cliente, quiero consultar mis entradas, para presentarlas en el evento. | CU-08 | Eventos y Venta | 2 | Pendiente |
 | HU-17 | Como sistema, quiero enviar los correos desde un servicio propio, para que una falla de correo no afecte la compra. | Transversal | Notificaciones | 3 | Pendiente |
 | HU-18 | Como cliente, quiero pagar con QR, para confirmar mi compra. | CU-07 | Pagos | 3 | Pendiente |

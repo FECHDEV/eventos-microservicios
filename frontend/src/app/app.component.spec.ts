@@ -138,6 +138,19 @@ describe('AppComponent', () => {
     expect(crear().nativeElement.querySelector('button.salir')).toBeNull();
   });
 
+  it('al abrir el sitio toma el rol actual de la cuenta', async () => {
+    const sesion = TestBed.inject(SesionService);
+    sesion.iniciar(sesionVigente('CLIENTE'));
+    crear();
+
+    TestBed.inject(HttpTestingController)
+      .expectOne('/api/cuenta/datos-personales')
+      .flush({ ...sesionVigente('PERSONAL').usuario });
+    await Promise.resolve();
+
+    expect(sesion.rol()).toBe('PERSONAL');
+  });
+
   it('con sesión muestra el nombre y permite cerrarla', () => {
     TestBed.inject(SesionService).iniciar(sesionVigente());
 
@@ -489,7 +502,7 @@ describe('AppComponent', () => {
     it('una pantalla sin página no cuenta', async () => {
       const fijo = await en('/panel');
 
-      TestBed.inject(HttpTestingController).expectNone(() => true);
+      TestBed.inject(HttpTestingController).expectNone((peticion) => peticion.url.startsWith('/api/visitas/'));
       expect(pie(fijo)).not.toContain('Visitas');
     });
   });

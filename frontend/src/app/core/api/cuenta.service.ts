@@ -19,6 +19,10 @@ export class CuentaService {
 		return httpResource<Usuario>(() => '/api/cuenta/datos-personales');
 	}
 
+	leerDatos(): Promise<Usuario> {
+		return firstValueFrom(this.http.get<Usuario>('/api/cuenta/datos-personales'));
+	}
+
 	// Limpio como en el registro; el teléfono vacío viaja como null (RF-8)
 	async actualizarDatos(datos: DatosPersonales): Promise<Usuario> {
 		const telefono = datos.telefono.trim();

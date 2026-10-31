@@ -42,7 +42,7 @@ public class TipoEntrada {
 	@Column(name = "cantidad_total", nullable = false)
 	private int cantidadTotal;
 
-	// Se descuenta al reservar (CU-06)
+	// Se descuenta al reservar (CU-06) y vuelve al liberar una vencida (TipoEntradaRepository.devolverDisponibilidad)
 	@Column(name = "cantidad_disponible", nullable = false)
 	private int cantidadDisponible;
 

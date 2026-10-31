@@ -34,6 +34,7 @@ public class ManejadorErrores extends ResponseEntityExceptionHandler {
 	public ProblemDetail manejarErrorNegocio(ErrorNegocioException ex) {
 		ProblemDetail problema = ProblemDetail.forStatusAndDetail(ex.getEstadoHttp(), ex.getMessage());
 		problema.setProperty("codigo", ex.getCodigo());
+		ex.propiedades().forEach(problema::setProperty);
 		return problema;
 	}
 

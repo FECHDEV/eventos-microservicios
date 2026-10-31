@@ -169,6 +169,24 @@ class InicioSesionIntegracionTest {
 				.hasStatus(HttpStatus.UNAUTHORIZED);
 	}
 
+	// CU-06: otro servicio pregunta la fecha de nacimiento, y solo otro servicio
+	@Test
+	void laFechaDeNacimientoSoloSeLaDaAOtroServicio() {
+		Long id = usuarioRepository.findByCorreo("ana@mail.com").orElseThrow().getIdUsuario();
+		String ruta = "/interno/usuarios/" + id + "/fecha-nacimiento";
+
+		MvcTestResult fecha = mvc.get().uri(ruta).header("X-Clave-Servicio", "clave-de-pruebas").exchange();
+		assertThat(fecha).hasStatus(HttpStatus.OK);
+		assertThat(fecha).bodyJson().extractingPath("$.fechaNacimiento")
+				.isEqualTo(usuarioRepository.findById(id).orElseThrow().getFechaNacimiento().toString());
+
+		assertThat(mvc.get().uri("/interno/usuarios/999999/fecha-nacimiento").header("X-Clave-Servicio", "clave-de-pruebas")
+				.exchange()).hasStatus(HttpStatus.NOT_FOUND);
+		assertThat(mvc.get().uri(ruta).exchange()).hasStatus(HttpStatus.UNAUTHORIZED);
+		assertThat(mvc.get().uri(ruta).header("X-Clave-Servicio", "clave-de-pruebas").header("X-Usuario-Id", id.toString())
+				.header("X-Usuario-Rol", "CLIENTE").exchange()).hasStatus(HttpStatus.FORBIDDEN);
+	}
+
 	@Test
 	void encabezadosDeUsuarioSinClaveDeServicioNoAutentican() {
 		assertThat(mvc.get().uri("/api/cuenta").header("X-Usuario-Id", "1").header("X-Usuario-Rol", "ADMINISTRADOR")

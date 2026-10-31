@@ -3,6 +3,7 @@ package com.sarao.eventos.entity;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.Period;
 import java.util.Objects;
 import java.util.Set;
 
@@ -163,6 +164,22 @@ public class Evento {
 	// eventos). EventoRepository.buscarEnElCatalogo repite esta regla en JPQL para la lista
 	public boolean seMuestraEnElCatalogo(LocalDateTime ahora) {
 		return ESTADOS_EN_CATALOGO.contains(estado) && !termino(ahora);
+	}
+
+	// CU-06 paso 3, a la fecha del evento: si se postergó, la nueva
+	public boolean verificarRestriccionEdad(LocalDate fechaNacimiento) {
+		return restriccionEdad == null || Period.between(fechaNacimiento, fecha).getYears() >= restriccionEdad;
+	}
+
+	// CU-06 paso 4. El modelo recibe el cliente; acá llega lo que ya tiene comprometido en el evento, que se cuenta en
+	// la base (decisiones.md → Límite de compra acumulado por cliente y evento)
+	public boolean verificarLimiteCompra(int yaComprometidas, int cantidad) {
+		return limiteCompra == null || yaComprometidas + cantidad <= limiteCompra;
+	}
+
+	// Para el aviso de FA-03. Solo tiene sentido con límite
+	public int cuantasPuedeAgregar(int yaComprometidas) {
+		return Math.max(0, limiteCompra - yaComprometidas);
 	}
 
 	public boolean estaCancelado() {

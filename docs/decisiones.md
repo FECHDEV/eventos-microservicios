@@ -717,6 +717,15 @@ CU-10 tampoco deja editarlas.
 contradice la regla de CU-10. Permitir una fecha anterior a la actual (pero no a
 hoy) deja corregir una postergación que se fue demasiado lejos.
 
+### Fecha de nacimiento del Cliente
+
+La fecha de nacimiento vive en Seguridad y CU-06 la necesita para validar la edad
+(31/10/2026). Eventos y Venta la pide por `GET /interno/usuarios/{id}/fecha-nacimiento`,
+con clave de servicio y plazos de 1 s para conectar y 2 s para responder, **antes** de
+abrir la transacción de la reserva: una llamada a otro servicio no espera con el
+evento bloqueado. No se copia a `eventos_db`. Si Seguridad no responde, la reserva
+sale 503 `SERVICIO_NO_DISPONIBLE`, porque no se sabe si el Cliente cumple la edad.
+
 ### Reactivar entradas utilizadas: cuando exista la Venta
 
 CU-12 FA-02 reactiva las entradas usadas antes de una postergación cuando el
