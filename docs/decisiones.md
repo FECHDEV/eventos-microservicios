@@ -726,6 +726,13 @@ abrir la transacción de la reserva: una llamada a otro servicio no espera con e
 evento bloqueado. No se copia a `eventos_db`. Si Seguridad no responde, la reserva
 sale 503 `SERVICIO_NO_DISPONIBLE`, porque no se sabe si el Cliente cumple la edad.
 
+### Espera máxima de un bloqueo en Eventos y Venta
+
+La conexión fija `innodb_lock_wait_timeout=5` (31/10/2026): quien no obtiene un
+bloqueo a los 5 segundos recibe 409 `OPERACION_SIMULTANEA` (CU-06 RF-14), en vez de
+retener hilo y conexión los 50 segundos por defecto de MySQL. Va en la URL de la
+conexión porque MySQL no aplica `jakarta.persistence.lock.timeout`.
+
 ### Reactivar entradas utilizadas: cuando exista la Venta
 
 CU-12 FA-02 reactiva las entradas usadas antes de una postergación cuando el

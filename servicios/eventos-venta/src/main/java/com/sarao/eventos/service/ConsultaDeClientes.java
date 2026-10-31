@@ -11,8 +11,10 @@ import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
 import com.sarao.eventos.exception.ServicioNoDisponibleException;
+import lombok.extern.slf4j.Slf4j;
 
 // Lo que Eventos y Venta necesita de una cuenta, que vive en Seguridad (decisiones.md → Fecha de nacimiento del Cliente)
+@Slf4j
 @Component
 public class ConsultaDeClientes {
 
@@ -36,6 +38,7 @@ public class ConsultaDeClientes {
 			return seguridad.get().uri("/interno/usuarios/{id}/fecha-nacimiento", idCliente)
 					.header("X-Clave-Servicio", claveServicio).retrieve().body(FechaNacimiento.class).fechaNacimiento();
 		} catch (RestClientException e) {
+			log.warn("No se pudo consultar la cuenta en Seguridad: {}", e.getMessage());
 			throw new ServicioNoDisponibleException();
 		}
 	}

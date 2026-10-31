@@ -1,3 +1,4 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, computed, inject, linkedSignal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { form, FormField, maxLength } from '@angular/forms/signals';
@@ -53,15 +54,28 @@ export class AppComponent {
   private readonly visitas = inject(VisitasService);
   private readonly cuenta = inject(CuentaService);
 
-  // El rol guardado puede haber cambiado (CU-09): el backend ya aplica el nuevo, y
-  // el menú lo toma al abrir el sitio. Si falla, sigue el guardado
+  // El rol guardado puede haber cambiado (CU-09): el backend ya aplica el nuevo, y el
+  // menú lo toma al abrir el sitio. Una respuesta de una sesión que ya no está no se
+  // aplica. Con un 401 se cierra sin salir de la pantalla, que puede ser pública; con
+  // otro error sigue lo guardado
   constructor() {
-    if (this.sesion.autenticado()) {
-      this.cuenta.leerDatos().then(
-        (usuario) => this.sesion.actualizarUsuario(usuario),
-        () => undefined,
-      );
+    const token = this.sesion.token();
+    if (token === null) {
+      return;
     }
+    const sigueLaMisma = () => this.sesion.token() === token;
+    this.cuenta.leerDatos().then(
+      (usuario) => {
+        if (sigueLaMisma()) {
+          this.sesion.actualizarUsuario(usuario);
+        }
+      },
+      (error: unknown) => {
+        if (sigueLaMisma() && error instanceof HttpErrorResponse && error.status === 401) {
+          this.sesion.cerrar();
+        }
+      },
+    );
   }
 
   protected readonly marca = MARCA;

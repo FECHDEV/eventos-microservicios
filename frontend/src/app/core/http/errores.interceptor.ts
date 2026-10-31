@@ -1,4 +1,4 @@
-import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
+import { HttpContextToken, HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
@@ -6,6 +6,9 @@ import { catchError, throwError } from 'rxjs';
 import { SesionService } from '../sesion/sesion.service';
 
 const PUBLICAS = ['/api/auth/', '/api/visitas/'];
+
+// Para quien decide por su cuenta qué hacer con un 401
+export const MANEJA_SU_401 = new HttpContextToken<boolean>(() => false);
 
 // Un 401 en una petición protegida significa que el token dejó de valer: venció,
 // la cuenta se desactivó, cambió la contraseña o cambió el rol (CU-02 RF-8, RF-9
@@ -20,6 +23,7 @@ export const erroresInterceptor: HttpInterceptorFn = (peticion, siguiente) => {
 			const esSesionCaida =
 				error instanceof HttpErrorResponse &&
 				error.status === 401 &&
+				!peticion.context.get(MANEJA_SU_401) &&
 				!PUBLICAS.some((prefijo) => peticion.url.startsWith(prefijo));
 
 			if (esSesionCaida) {

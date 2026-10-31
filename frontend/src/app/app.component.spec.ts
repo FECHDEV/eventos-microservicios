@@ -151,6 +151,47 @@ describe('AppComponent', () => {
     expect(sesion.rol()).toBe('PERSONAL');
   });
 
+  it('un 401 al leer la cuenta cierra la sesión sin salir de la pantalla', async () => {
+    const sesion = TestBed.inject(SesionService);
+    sesion.iniciar(sesionVigente());
+    crear();
+    const url = TestBed.inject(Router).url;
+
+    TestBed.inject(HttpTestingController)
+      .expectOne('/api/cuenta/datos-personales')
+      .flush(null, { status: 401, statusText: 'Unauthorized' });
+    await new Promise((listo) => setTimeout(listo));
+
+    expect(sesion.autenticado()).toBe(false);
+    expect(TestBed.inject(Router).url).toBe(url);
+  });
+
+  it('otro error al leer la cuenta mantiene la sesión', async () => {
+    const sesion = TestBed.inject(SesionService);
+    sesion.iniciar(sesionVigente());
+    crear();
+
+    TestBed.inject(HttpTestingController)
+      .expectOne('/api/cuenta/datos-personales')
+      .flush(null, { status: 503, statusText: 'Unavailable' });
+    await new Promise((listo) => setTimeout(listo));
+
+    expect(sesion.autenticado()).toBe(true);
+  });
+
+  it('una respuesta de otra sesión no pisa la actual', async () => {
+    const sesion = TestBed.inject(SesionService);
+    sesion.iniciar(sesionVigente('CLIENTE'));
+    crear();
+    const peticion = TestBed.inject(HttpTestingController).expectOne('/api/cuenta/datos-personales');
+
+    sesion.iniciar({ ...sesionVigente('ADMINISTRADOR'), token: 'otra.sesion' });
+    peticion.flush({ ...sesionVigente('PERSONAL').usuario });
+    await new Promise((listo) => setTimeout(listo));
+
+    expect(sesion.rol()).toBe('ADMINISTRADOR');
+  });
+
   it('con sesión muestra el nombre y permite cerrarla', () => {
     TestBed.inject(SesionService).iniciar(sesionVigente());
 
