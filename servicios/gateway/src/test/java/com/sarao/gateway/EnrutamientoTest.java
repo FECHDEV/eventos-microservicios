@@ -104,6 +104,18 @@ class EnrutamientoTest {
 	}
 
 	@Test
+	void lasVisitasSeAtiendenSinConsultarLaSesion() throws Exception {
+		try (var cliente = HttpClient.newHttpClient()) {
+			var respuesta = cliente.send(HttpRequest.newBuilder(URI.create("http://localhost:" + puerto + "/api/visitas/PORTADA"))
+					.header("Authorization", "Bearer falla").POST(HttpRequest.BodyPublishers.noBody()).build(),
+					HttpResponse.BodyHandlers.ofString());
+
+			assertThat(respuesta.statusCode()).isEqualTo(200);
+			assertThat(respuesta.body()).startsWith("/api/visitas/PORTADA|null|null|null|");
+		}
+	}
+
+	@Test
 	void losEncabezadosDeIdentidadDelClienteNoLleganAlCatalogo() throws Exception {
 		var respuesta = pedir("/api/catalogo/5", "X-Usuario-Id", "1", "X-Usuario-Rol", "ADMINISTRADOR",
 				"X-Clave-Servicio", "adivinada");

@@ -5,7 +5,7 @@ import { catchError, throwError } from 'rxjs';
 
 import { SesionService } from '../sesion/sesion.service';
 
-const PUBLICO = '/api/auth/';
+const PUBLICAS = ['/api/auth/', '/api/visitas/'];
 
 // Un 401 en una petición protegida significa que el token dejó de valer: venció,
 // la cuenta se desactivó, cambió la contraseña o cambió el rol (CU-02 RF-8, RF-9
@@ -20,7 +20,7 @@ export const erroresInterceptor: HttpInterceptorFn = (peticion, siguiente) => {
 			const esSesionCaida =
 				error instanceof HttpErrorResponse &&
 				error.status === 401 &&
-				!peticion.url.startsWith(PUBLICO);
+				!PUBLICAS.some((prefijo) => peticion.url.startsWith(prefijo));
 
 			if (esSesionCaida) {
 				sesion.cerrar();

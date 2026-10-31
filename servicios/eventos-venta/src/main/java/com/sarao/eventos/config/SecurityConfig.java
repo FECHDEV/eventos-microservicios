@@ -33,6 +33,8 @@ public class SecurityConfig {
 						// CU-05: el catálogo se consulta sin sesión. Solo lectura: cualquier otro método sigue rechazado
 						.requestMatchers(HttpMethod.GET, "/api/catalogo/**").permitAll()
 						.requestMatchers(HttpMethod.HEAD, "/api/catalogo/**").permitAll()
+						// El contador del pie de cada página, también sin sesión. Solo sumar una visita
+						.requestMatchers(HttpMethod.POST, "/api/visitas/*").permitAll()
 						.requestMatchers("/api/eventos/**").hasRole("ADMINISTRADOR")
 						.anyRequest().denyAll())
 				// El 401 y el 403 pasan por ManejadorErrores para salir con el mismo formato que el resto de la API
