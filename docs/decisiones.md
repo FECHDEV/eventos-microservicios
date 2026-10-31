@@ -462,6 +462,10 @@ administradores.
 
 ### Envío de correo detrás de una interfaz `NotificadorCorreo`
 
+Vive en el servicio Notificaciones (31/10/2026): los demás servicios lo llaman por
+`/interno/correos`, reciben 202 y no esperan la entrega. Seguridad pide el correo de
+recuperación después del commit y en segundo plano, sin propagar fallos.
+
 Mismo patrón que `IPago` (`plan-implementacion.md` → Paso 0, decisión 4): un
 simulador que no manda nada de verdad, solo registra qué se habría enviado, y
 un adaptador SMTP real contra el servidor propio (`plan-implementacion.md` →
@@ -471,9 +475,8 @@ defecto, y siempre en las pruebas) o `smtp` (en Docker).
 Tres correos de alcance (`CLAUDE.md` → Reglas de negocio → Correos):
 recuperación de contraseña (CU-03), detalle de compra y envío de entradas.
 
-El simulador escribe en el log el contenido que habría enviado, incluido el
-token de recuperación en claro. Sirve para desarrollo y pruebas; **no debe
-quedar activo en producción**.
+El simulador registra el destinatario, y el token y los códigos solo con su logger
+en DEBUG. Sirve para desarrollo y pruebas; **no debe quedar activo en producción**.
 
 **El envío no puede cambiar la respuesta de CU-03.** La solicitud de
 recuperación responde igual exista o no la cuenta, pero el correo solo se
@@ -485,7 +488,8 @@ El simulador no lo necesita, porque solo escribe en el log.
 ### El servidor de correo en Docker, con buzones del propio dominio
 
 El servidor de correo (docker-mailserver) y su webmail (Roundcube) son dos
-servicios más del `docker-compose.yml`, en el mismo servidor que la aplicación,
+servicios más del `docker-compose.yml`, en el perfil `correo` para no consumir
+memoria en desarrollo, en el mismo servidor que la aplicación,
 en lugar de las dos VMs del planteo original. Los destinatarios de la
 demostración son buzones del propio dominio (`EVENTOS_CORREO_DOMINIO`, por
 defecto `mail.com`: fabio@mail.com), leídos en el webmail. Así todo se entrega

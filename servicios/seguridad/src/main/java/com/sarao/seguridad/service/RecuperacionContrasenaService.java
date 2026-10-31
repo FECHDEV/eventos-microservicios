@@ -4,6 +4,7 @@ import java.time.Clock;
 import java.time.LocalDateTime;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,7 +24,7 @@ public class RecuperacionContrasenaService {
 	private final UsuarioRepository usuarioRepository;
 	private final RecuperacionContrasenaRepository recuperacionRepository;
 	private final PasswordEncoder passwordEncoder;
-	private final NotificadorCorreo notificadorCorreo;
+	private final ApplicationEventPublisher eventos;
 	private final LimiteSolicitudesRecuperacion limiteSolicitudes;
 	private final LimiteIntentos limiteIntentos;
 	private final Clock clock;
@@ -59,7 +60,7 @@ public class RecuperacionContrasenaService {
 		String token = TokenRecuperacion.generar();
 		recuperacionRepository.save(
 				RecuperacionContrasena.crear(usuario, TokenRecuperacion.hash(token), LocalDateTime.now(clock)));
-		notificadorCorreo.enviarRecuperacion(usuario.getCorreo(), usuario.getNombre(), token);
+		eventos.publishEvent(new RecuperacionSolicitada(usuario.getCorreo(), usuario.getNombre(), token));
 	}
 
 	// Incluye la recuperación que se acaba de usar al restablecer

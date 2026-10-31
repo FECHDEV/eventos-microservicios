@@ -3,7 +3,6 @@ package com.sarao.seguridad.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.times;
@@ -22,6 +21,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -51,7 +51,7 @@ class RecuperacionContrasenaServiceTest {
 	private RecuperacionContrasenaRepository recuperacionRepository;
 
 	@Mock
-	private NotificadorCorreo notificadorCorreo;
+	private ApplicationEventPublisher eventos;
 
 	private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
@@ -62,7 +62,7 @@ class RecuperacionContrasenaServiceTest {
 	@BeforeEach
 	void crearServicio() {
 		servicio = new RecuperacionContrasenaService(usuarioRepository, recuperacionRepository, passwordEncoder,
-				notificadorCorreo, new LimiteSolicitudesRecuperacion(RELOJ), limiteIntentos, RELOJ);
+				eventos, new LimiteSolicitudesRecuperacion(RELOJ), limiteIntentos, RELOJ);
 	}
 
 	private static Usuario ana() {
@@ -84,9 +84,11 @@ class RecuperacionContrasenaServiceTest {
 	}
 
 	private String tokenEnviadoAAna() {
-		ArgumentCaptor<String> token = ArgumentCaptor.forClass(String.class);
-		then(notificadorCorreo).should().enviarRecuperacion(eq("ana@mail.com"), eq("Ana"), token.capture());
-		return token.getValue();
+		ArgumentCaptor<RecuperacionSolicitada> solicitud = ArgumentCaptor.forClass(RecuperacionSolicitada.class);
+		then(eventos).should().publishEvent(solicitud.capture());
+		assertThat(solicitud.getValue().correo()).isEqualTo("ana@mail.com");
+		assertThat(solicitud.getValue().nombre()).isEqualTo("Ana");
+		return solicitud.getValue().token();
 	}
 
 	private RecuperacionContrasena recuperacionGuardada() {
@@ -126,7 +128,7 @@ class RecuperacionContrasenaServiceTest {
 		assertThatCode(() -> solicitar("nadie@mail.com")).doesNotThrowAnyException();
 
 		then(recuperacionRepository).shouldHaveNoInteractions();
-		then(notificadorCorreo).shouldHaveNoInteractions();
+		then(eventos).shouldHaveNoInteractions();
 	}
 
 	@Test
