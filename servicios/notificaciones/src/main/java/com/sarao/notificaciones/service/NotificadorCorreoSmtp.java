@@ -2,9 +2,12 @@ package com.sarao.notificaciones.service;
 
 import static org.springframework.web.util.HtmlUtils.htmlEscape;
 
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
+import java.text.NumberFormat;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -80,7 +83,7 @@ public class NotificadorCorreoSmtp implements NotificadorCorreo {
 				En otro correo te enviamos las entradas.
 				""".formatted(compra.nombre(), compra.evento(), compra.fecha().format(FECHA),
 				compra.horaInicio().format(HORA), compra.lugar(), compra.tipo(), compra.cantidad(),
-				compra.precioUnitario().toPlainString(), compra.total().toPlainString());
+				bolivianos(compra.precioUnitario()), bolivianos(compra.total()));
 		String html = """
 				<p>Hola, %s:</p>
 				<p>Tu compra está confirmada. Este es el detalle:</p>
@@ -92,8 +95,8 @@ public class NotificadorCorreoSmtp implements NotificadorCorreo {
 				fila("Fecha", compra.fecha().format(FECHA) + ", " + compra.horaInicio().format(HORA)),
 				fila("Lugar", compra.lugar()), fila("Entrada", compra.tipo()),
 				fila("Cantidad", String.valueOf(compra.cantidad())),
-				fila("Precio unitario", "Bs " + compra.precioUnitario().toPlainString()),
-				fila("Total", "Bs " + compra.total().toPlainString()));
+				fila("Precio unitario", "Bs " + bolivianos(compra.precioUnitario())),
+				fila("Total", "Bs " + bolivianos(compra.total())));
 		enviar("detalle de compra", compra.correo(), "Detalle de tu compra en Sarao", texto, html);
 	}
 
@@ -140,6 +143,14 @@ public class NotificadorCorreoSmtp implements NotificadorCorreo {
 			// correo: el de recuperación lleva el token
 			log.error("No se pudo enviar el correo de {} a {}: {}", cual, para, error.getMessage());
 		}
+	}
+
+	// Como en el sitio: 1.250,00
+	private static String bolivianos(BigDecimal monto) {
+		NumberFormat formato = NumberFormat.getNumberInstance(Locale.of("es", "BO"));
+		formato.setMinimumFractionDigits(2);
+		formato.setMaximumFractionDigits(2);
+		return formato.format(monto);
 	}
 
 	private static String plantilla(String cuerpo) {

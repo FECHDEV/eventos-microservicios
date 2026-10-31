@@ -26,7 +26,7 @@ Spec: `docs/decisiones.md` → «2. Notificaciones» y `CLAUDE.md` → Correos.
 
 ## Resultado
 
-- **Suites:** Notificaciones con 20 pruebas y Seguridad con 236, en verde.
+- **Suites:** Notificaciones con 21 pruebas y Seguridad con 237, en verde.
 - **Prueba en Docker con el servidor de correo real:** el correo de recuperación llegó a un buzón, en
   texto y HTML con el nombre escapado. Su enlace cambió la contraseña y el token no sirvió dos veces.
   Otro dominio se rechaza y queda en el log, sin salir del servidor.
@@ -34,4 +34,9 @@ Spec: `docs/decisiones.md` → «2. Notificaciones» y `CLAUDE.md` → Correos.
   por debajo de 0,1 s. El token no aparece en ningún log.
 - **Prueba manual en el navegador:** pasada por el usuario, con el correo leído en el webmail.
 - **Sin probar:** los correos de compra con el servidor real, porque los pide HU-18.
-- **Pendiente:** `/code-review`, `/security-review` y CI, que necesitan el commit.
+- **`/security-review`:** sin vulnerabilidades.
+- **`/code-review`, corregidos:** la prueba de dos solicitudes vuelve a demorar dentro de la
+  transacción, prueba de que un rollback no manda el correo, enlaces con el puerto real, espera de los
+  correos en cola al apagarse, montos como en el sitio y detalles de comentarios y `.env.example`.
+- **`/code-review`, no corregido:** avisar si el simulador queda activo en el VPS va con HU-22. El
+  rechazo de Postfix sí llega a la API: la prueba real lo mostró en el log.

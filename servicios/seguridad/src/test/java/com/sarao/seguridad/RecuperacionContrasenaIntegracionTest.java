@@ -1,8 +1,10 @@
 package com.sarao.seguridad;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.BDDMockito.willAnswer;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.never;
@@ -22,19 +24,25 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.test.web.servlet.assertj.MvcTestResult;
 
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 import com.jayway.jsonpath.JsonPath;
 
 import com.sarao.seguridad.dto.SolicitudRecuperacionRequest;
 import com.sarao.seguridad.repository.UsuarioRepository;
+import com.sarao.seguridad.repository.RecuperacionContrasenaRepository;
 import com.sarao.seguridad.service.NotificadorCorreo;
+import com.sarao.seguridad.service.RecuperacionSolicitada;
 import com.sarao.seguridad.service.RecuperacionContrasenaService;
 import com.sarao.seguridad.service.TokenRecuperacion;
 
@@ -54,12 +62,21 @@ class RecuperacionContrasenaIntegracionTest {
 	private UsuarioRepository usuarioRepository;
 
 	@Autowired
+	private ApplicationEventPublisher eventos;
+
+	@Autowired
+	private PlatformTransactionManager transacciones;
+
+	@Autowired
 	private JdbcTemplate jdbc;
 
 	@Autowired
 	private RecuperacionContrasenaService recuperacionContrasenaService;
 
-	// Deja pasar la llamada al simulador y permite leer el token, que la base no guarda
+	@MockitoSpyBean
+	private RecuperacionContrasenaRepository recuperacionRepository;
+
+	// Solo captura el token: el correo real es de Notificaciones
 	@MockitoBean
 	private NotificadorCorreo notificadorCorreo;
 
@@ -244,8 +261,25 @@ class RecuperacionContrasenaIntegracionTest {
 		assertThat(iniciarSesionDesde(ip, "Nueva-clave-1")).hasStatus(HttpStatus.OK);
 	}
 
+	// Un token que se revirtió no sirve: no se manda el enlace
+	@Test
+	void siLaTransaccionSeRevierteNoSeMandaElCorreo() {
+		new TransactionTemplate(transacciones).executeWithoutResult(estado -> {
+			eventos.publishEvent(new RecuperacionSolicitada("revertido@mail.com", "Ana", "token"));
+			estado.setRollbackOnly();
+		});
+
+		then(notificadorCorreo).should(never()).enviarRecuperacion(eq("revertido@mail.com"), anyString(), anyString());
+	}
+
 	@Test
 	void dosSolicitudesSimultaneasDejanUnSoloTokenVigente() throws Exception {
+		// El guardado tarda: sin el bloqueo de la cuenta, la segunda solicitud no ve el token que la primera no confirmó
+		willAnswer(invocacion -> {
+			Object guardado = invocacion.callRealMethod();
+			Thread.sleep(300);
+			return guardado;
+		}).given(recuperacionRepository).save(any());
 		CountDownLatch largada = new CountDownLatch(1);
 		ExecutorService hilos = Executors.newFixedThreadPool(2);
 		try {

@@ -89,7 +89,16 @@ class NotificadorCorreoSmtpTest {
 		assertThat(mensaje.getSubject()).isEqualTo("Detalle de tu compra en Sarao");
 		assertThat(partes(mensaje)).allSatisfy(parte -> assertThat(parte).contains("Noche de jazz")
 				.contains("04/10/2026").contains("22:00").contains("Teatro Municipal").contains("General")
-				.contains("Bs 50.00").contains("Bs 100.00"));
+				.contains("Bs 50,00").contains("Bs 100,00"));
+	}
+
+	@Test
+	void losMontosVanComoEnElSitio() throws Exception {
+		notificador.enviarDetalleDeCompra(new CorreoDeCompra("ana@mail.com", "Ana", "Noche de jazz",
+				LocalDate.of(2026, 10, 4), LocalTime.of(22, 0), "Teatro", "General", 25, new BigDecimal("50"),
+				new BigDecimal("1250.5")));
+
+		assertThat(partes(enviado())).allSatisfy(parte -> assertThat(parte).contains("Bs 50,00").contains("Bs 1.250,50"));
 	}
 
 	@Test
