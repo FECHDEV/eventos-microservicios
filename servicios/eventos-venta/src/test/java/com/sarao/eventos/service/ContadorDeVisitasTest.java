@@ -82,7 +82,7 @@ class ContadorDeVisitasTest {
 	// Una página nueva del enum (se agregó una pantalla) recibe su fila en el siguiente arranque
 	@Test
 	void unaPaginaSinFilaLaRecibeAlArrancar() {
-		repositorio.deleteAll(repositorio.findAll().stream().filter(v -> v.getPagina() == Pagina.VALIDACION).toList());
+		repositorio.deleteAll(repositorio.findAll().stream().filter(v -> v.getPagina().equals("VALIDACION")).toList());
 		em.flush();
 		em.clear();
 
@@ -94,13 +94,13 @@ class ContadorDeVisitasTest {
 	}
 
 	private Map<Pagina, Long> totales() {
-		return repositorio.findAll().stream().collect(Collectors.toMap(VisitaPagina::getPagina, VisitaPagina::getTotal));
+		return repositorio.findAll().stream().collect(Collectors.toMap(v -> Pagina.valueOf(v.getPagina()), VisitaPagina::getTotal));
 	}
 
 	// Sin su fila (la tabla se vació con la aplicación andando) la visita la crea, en vez de fallar
 	@Test
 	void unaPaginaSinFilaLaCreaConLaPrimeraVisita() {
-		repositorio.deleteAll(repositorio.findAll().stream().filter(v -> v.getPagina() == Pagina.REPORTES).toList());
+		repositorio.deleteAll(repositorio.findAll().stream().filter(v -> v.getPagina().equals("REPORTES")).toList());
 		em.flush();
 		em.clear();
 

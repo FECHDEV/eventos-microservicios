@@ -1554,8 +1554,9 @@ el usuario el 12/10/2026:
   ruta dice la suya en `data.pagina`, y el frontend tiene la misma lista en
   `core/modelos/visitas.ts`. Una pantalla nueva agrega su valor en los dos.
 - **Amplía el modelo de datos:** tabla `visita_pagina` (`id_visita_pagina`,
-  `pagina` única, `total`). La columna `pagina` es `VARCHAR` y no un `ENUM` de
-  MySQL: con `ddl-auto=update`, un valor nuevo no cabría en la columna ya creada.
+  `pagina` única, `total`). La columna `pagina` es `VARCHAR`, y en la entidad es texto y
+  no un enum: Hibernate pondría un `CHECK` con los valores, y con `ddl-auto=update`
+  un valor nuevo no cabría en la tabla ya creada (corregido el 31/10/2026).
 - **`POST /api/visitas/{pagina}` es público**, como el catálogo, y devuelve el
   total. Una página fuera del enum sale como 400, así nadie crea filas pidiendo
   páginas inventadas. Cualquiera puede inflar el contador repitiendo la petición:

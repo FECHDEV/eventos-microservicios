@@ -1,14 +1,7 @@
 package com.sarao.eventos.entity;
 
-import java.util.Objects;
-
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -30,19 +23,10 @@ public class VisitaPagina {
 	@Column(name = "id_visita_pagina")
 	private Long idVisitaPagina;
 
-	// VARCHAR y no ENUM de MySQL: con ddl-auto=update, una página nueva no cabría en la columna ya creada
-	@Enumerated(EnumType.STRING)
-	@JdbcTypeCode(SqlTypes.VARCHAR)
+	// Texto y no enum: Hibernate pondría un CHECK con los valores, y con ddl-auto=update una página nueva no cabría
 	@Column(nullable = false, unique = true, length = 40)
-	private Pagina pagina;
+	private String pagina;
 
 	@Column(nullable = false)
 	private long total;
-
-	public static VisitaPagina nueva(Pagina pagina) {
-		VisitaPagina visita = new VisitaPagina();
-		visita.pagina = Objects.requireNonNull(pagina);
-		visita.total = 0;
-		return visita;
-	}
 }

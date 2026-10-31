@@ -105,10 +105,14 @@ class EnrutamientoTest {
 
 	@Test
 	void lasVisitasSeAtiendenSinConsultarLaSesion() throws Exception {
-		var respuesta = pedir("/api/visitas/PORTADA", "Authorization", "Bearer falla");
+		try (var cliente = HttpClient.newHttpClient()) {
+			var respuesta = cliente.send(HttpRequest.newBuilder(URI.create("http://localhost:" + puerto + "/api/visitas/PORTADA"))
+					.header("Authorization", "Bearer falla").POST(HttpRequest.BodyPublishers.noBody()).build(),
+					HttpResponse.BodyHandlers.ofString());
 
-		assertThat(respuesta.statusCode()).isEqualTo(200);
-		assertThat(respuesta.body()).startsWith("/api/visitas/PORTADA|null|null|null|");
+			assertThat(respuesta.statusCode()).isEqualTo(200);
+			assertThat(respuesta.body()).startsWith("/api/visitas/PORTADA|null|null|null|");
+		}
 	}
 
 	@Test

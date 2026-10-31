@@ -1,7 +1,6 @@
 package com.sarao.eventos.service;
 
 import java.util.Arrays;
-import java.util.Set;
 
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -9,7 +8,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.sarao.eventos.entity.Pagina;
-import com.sarao.eventos.entity.VisitaPagina;
 import com.sarao.eventos.repository.VisitaPaginaRepository;
 import lombok.RequiredArgsConstructor;
 
@@ -25,8 +23,6 @@ public class PaginasDelContador implements ApplicationRunner {
 	@Override
 	@Transactional
 	public void run(ApplicationArguments argumentos) {
-		Set<Pagina> registradas = repositorio.paginasRegistradas();
-		Arrays.stream(Pagina.values()).filter(pagina -> !registradas.contains(pagina))
-				.forEach(pagina -> repositorio.save(VisitaPagina.nueva(pagina)));
+		Arrays.stream(Pagina.values()).forEach(pagina -> repositorio.crearSiFalta(pagina.name()));
 	}
 }

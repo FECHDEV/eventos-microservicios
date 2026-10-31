@@ -105,6 +105,16 @@ describe('erroresInterceptor', () => {
   });
 
   // Un 401 al iniciar sesión son credenciales incorrectas, no una sesión caída
+  it('un 401 del contador de visitas no cierra la sesión', () => {
+    sesion.iniciar(sesionVigente());
+    http.post('/api/visitas/PORTADA', null).subscribe({ error: () => undefined });
+
+    servidor.expectOne('/api/visitas/PORTADA').flush(null, { status: 401, statusText: 'Unauthorized' });
+
+    expect(sesion.autenticado()).toBe(true);
+    expect(navegaciones).toEqual([]);
+  });
+
   it('ante un 401 al iniciar sesión no navega', async () => {
     const respuesta = new Promise((_, rechazar) => {
       http.post('/api/auth/inicio-sesion', {}).subscribe({ error: rechazar });

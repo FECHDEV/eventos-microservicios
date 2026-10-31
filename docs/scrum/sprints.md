@@ -35,6 +35,7 @@ con 232 pruebas, gateway con 8 y frontend con 900.
   revelarían qué cuentas existen.
 - **HU-18:** al vencer la reserva, la pantalla deja de consultar el pago y no muestra un pago tardío.
 - **HU-19:** el lector de QR reintenta sin pausa tras un error del servidor.
+- **HU-22:** límite de frecuencia en nginx para las rutas públicas de escritura (`/api/visitas`).
 - **HU-22:** healthcheck de Seguridad en compose, y revisar la IP real según lo que quede delante
   de nginx. Sin Caddy, un cliente por IPv6 llega con IP interna y puede inventar su IP.
 - **HU-15:** liberar las reservas vencidas al listar y modificar tipos de entrada y en el detalle del

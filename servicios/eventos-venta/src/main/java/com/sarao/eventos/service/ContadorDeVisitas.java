@@ -4,7 +4,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.sarao.eventos.entity.Pagina;
-import com.sarao.eventos.entity.VisitaPagina;
 import com.sarao.eventos.repository.VisitaPaginaRepository;
 import lombok.RequiredArgsConstructor;
 
@@ -20,10 +19,10 @@ public class ContadorDeVisitas {
 	// fila falta (la tabla se vació con la aplicación andando), la crea en vez de fallar
 	@Transactional
 	public long registrarVisita(Pagina pagina) {
-		if (repositorio.sumarVisita(pagina) == 0) {
-			repositorio.saveAndFlush(VisitaPagina.nueva(pagina));
-			repositorio.sumarVisita(pagina);
+		if (repositorio.sumarVisita(pagina.name()) == 0) {
+			repositorio.crearSiFalta(pagina.name());
+			repositorio.sumarVisita(pagina.name());
 		}
-		return repositorio.totalDe(pagina).orElseThrow();
+		return repositorio.totalDe(pagina.name()).orElseThrow();
 	}
 }
