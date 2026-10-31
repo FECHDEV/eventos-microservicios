@@ -23,11 +23,12 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ConsultaDeEntradas {
 
-	// Por la fecha y la hora del evento; en el mismo evento, por orden de compra
 	private static final Comparator<CompraDelCliente> POR_FECHA = Comparator
 			.comparing((CompraDelCliente compra) -> compra.evento().getFecha())
-			.thenComparing(compra -> compra.evento().getHoraInicio())
-			.thenComparing(compra -> compra.reserva().getIdReserva());
+			.thenComparing(compra -> compra.evento().getHoraInicio());
+	// En el mismo evento, siempre por orden de compra
+	private static final Comparator<CompraDelCliente> POR_COMPRA = Comparator
+			.comparing(compra -> compra.reserva().getIdReserva());
 
 	private final EntradaRepository entradaRepository;
 	private final Clock clock;
@@ -43,9 +44,9 @@ public class ConsultaDeEntradas {
 				.collect(Collectors.partitioningBy(compra -> compra.evento().estaCancelado()));
 		Map<Boolean, List<CompraDelCliente>> porTermino = porCancelacion.get(false).stream()
 				.collect(Collectors.partitioningBy(compra -> compra.evento().termino(ahora)));
-		return new EntradasDelCliente(porTermino.get(false).stream().sorted(POR_FECHA).toList(),
-				porTermino.get(true).stream().sorted(POR_FECHA.reversed()).toList(),
-				porCancelacion.get(true).stream().sorted(POR_FECHA.reversed()).toList());
+		return new EntradasDelCliente(porTermino.get(false).stream().sorted(POR_FECHA.thenComparing(POR_COMPRA)).toList(),
+				porTermino.get(true).stream().sorted(POR_FECHA.reversed().thenComparing(POR_COMPRA)).toList(),
+				porCancelacion.get(true).stream().sorted(POR_FECHA.reversed().thenComparing(POR_COMPRA)).toList());
 	}
 
 	@Transactional(readOnly = true)

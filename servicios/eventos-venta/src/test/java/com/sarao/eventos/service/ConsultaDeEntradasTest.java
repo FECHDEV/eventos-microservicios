@@ -142,6 +142,24 @@ class ConsultaDeEntradasTest {
 		assertThat(resultado.proximas()).extracting(CompraDelCliente::entradas).containsExactly(primera, segunda);
 	}
 
+	// RF-5: el orden de compra no cambia cuando el evento pasa a «Pasados» o a «Cancelados»
+	@Test
+	void enPasadosYCanceladosTambienVanPorOrdenDeCompra() {
+		Evento pasado = evento("Pasado", LocalDate.of(2026, 9, 1));
+		Evento cancelado = evento("Cancelado", LocalDate.of(2026, 11, 1));
+		cancelado.cancelar();
+		List<Entrada> primera = compra(pasado, 1);
+		List<Entrada> segunda = compra(pasado, 1);
+		List<Entrada> tercera = compra(cancelado, 1);
+		List<Entrada> cuarta = compra(cancelado, 1);
+		given(entradaRepository.delCliente(7L)).willReturn(juntas(segunda, primera, cuarta, tercera));
+
+		EntradasDelCliente resultado = consulta.delCliente(7L);
+
+		assertThat(resultado.pasadas()).extracting(CompraDelCliente::entradas).containsExactly(primera, segunda);
+		assertThat(resultado.canceladas()).extracting(CompraDelCliente::entradas).containsExactly(tercera, cuarta);
+	}
+
 	// Pedido en la prueba manual: los cancelados van aparte, hayan terminado o no, del más reciente al más antiguo
 	@Test
 	void losCanceladosVanAparteHayanTerminadoONo() {

@@ -11,6 +11,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -21,7 +22,8 @@ import lombok.NoArgsConstructor;
 // Tabla entrada (modelo-diseno-y-datos.md 2.6). codigo_qr es el que se escanea en la puerta (decisiones.md →
 // codigo_qr significa dos cosas)
 @Entity
-@Table(name = "entrada")
+// id_usuario no es llave foránea, así que MySQL no le crea el índice que necesita «Mis entradas»
+@Table(name = "entrada", indexes = @Index(columnList = "id_usuario"))
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Entrada {
