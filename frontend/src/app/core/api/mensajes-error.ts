@@ -31,6 +31,7 @@ const MENSAJES: Record<string, string> = {
 	TIPO_ENTRADA_NO_ENCONTRADO: 'No encontramos ese tipo de entrada en este evento.',
 	TIPO_ENTRADA_DUPLICADO: 'Este evento ya tiene un tipo de entrada con ese nombre.',
 	EVENTO_SIN_TIPOS_DE_ENTRADA: 'Agrega al menos un tipo de entrada antes de activar el evento.',
+	EVENTO_TERMINADO: 'La fecha de este evento ya pasó. Postérgalo a una fecha futura antes de activarlo.',
 	CAMBIO_DE_ESTADO_NO_PERMITIDO: 'Ese cambio ya no corresponde al estado del evento. Revisa su estado actual.',
 	VENTA_YA_CERRADA: 'La venta de este evento ya está cerrada.',
 	VENTA_CERRADA: 'La venta de este evento está cerrada.',

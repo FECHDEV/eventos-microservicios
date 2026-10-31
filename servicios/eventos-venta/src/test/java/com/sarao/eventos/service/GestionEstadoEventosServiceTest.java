@@ -32,6 +32,7 @@ import com.sarao.eventos.exception.CamposInvalidosException.CampoInvalido;
 import com.sarao.eventos.exception.EventoCanceladoException;
 import com.sarao.eventos.exception.EventoNoEncontradoException;
 import com.sarao.eventos.exception.EventoSinTiposDeEntradaException;
+import com.sarao.eventos.exception.EventoTerminadoException;
 import com.sarao.eventos.exception.VentaYaCerradaException;
 import com.sarao.eventos.repository.EntradaRepository;
 import com.sarao.eventos.repository.EventoRepository;
@@ -131,6 +132,18 @@ class GestionEstadoEventosServiceTest {
 		evento(EstadoEvento.ACTIVO);
 
 		assertThatThrownBy(() -> servicio.activar(5L)).isInstanceOf(CambioDeEstadoNoPermitidoException.class);
+		then(entradaRepository).shouldHaveNoInteractions();
+	}
+
+	// RF-33: con la fecha nueva ya pasada no se activa ni se reactiva nada
+	@Test
+	void activarUnPostergadoQueYaTerminoEs409YNoReactivaEntradas() {
+		Evento postergado = evento(EstadoEvento.POSTERGADO);
+		ReflectionTestUtils.setField(postergado, "fecha", LocalDate.of(2026, 9, 1));
+
+		assertThatThrownBy(() -> servicio.activar(5L)).isInstanceOf(EventoTerminadoException.class);
+
+		assertThat(postergado.getEstado()).isEqualTo(EstadoEvento.POSTERGADO);
 		then(entradaRepository).shouldHaveNoInteractions();
 	}
 

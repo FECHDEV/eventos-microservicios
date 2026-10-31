@@ -15,6 +15,7 @@ import com.sarao.eventos.exception.CambioDeEstadoNoPermitidoException;
 import com.sarao.eventos.exception.CamposInvalidosException;
 import com.sarao.eventos.exception.CamposInvalidosException.CampoInvalido;
 import com.sarao.eventos.exception.EventoSinTiposDeEntradaException;
+import com.sarao.eventos.exception.EventoTerminadoException;
 import com.sarao.eventos.exception.VentaYaCerradaException;
 import com.sarao.eventos.repository.EntradaRepository;
 import com.sarao.eventos.repository.EventoRepository;
@@ -47,6 +48,10 @@ public class GestionEstadoEventosService {
 			throw new EventoSinTiposDeEntradaException();
 		}
 		boolean estabaPostergado = evento.getEstado() == EstadoEvento.POSTERGADO;
+		// Reactivar entradas de un evento que ya terminó solo devolvería un QR que nadie puede usar (RF-33)
+		if (estabaPostergado && evento.termino(LocalDateTime.now(clock))) {
+			throw new EventoTerminadoException();
+		}
 		evento.activar();
 		int reactivadas = estabaPostergado ? entradaRepository.reactivarUtilizadasDelEvento(idEvento) : 0;
 		return new EventoActivado(evento, reactivadas);

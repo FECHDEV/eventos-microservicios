@@ -752,6 +752,11 @@ entradas toman su validez (cuelgan del evento a través de su tipo).
 En microservicios el orden se conservó (30/10/2026): FA-02 entró con HU-16, y liberar
 las reservas vencidas al listar o modificar tipos (CU-11), con HU-15.
 
+**Un postergado cuya fecha ya pasó no se activa (31/10/2026, decidido con el usuario):**
+responde 409 `EVENTO_TERMINADO` y hay que postergarlo a una fecha futura. Reactivar
+entradas de un evento terminado devolvería un QR que nadie puede usar y borraría el
+historial de cuáles se usaron (CU-12 RF-33).
+
 Al implementarla, en su rama propia, se decidió con el usuario (22/09/2026):
 
 - **Es automática al activar.** Activar un evento POSTERGADO pasa a ACTIVA,
