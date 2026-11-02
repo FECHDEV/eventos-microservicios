@@ -56,7 +56,8 @@ public class ConfirmacionDeReservas {
 			// FA-03: la reserva venció y su cupo volvió. Se confirma solo si el evento sigue vendiendo y hay cupo
 			// (decisiones.md → Realizar pago: pago tardío solo si el evento sigue vendiendo)
 			boolean sigueVendiendo = evento.seMuestraEnElCatalogo(ahora) && evento.isVentaAbierta();
-			if (!sigueVendiendo || !tipo.verificarDisponibilidad(reserva.getCantidad())) {
+			if (!sigueVendiendo || !tipo.verificarDisponibilidad(reserva.getCantidad())
+					|| !dentroDelLimite(evento, reserva, ahora)) {
 				return ResultadoConfirmacion.SIN_CUPO;
 			}
 			tipo.reducirDisponibilidad(reserva.getCantidad());
@@ -67,6 +68,19 @@ public class ConfirmacionDeReservas {
 		}
 		eventos.publishEvent(new CompraConfirmada(idReserva));
 		return ResultadoConfirmacion.CONFIRMADA;
+	}
+
+	// Vuelve a descontar como una reserva nueva: el límite acumulado cuenta lo emitido y lo vigente del Cliente (CU-07
+	// RF-21). La reserva vencida ya no cuenta como vigente
+	private boolean dentroDelLimite(Evento evento, Reserva reserva, LocalDateTime ahora) {
+		if (evento.getLimiteCompra() == null) {
+			return true;
+		}
+		Long idCliente = reserva.getIdCliente();
+		Long idEvento = evento.getIdEvento();
+		int yaComprometidas = (int) (reservaRepository.cantidadVigenteDelCliente(idCliente, idEvento, ahora)
+				+ entradaRepository.cantidadEmitidaAlCliente(idCliente, idEvento));
+		return evento.verificarLimiteCompra(yaComprometidas, reserva.getCantidad());
 	}
 
 	// FA-01 y CU-06 FA-05: un error del pago libera una reserva vigente. Una vencida ya devolvió su cupo y una

@@ -29,11 +29,13 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -99,6 +101,10 @@ class ConfirmacionIntegracionTest {
 	@Autowired
 	private ConfirmacionDeReservas confirmacionDeReservas;
 
+	@Autowired
+	@Qualifier("applicationTaskExecutor")
+	private ThreadPoolTaskExecutor tareas;
+
 	@MockitoBean
 	private ConsultaDeClientes consultaDeClientes;
 
@@ -113,6 +119,9 @@ class ConfirmacionIntegracionTest {
 
 	@AfterEach
 	void limpiar() {
+		// Los correos de una compra salen en segundo plano: se espera a que terminen antes de borrar lo que leen
+		await().atMost(Duration.ofSeconds(5)).until(() -> tareas.getActiveCount() == 0
+				&& tareas.getThreadPoolExecutor().getQueue().isEmpty());
 		jdbc.update("DELETE FROM entrada");
 		jdbc.update("DELETE FROM reserva");
 		jdbc.update("DELETE FROM tipo_entrada");
@@ -379,5 +388,19 @@ class ConfirmacionIntegracionTest {
 
 		assertThat(reservar(ANA, tipo, 2)).hasStatus(HttpStatus.CONFLICT);
 		assertThat(reservar(ANA, tipo, 1)).hasStatus(HttpStatus.CREATED);
+	}
+
+	// RF-21: un pago tardío vuelve a descontar como una reserva nueva, así que también respeta el límite
+	@Test
+	void pagoTardioQuePasaElLimiteNoEmite() throws Exception {
+		Integer tipo = tipoActivo(10, 4);
+		Integer vencida = idReserva(ANA, tipo, 4);
+		vencerLasReservas();
+		resulta(confirmar(idReserva(ANA, tipo, 4), 41), "CONFIRMADA");
+
+		resulta(confirmar(vencida, 42), "SIN_CUPO");
+
+		assertThat(entradas(vencida)).isZero();
+		assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM entrada", Integer.class)).isEqualTo(4);
 	}
 }

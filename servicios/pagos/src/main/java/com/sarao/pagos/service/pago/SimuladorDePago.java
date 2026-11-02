@@ -24,6 +24,8 @@ public class SimuladorDePago implements IPago {
 
 	public SimuladorDePago(Clock clock) {
 		this.clock = clock;
+		// Con el simulador, cualquier Cliente puede marcar su pago como hecho: nunca en un servidor público
+		log.warn("Pagos usa el simulador: los pagos no son reales. En producción, EVENTOS_PAGO_PROVEEDOR va con el proveedor real");
 	}
 
 	@Override

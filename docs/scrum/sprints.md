@@ -34,6 +34,11 @@ con 232 pruebas, gateway con 8 y frontend con 900.
 - **HU-19:** el lector de QR reintenta sin pausa tras un error del servidor.
 - **HU-22:** en el VPS, `EVENTOS_SITIO_URL` con el dominio real y `EVENTOS_CORREO_PROVEEDOR=smtp`:
   sin ellos, los enlaces apuntan a localhost o el simulador queda activo sin avisar.
+- **HU-22:** en el VPS, `EVENTOS_PAGO_PROVEEDOR=libelula`: vacío deja el simulador, y cualquier
+  Cliente podría marcar su pago como hecho. Pagos lo avisa en el log al arrancar.
+- **Adaptador de Libélula:** con otro proveedor que el simulador, Pagos no arranca hasta que exista
+  su adaptador. La tarea de cada minuto consulta al proveedor por cada cobro abandonado durante 24
+  horas: medir su costo con el proveedor real.
 - **HU-22:** límite de frecuencia en nginx para las rutas públicas de escritura (`/api/visitas`).
 - **HU-22:** healthcheck de Seguridad en compose, y revisar la IP real según lo que quede delante
   de nginx. Sin Caddy, un cliente por IPv6 llega con IP interna y puede inventar su IP.

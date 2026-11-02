@@ -42,7 +42,7 @@ public class Pago {
 	@Column(nullable = false, precision = 10, scale = 2)
 	private BigDecimal monto;
 
-	// El texto del QR interoperable puede ser largo (decisiones.md → Adaptador de Libélula)
+	// El texto de un QR interoperable puede pasar de 255 caracteres
 	@Column(name = "codigo_qr", nullable = false, length = 1000)
 	private String codigoQrPago;
 
