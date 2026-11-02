@@ -10,7 +10,7 @@
 # cancelación y devolución, y reportes. No toca el .env ni los datos de otro
 # proyecto. Necesita bash, curl, openssl y python.
 #
-# Termina con 0 si todo pasó, o con la cantidad de fallas.
+# Termina con 0 si todo pasó, o con la cantidad de fallas (hasta 125).
 
 set -u
 cd "$(dirname "$0")/.."
@@ -20,6 +20,11 @@ PUERTO=18090
 TEMPORAL="$(mktemp -d)"
 ENVF="$TEMPORAL/prueba.env"
 ADMIN_CLAVE="$(openssl rand -hex 8)Aa1"
+CLAVE="$(openssl rand -hex 8)Aa1"
+# El primero que corre de verdad: en Windows, python3 puede ser el acceso directo de la tienda
+PY=""
+for p in python3 python; do "$p" -c "" >/dev/null 2>&1 && { PY=$p; break; }; done
+[ -n "$PY" ] || { echo "Falta python"; exit 1; }
 {
 	echo "MYSQL_ROOT_PASSWORD=$(openssl rand -hex 16)"
 	echo "EVENTOS_SEGURIDAD_DB_PASSWORD=$(openssl rand -hex 16)"
@@ -55,12 +60,12 @@ espera() {
 		FALLAS=$((FALLAS + 1))
 	fi
 }
-js() { python -c "import json,sys; d=json.load(sys.stdin); print(eval(sys.argv[1]))" "$1" 2>/dev/null; }
+js() { "$PY" -c "import json,sys; d=json.load(sys.stdin); print(eval(sys.argv[1]))" "$1" 2>/dev/null; }
 cod() { curl -s -o /dev/null -w "%{http_code}" --max-time 30 "$@"; }
 base() { $C exec -T base sh -c "MYSQL_PWD=\$MYSQL_ROOT_PASSWORD mysql -uroot -N -e \"$1\"" 2>/dev/null | tr -d '\r'; }
 buzon() { $C exec -T correo sh -c "ls /var/mail/mail.com/$1/new 2>/dev/null | wc -l" | tr -d '\r '; }
 esperarCorreos() {
-	for _ in $(seq 1 30); do [ "$(buzon "$1")" -ge "$2" ] && return; sleep 2; done
+	for _ in $(seq 1 30); do [ "$(buzon "$1")" -ge "$2" ] 2>/dev/null && return; sleep 2; done
 }
 token() { curl -s -X POST $A/auth/inicio-sesion -H "$J" -d "{\"correo\":\"$1\",\"contrasena\":\"$2\"}" | js 'd["token"]'; }
 
@@ -68,6 +73,7 @@ echo "== Levantar (espera a que cada servicio esté sano)"
 if ! $C up -d --build --wait --wait-timeout 600 >/dev/null 2>&1; then
 	echo "  FALLA no arrancó"
 	$C ps
+	$C logs --tail 40
 	exit 1
 fi
 echo "  ok    todos los servicios sanos"
@@ -84,16 +90,19 @@ sleep 5
 echo "== Cuentas"
 for persona in "ana Ana" "pedro Pedro"; do
 	set -- $persona
-	espera "registro de $2" "$(cod -X POST $A/auth/registro -H "$J" -d "{\"nombre\":\"$2\",\"apellido\":\"Rojas\",\"correo\":\"$1@mail.com\",\"contrasena\":\"Secreta12\",\"fechaNacimiento\":\"2000-05-20\"}")" 201
+	espera "registro de $2" "$(cod -X POST $A/auth/registro -H "$J" -d "{\"nombre\":\"$2\",\"apellido\":\"Rojas\",\"correo\":\"$1@mail.com\",\"contrasena\":\"$CLAVE\",\"fechaNacimiento\":\"2000-05-20\"}")" 201
 done
-HA="Authorization: Bearer $(token admin@mail.com "$ADMIN_CLAVE")"
+# El puerto de Seguridad abre antes de que la carga inicial cree al Administrador
+for _ in $(seq 1 30); do TA=$(token admin@mail.com "$ADMIN_CLAVE"); [ -n "$TA" ] && break; sleep 2; done
+espera "el Administrador inicial entra" "$([ -n "$TA" ] && echo si)" si
+HA="Authorization: Bearer $TA"
 espera "recuperación pedida" "$(cod -X POST $A/auth/recuperacion -H "$J" -d '{"correo":"ana@mail.com"}')" 202
 esperarCorreos ana 1
 espera "correo de recuperación en el buzón" "$(buzon ana)" 1
 ID_PEDRO=$(base "select id_usuario from seguridad_db.usuario where correo='pedro@mail.com'")
 espera "Pedro pasa a Personal" "$(cod -X PUT $A/usuarios/$ID_PEDRO/rol -H "$HA" -H "$J" -d '{"rol":"PERSONAL"}')" 200
-HANA="Authorization: Bearer $(token ana@mail.com Secreta12)"
-HPEDRO="Authorization: Bearer $(token pedro@mail.com Secreta12)"
+HANA="Authorization: Bearer $(token ana@mail.com "$CLAVE")"
+HPEDRO="Authorization: Bearer $(token pedro@mail.com "$CLAVE")"
 
 echo "== Evento y compra"
 FECHA=$(date -d "+5 days" +%F)
@@ -146,4 +155,5 @@ done
 
 echo
 [ $FALLAS -eq 0 ] && echo "Todo pasó." || echo "$FALLAS fallas."
-exit $FALLAS
+# Acotado: el código de salida da la vuelta en 256
+exit $((FALLAS > 125 ? 125 : FALLAS))
