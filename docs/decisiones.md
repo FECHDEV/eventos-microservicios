@@ -38,6 +38,12 @@ Decidido con el usuario el 30/10/2026.
 Cuatro microservicios (Seguridad, Eventos y Venta, Pagos, Notificaciones), un
 gateway y tres bases. El reparto de casos de uso y tablas está en `CLAUDE.md`.
 
+**CU-13 pasa a Eventos y Venta** (decidido con el usuario el 02/11/2026, en
+HU-21): registrar una devolución cambia el estado de la entrada, que vive ahí, y
+no toca el pago (CU-13 RF-15). En Pagos, solo reenviaría cada pedido. La fecha
+de la compra que se muestra es la de emisión de sus entradas, que se emiten al
+confirmarse el pago.
+
 - **Bases separadas:** si dos servicios comparten tablas, un cambio en una rompe
   al otro. Para ahorrar memoria viven en un solo contenedor MySQL, cada una con
   su usuario, sin permisos sobre las otras y sin llaves foráneas entre ellas.

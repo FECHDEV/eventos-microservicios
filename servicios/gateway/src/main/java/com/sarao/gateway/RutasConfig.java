@@ -32,7 +32,7 @@ public class RutasConfig {
 						.build())
 				.and(route("eventos-venta")
 						.route(path("/api/eventos/**", "/api/reservas/**", "/api/entradas/**", "/api/accesos/**",
-								"/api/reportes/**"), http())
+								"/api/reportes/**", "/api/devoluciones/**"), http())
 						.before(uri(venta))
 						.before(identidad::aplicar)
 						.build())
