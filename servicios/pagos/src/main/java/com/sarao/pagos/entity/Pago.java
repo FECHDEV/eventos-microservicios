@@ -12,6 +12,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -21,7 +22,8 @@ import lombok.NoArgsConstructor;
 // codigo_qr significa dos cosas). La reserva vive en otra base: id_reserva es un id, y el pago copia lo que necesita
 // de ella (plan de HU-18 → Decisiones)
 @Entity
-@Table(name = "pago")
+// El aviso del sistema de pago busca por la referencia (PagoRepository.idPorReferencia)
+@Table(name = "pago", indexes = @Index(columnList = "referencia_externa"))
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Pago {

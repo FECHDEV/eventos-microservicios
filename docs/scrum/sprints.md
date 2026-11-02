@@ -36,10 +36,10 @@ con 232 pruebas, gateway con 8 y frontend con 900.
   sin ellos, los enlaces apuntan a localhost o el simulador queda activo sin avisar.
 - **HU-22:** en el VPS, `EVENTOS_PAGO_PROVEEDOR=libelula`: vacío deja el simulador, y cualquier
   Cliente podría marcar su pago como hecho. Pagos lo avisa en el log al arrancar.
-- **Adaptador de Libélula:** con otro proveedor que el simulador, Pagos no arranca hasta que exista
-  su adaptador. La tarea de cada minuto consulta al proveedor por cada cobro abandonado durante 24
-  horas: medir su costo con el proveedor real.
-- **HU-22:** límite de frecuencia en nginx para las rutas públicas de escritura (`/api/visitas`).
+- **Con Libélula:** la tarea de cada minuto consulta al proveedor por cada cobro abandonado durante
+  24 horas: medir su costo en el VPS.
+- **HU-22:** límite de frecuencia en nginx para las rutas públicas de escritura (`/api/visitas`) y
+  para el aviso de pago (`/api/pagos/aviso`), que consulta al proveedor.
 - **HU-22:** healthcheck de Seguridad en compose, y revisar la IP real según lo que quede delante
   de nginx. Sin Caddy, un cliente por IPv6 llega con IP interna y puede inventar su IP.
 - **Sin historia:** un 401 en una pestaña borra la sesión de las demás, y cerrar sesión no se
@@ -71,6 +71,6 @@ desde un servicio propio de Notificaciones y el pago desde un servicio propio de
 
 **Backlog:** HU-17 y HU-18.
 
-**Avance:** HU-17 hecha el 31/10/2026, con el servidor de correo propio en Docker. HU-18 en curso:
-pago, verificación, pago tardío, entradas y correos con el simulador. El adaptador de Libélula va en
-una rama propia, porque necesita una librería para leer el QR.
+**Avance:** HU-17 hecha el 31/10/2026, con el servidor de correo propio en Docker. HU-18 hecha el
+02/11/2026: pago, verificación, pago tardío, entradas y correos con el simulador. El adaptador de
+Libélula sigue en una rama propia, con zxing para leer el QR.

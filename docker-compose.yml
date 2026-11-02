@@ -89,6 +89,11 @@ services:
       EVENTOS_VENTA_URL: http://eventos-venta:8082
       # simulador por defecto (decisiones.md -> Pago: interfaz propia)
       EVENTOS_PAGO_PROVEEDOR: ${EVENTOS_PAGO_PROVEEDOR:-simulador}
+      # Solo con libelula: sin appkey ni correo Pagos no arranca
+      EVENTOS_PAGO_LIBELULA_APPKEY: ${EVENTOS_PAGO_LIBELULA_APPKEY:-}
+      EVENTOS_PAGO_LIBELULA_EMAIL: ${EVENTOS_PAGO_LIBELULA_EMAIL:-}
+      # El aviso de pago y la vuelta del Cliente a su reserva
+      EVENTOS_SITIO_URL: ${EVENTOS_SITIO_URL:-http://localhost:${SARAO_PUERTO:-80}}
 
   gateway:
     build:
