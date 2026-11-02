@@ -1,6 +1,7 @@
 package com.sarao.eventos.entity;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -84,13 +85,13 @@ class EntradaTest {
 		Entrada entrada = emitida();
 		entrada.marcarUtilizada();
 		assertThat(entrada.getEstado()).isEqualTo(EstadoEntrada.UTILIZADA);
-		org.assertj.core.api.Assertions.assertThatThrownBy(entrada::marcarUtilizada)
+		assertThatThrownBy(entrada::marcarUtilizada)
 				.isInstanceOf(IllegalStateException.class);
 
 		Entrada devuelta = emitida();
 		ReflectionTestUtils.setField(devuelta, "estado", EstadoEntrada.DEVUELTA);
 		assertThat(devuelta.verificarVigencia(LocalDateTime.of(2026, 10, 4, 22, 0))).isFalse();
-		org.assertj.core.api.Assertions.assertThatThrownBy(devuelta::marcarUtilizada)
+		assertThatThrownBy(devuelta::marcarUtilizada)
 				.isInstanceOf(IllegalStateException.class);
 	}
 }

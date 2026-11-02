@@ -321,6 +321,27 @@ describe('ValidarEntradasPage', () => {
     expect(resultado()?.textContent).toContain('Entrada válida');
   });
 
+  it('un código que el backend rechaza no se reenvía mientras la cámara lo sigue viendo', async () => {
+    await abrir('/validar?evento=5');
+    accesos.validar.mockRejectedValueOnce({ status: 400, detail: 'datos', codigo: 'DATOS_INVALIDOS' } as ErrorApi);
+
+    await leerConLaCamara('codigo-81');
+    vi.advanceTimersByTime(60000);
+    await leerConLaCamara('codigo-81');
+
+    expect(accesos.validar).toHaveBeenCalledTimes(1);
+  });
+
+  it('un error al escribir el código a mano no pausa la cámara', async () => {
+    await abrir('/validar?evento=5');
+    accesos.validar.mockRejectedValueOnce({ status: 0, detail: 'sin red', codigo: 'SIN_CONEXION' } as ErrorApi);
+    await escribirYValidar('codigo-81');
+
+    await leerConLaCamara('codigo-81');
+
+    expect(accesos.validar).toHaveBeenCalledTimes(2);
+  });
+
   it('la pausa tras un error no frena otro código', async () => {
     await abrir('/validar?evento=5');
     accesos.validar.mockRejectedValueOnce({ status: 500, detail: 'falla', codigo: 'ERROR_INTERNO' } as ErrorApi);

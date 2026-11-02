@@ -33,4 +33,15 @@ Spec: `docs/criterios-aceptacion/CU-15.md`. Las pantallas ya vinieron con HU-09 
   Cliente y Administrador reciben 403, y un evento postergado 409. Sin errores en el log.
 - **Prueba manual en el navegador:** pasada por el usuario.
 - **Sin probar:** la cámara del celular, que necesita HTTPS (`docs/flujo-sdd.md`): va con el VPS.
-- **Pendiente:** `/code-review`, `/security-review` y CI, que necesitan el commit.
+- **CI:** en verde.
+- **`/security-review`:** sin vulnerabilidades.
+- **`/code-review`, corregidos:** la pausa de la cámara solo vale para lo que lee la cámara; un error
+  de red o del servidor se reintenta a los 2 s, y un código que el backend rechaza no se reenvía
+  mientras siga a la vista. La prueba del gateway cubre también `/api/accesos`, y un import.
+- **`/code-review`, no corregido:**
+  - **La puerta espera a las ventas del mismo evento:** el bloqueo compartido de validar espera al
+    exclusivo de reservar y confirmar, que son transacciones cortas. Es el orden del sistema base y
+    lo que pide RF-9 para la cancelación y la postergación.
+  - **Una entrada se reactiva en cada postergación:** coincide con la regla, porque se usó antes de
+    esa postergación.
+  - **La vigencia del evento se mira dos veces** (servicio y entidad), como en el sistema base.
