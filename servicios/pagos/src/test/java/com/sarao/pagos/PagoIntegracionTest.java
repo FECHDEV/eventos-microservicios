@@ -393,4 +393,35 @@ class PagoIntegracionTest {
 		assertThat(mvc.get().uri("/api/pagos/aviso").exchange()).hasStatusOk();
 		then(simulador).should(never()).consultar("SIM-ajena");
 	}
+
+	// CU-14: los pagos confirmados para los reportes; ventas sin los de devolución; solo para otro servicio
+	@Test
+	void losPagosCobradosSoloSeLosDaAOtroServicio() throws Exception {
+		pagar(ana);
+		simular("PAGADO");
+		consultar(ana);
+		var servicio = (org.springframework.test.web.servlet.request.RequestPostProcessor) peticion -> {
+			peticion.addHeader("X-Clave-Servicio", "clave-de-pruebas");
+			return peticion;
+		};
+
+		MvcTestResult ventas = mvc.get().uri("/interno/pagos/cobrados?conDevolucion=false").with(servicio).exchange();
+		assertThat(ventas).hasStatusOk();
+		assertThat(ventas).bodyJson().extractingPath("$[0].idReserva").isEqualTo(40);
+		assertThat(ventas).bodyJson().extractingPath("$[0].monto").isEqualTo(100.0);
+		assertThat(ventas.getResponse().getContentAsString()).doesNotContain("SIM-").doesNotContain("SIMULADOR");
+
+		jdbc.update("UPDATE pago SET requiere_devolucion = TRUE");
+		assertThat(mvc.get().uri("/interno/pagos/cobrados?conDevolucion=false").with(servicio).exchange())
+				.bodyJson().extractingPath("$.length()").isEqualTo(0);
+		assertThat(mvc.get().uri("/interno/pagos/cobrados?conDevolucion=true&desde=2000-01-01T00:00:00").with(servicio)
+				.exchange()).bodyJson().extractingPath("$.length()").isEqualTo(1);
+		assertThat(mvc.get().uri("/interno/pagos/cobrados?conDevolucion=true&hasta=2000-01-01T00:00:00").with(servicio)
+				.exchange()).bodyJson().extractingPath("$.length()").isEqualTo(0);
+
+		assertThat(mvc.get().uri("/interno/pagos/cobrados?conDevolucion=true").exchange())
+				.hasStatus(HttpStatus.UNAUTHORIZED);
+		assertThat(mvc.get().uri("/interno/pagos/cobrados?conDevolucion=true").with(ana).exchange())
+				.hasStatus(HttpStatus.FORBIDDEN);
+	}
 }

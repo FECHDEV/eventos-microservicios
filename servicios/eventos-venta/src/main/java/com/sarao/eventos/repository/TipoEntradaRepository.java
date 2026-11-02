@@ -1,5 +1,6 @@
 package com.sarao.eventos.repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -41,4 +42,10 @@ public interface TipoEntradaRepository extends JpaRepository<TipoEntrada, Long> 
 			where t.idTipoEntrada = :idTipoEntrada
 			""")
 	int devolverDisponibilidad(@Param("idTipoEntrada") Long idTipoEntrada, @Param("cantidad") int cantidad);
+
+	// CU-14 RF-2: los tipos de los eventos del filtro, en una consulta
+	List<TipoEntrada> findByEvento_IdEventoInOrderByIdTipoEntrada(Collection<Long> idsEvento);
+
+	// CU-14 RF-4: el tipo de entrada del filtro tiene que ser del evento elegido
+	Optional<TipoEntrada> findByIdTipoEntradaAndEvento_IdEvento(Long idTipoEntrada, Long idEvento);
 }

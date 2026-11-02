@@ -114,6 +114,19 @@ Seguridad tiene la clave JWT.
 Quedan en Eventos y Venta. Los datos de ventas e ingresos se piden a Pagos con
 una consulta interna por rango, y los nombres de clientes a Seguridad, en lote.
 
+Al implementarlo en HU-20 (02/11/2026) se sumaron estas reglas técnicas:
+
+- **Pagos filtra por fecha y Eventos y Venta por evento y tipo:** Pagos no sabe
+  de eventos; sus pagos se cruzan con las reservas en una consulta.
+- **Ventas e ingresos cuentan los pagos ya confirmados:** uno PAGADO que todavía
+  espera la confirmación no aparece, y se resuelve en el minuto.
+- **El envío por correo espera a que Notificaciones lo acepte:** si no, 503 en
+  vez de un «enviado» que no sale. Notificaciones responde 202 enseguida y manda
+  el correo en segundo plano.
+- **El dominio se valida en los dos servicios:** en Eventos y Venta, para
+  responder 400 en el campo, y en Notificaciones, que nunca manda fuera del
+  dominio propio.
+
 ### Complejidad de la contraseña
 
 Regex `^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$`, en el backend y en el formulario,

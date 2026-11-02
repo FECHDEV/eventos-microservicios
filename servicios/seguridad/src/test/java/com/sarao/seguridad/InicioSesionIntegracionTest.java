@@ -233,4 +233,33 @@ class InicioSesionIntegracionTest {
 	void noSeCreaElUsuarioEnMemoriaConContrasenaGenerada() {
 		assertThat(contexto.getBeansOfType(UserDetailsService.class)).isEmpty();
 	}
+
+	// CU-14: las cuentas de un reporte en lote, y los Clientes por fecha de registro; solo para otro servicio
+	@Test
+	void lasCuentasDeUnReporteSoloSeLasDaAOtroServicio() throws Exception {
+		Long ana = usuarioRepository.findByCorreo("ana@mail.com").orElseThrow().getIdUsuario();
+
+		MvcTestResult lote = mvc.post().uri("/interno/usuarios/lote").header("X-Clave-Servicio", "clave-de-pruebas")
+				.contentType(MediaType.APPLICATION_JSON).content("{\"ids\":[" + ana + ",999999]}").exchange();
+		assertThat(lote).hasStatus(HttpStatus.OK);
+		assertThat(lote).bodyJson().extractingPath("$.length()").isEqualTo(1);
+		assertThat(lote).bodyJson().extractingPath("$[0].correo").isEqualTo("ana@mail.com");
+		assertThat(lote).bodyJson().extractingPath("$[0].estado").isEqualTo("ACTIVA");
+		assertThat(lote.getResponse().getContentAsString()).doesNotContain("contrasena").doesNotContain("$2a$");
+
+		MvcTestResult clientes = mvc.get().uri("/interno/usuarios/clientes").header("X-Clave-Servicio", "clave-de-pruebas")
+				.exchange();
+		assertThat(clientes).hasStatus(HttpStatus.OK);
+		assertThat(clientes).bodyJson().extractingPath("$[*].correo").asArray().contains("ana@mail.com")
+				.doesNotContain("admin@mail.com");
+		assertThat(mvc.get().uri("/interno/usuarios/clientes?desde=2999-01-01T00:00:00")
+				.header("X-Clave-Servicio", "clave-de-pruebas").exchange()).bodyJson().extractingPath("$.length()")
+				.isEqualTo(0);
+
+		assertThat(mvc.get().uri("/interno/usuarios/clientes").exchange()).hasStatus(HttpStatus.UNAUTHORIZED);
+		assertThat(mvc.post().uri("/interno/usuarios/lote").header("X-Clave-Servicio", "clave-de-pruebas")
+				.header("X-Usuario-Id", ana.toString()).header("X-Usuario-Rol", "ADMINISTRADOR")
+				.contentType(MediaType.APPLICATION_JSON).content("{\"ids\":[1]}").exchange())
+				.hasStatus(HttpStatus.FORBIDDEN);
+	}
 }

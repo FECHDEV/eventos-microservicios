@@ -98,4 +98,23 @@ class CorreosControllerTest {
 		assertThat(post("entradas", "{\"compra\":" + COMPRA + ",\"codigos\":[]}")).hasStatus(HttpStatus.BAD_REQUEST);
 		then(notificador).shouldHaveNoInteractions();
 	}
+
+	private static final String REPORTE = """
+			{"titulo":"Reporte de ventas","enviadoPor":"Administrador Inicial","criterios":["Desde: 01/09/2026"],
+			"datosAl":"2026-09-23T15:30:00","destinatarios":["%s"],
+			"adjuntos":[{"nombre":"reporte-ventas-12.pdf","contenido":"JVBERi0="}]}
+			""";
+
+	// CU-14 RF-21 y RF-22: al dominio propio, con el adjunto leído desde base64
+	@Test
+	void elReporteSeAceptaSoloParaElDominioPropio() {
+		assertThat(post("reporte", REPORTE.formatted("gerencia@mail.com"))).hasStatus(HttpStatus.ACCEPTED);
+		then(notificador).should().enviarReporte(org.mockito.ArgumentMatchers.argThat(reporte -> reporte
+				.destinatarios().equals(java.util.List.of("gerencia@mail.com"))
+				&& new String(reporte.adjuntos().getFirst().contenido()).equals("%PDF-")));
+
+		assertThat(post("reporte", REPORTE.formatted("alguien@gmail.com"))).hasStatus(HttpStatus.BAD_REQUEST);
+		assertThat(post("reporte", REPORTE.formatted("no-es-correo"))).hasStatus(HttpStatus.BAD_REQUEST);
+		then(notificador).should(org.mockito.Mockito.times(1)).enviarReporte(org.mockito.ArgumentMatchers.any());
+	}
 }

@@ -35,6 +35,8 @@ public class SecurityConfig {
 						.requestMatchers(HttpMethod.POST, "/api/pagos/aviso").permitAll()
 						// CU-07: paga el Cliente, y solo su reserva (PagoService). RF-1
 						.requestMatchers("/api/reservas/*/pago", "/api/reservas/*/pago/**").hasRole("CLIENTE")
+						// Solo otros servicios, con la clave y sin usuario: el gateway no publica /interno
+						.requestMatchers("/interno/**").hasRole("SERVICIO")
 						.anyRequest().denyAll())
 				// El 401 y el 403 pasan por ManejadorErrores para salir con el mismo formato que el resto de la API
 				.exceptionHandling(errores -> errores

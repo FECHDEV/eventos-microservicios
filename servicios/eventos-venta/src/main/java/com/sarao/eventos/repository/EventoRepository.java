@@ -61,4 +61,7 @@ public interface EventoRepository extends JpaRepository<Evento, Long> {
 	// CU-15 RF-2: los candidatos a validar; el servicio deja los que siguen en curso (Evento.admiteValidacion)
 	List<Evento> findByEstadoAndFechaBetweenOrderByFechaAscHoraInicioAsc(EstadoEvento estado, LocalDate desde,
 			LocalDate hasta);
+
+	// CU-14 RF-2: los eventos del filtro. Un borrador no vende
+	List<Evento> findByEstadoNotOrderByFechaDescHoraInicioDesc(EstadoEvento estado);
 }

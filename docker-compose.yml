@@ -52,6 +52,7 @@ services:
       # simulador por defecto. Con smtp hay que levantar también el perfil correo
       EVENTOS_CORREO_PROVEEDOR: ${EVENTOS_CORREO_PROVEEDOR:-simulador}
       EVENTOS_CORREO_HOST: correo
+      EVENTOS_CORREO_DOMINIO: ${EVENTOS_CORREO_DOMINIO:-mail.com}
       EVENTOS_CORREO_REMITENTE: Sarao <no-responder@${EVENTOS_CORREO_DOMINIO:-mail.com}>
       EVENTOS_SITIO_URL: ${EVENTOS_SITIO_URL:-http://localhost:${SARAO_PUERTO:-80}}
     # Sin puertos publicados y sin ruta en el gateway: solo lo llaman los otros servicios
@@ -71,6 +72,9 @@ services:
       EVENTOS_IMAGENES_DIRECTORIO: /datos/imagenes
       EVENTOS_SEGURIDAD_URL: http://seguridad:8081
       EVENTOS_NOTIFICACIONES_URL: http://notificaciones:8083
+      # Los reportes: los pagos y el dominio al que se pueden mandar (CU-14)
+      EVENTOS_PAGOS_URL: http://pagos:8084
+      EVENTOS_CORREO_DOMINIO: ${EVENTOS_CORREO_DOMINIO:-mail.com}
     volumes:
       - imagenes-eventos:/datos/imagenes
 

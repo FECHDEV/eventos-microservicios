@@ -1,6 +1,9 @@
 package com.sarao.seguridad.service;
 
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -84,6 +87,14 @@ public class AutenticacionService {
 
 	private static boolean tieneLargoAdmitido(String contrasena) {
 		return contrasena.getBytes(StandardCharsets.UTF_8).length <= MAXIMO_BYTES_CONTRASENA;
+	}
+
+	public List<Usuario> cuentas(Collection<Long> ids) {
+		return usuarioRepository.findAllById(ids);
+	}
+
+	public List<Usuario> clientes(LocalDateTime desde, LocalDateTime hasta) {
+		return usuarioRepository.clientesParaReporte(desde, hasta);
 	}
 
 	public Optional<Usuario> usuario(Long idUsuario) {

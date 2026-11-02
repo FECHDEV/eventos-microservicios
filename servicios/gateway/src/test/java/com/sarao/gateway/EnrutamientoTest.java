@@ -105,6 +105,8 @@ class EnrutamientoTest {
 				.startsWith("/api/accesos/eventos|7|CLIENTE|clave-de-pruebas|");
 		assertThat(pedir("/api/accesos", "Authorization", "Bearer valido").body())
 				.startsWith("/api/accesos|7|CLIENTE|clave-de-pruebas|");
+		assertThat(pedir("/api/reportes/12/pdf", "Authorization", "Bearer valido").body())
+				.startsWith("/api/reportes/12/pdf|7|CLIENTE|clave-de-pruebas|");
 	}
 
 	// CU-07: el pago de una reserva va a Pagos, con la identidad; la reserva sigue en Eventos y Venta

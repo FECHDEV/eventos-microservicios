@@ -1,19 +1,26 @@
 package com.sarao.seguridad.controller;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.sarao.seguridad.dto.ContactoResponse;
+import com.sarao.seguridad.dto.CuentaInternaResponse;
+import com.sarao.seguridad.dto.LoteDeCuentasRequest;
 import com.sarao.seguridad.dto.FechaNacimientoResponse;
 import com.sarao.seguridad.dto.IdentidadResponse;
 import com.sarao.seguridad.dto.SesionInternaRequest;
 import com.sarao.seguridad.entity.Usuario;
 import com.sarao.seguridad.service.AutenticacionService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 // Solo para otros servicios: SecurityConfig exige la clave de servicio y el gateway no publica /interno
@@ -35,6 +42,19 @@ public class InternoController {
 	public ResponseEntity<FechaNacimientoResponse> fechaNacimiento(@PathVariable Long idUsuario) {
 		return ResponseEntity.of(autenticacionService.usuarioActivo(idUsuario).map(Usuario::getFechaNacimiento)
 				.map(FechaNacimientoResponse::new));
+	}
+
+	// CU-14: las cuentas que aparecen en un reporte
+	@PostMapping("/usuarios/lote")
+	public List<CuentaInternaResponse> cuentas(@Valid @RequestBody LoteDeCuentasRequest solicitud) {
+		return autenticacionService.cuentas(solicitud.ids()).stream().map(CuentaInternaResponse::from).toList();
+	}
+
+	// CU-14 RF-10: los Clientes registrados en el rango
+	@GetMapping("/usuarios/clientes")
+	public List<CuentaInternaResponse> clientes(@RequestParam(required = false) LocalDateTime desde,
+			@RequestParam(required = false) LocalDateTime hasta) {
+		return autenticacionService.clientes(desde, hasta).stream().map(CuentaInternaResponse::from).toList();
 	}
 
 	// CU-07 RF-17: los correos de una compra. También de una cuenta desactivada: un pago tardío pudo llegar después
