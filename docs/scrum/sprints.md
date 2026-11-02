@@ -38,7 +38,8 @@ con 232 pruebas, gateway con 8 y frontend con 900.
   Cliente podría marcar su pago como hecho. Pagos lo avisa en el log al arrancar.
 - **Con Libélula:** la tarea de cada minuto consulta al proveedor por cada cobro abandonado durante
   24 horas: medir su costo en el VPS.
-- **HU-22:** límite de frecuencia en nginx para las rutas públicas de escritura (`/api/visitas`).
+- **HU-22:** límite de frecuencia en nginx para las rutas públicas de escritura (`/api/visitas`) y
+  para el aviso de pago (`/api/pagos/aviso`), que consulta al proveedor.
 - **HU-22:** healthcheck de Seguridad en compose, y revisar la IP real según lo que quede delante
   de nginx. Sin Caddy, un cliente por IPv6 llega con IP interna y puede inventar su IP.
 - **Sin historia:** un 401 en una pestaña borra la sesión de las demás, y cerrar sesión no se

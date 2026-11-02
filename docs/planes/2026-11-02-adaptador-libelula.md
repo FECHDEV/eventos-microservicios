@@ -28,4 +28,20 @@ imagen». Es el adaptador del sistema base, movido al servicio Pagos; las reglas
   Cliente. Sin errores en los logs.
 - **Visto en la prueba:** Libélula no mandó una `fecha_pago` legible, así que vale la hora en que el
   sistema aplicó el pago (segundos después).
-- **Pendiente:** revisiones y CI, que necesitan el commit.
+- **Monto:** la regla del proyecto pide entradas de Bs 0,10; el usuario probó con Bs 0,01.
+- **CI:** en verde.
+- **`/security-review`:** sin vulnerabilidades explotables. Tres riesgos bajos que solo cuentan con
+  el proveedor comprometido o el HTTPS interceptado: la URL del QR no se limita al host del
+  proveedor, la imagen no tiene tope de dimensiones antes de decodificarse, y el cliente sigue
+  redirecciones también en el POST que lleva la appkey. Se dejan como en el sistema base, que
+  funcionó en la prueba real.
+- **`/code-review`, corregidos:** el aviso responde siempre 200 aunque falle la consulta, índice en
+  `referencia_externa` para el aviso, y un comentario del gateway vuelve a su ruta.
+- **`/code-review`, no corregido:**
+  - **El aviso es público y consulta al proveedor:** necesita límite de frecuencia en nginx, con
+    HU-22.
+  - **Una deuda sin identificador cuenta como la nuestra:** así lo hace el sistema base, y la
+    consulta ya es por nuestro identificador. Cambiarlo sin ver una respuesta real arriesga dejar
+    de reconocer pagos.
+  - **`url_pasarela` de 255 caracteres:** la real mide 66.
+  - **Los riesgos de redirecciones y SSRF**, los mismos que la revisión de seguridad.

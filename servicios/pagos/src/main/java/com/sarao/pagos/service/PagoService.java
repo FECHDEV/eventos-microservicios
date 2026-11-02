@@ -90,7 +90,12 @@ public class PagoService {
 		if (referencia == null || referencia.isBlank() || referencia.length() > LARGO_DE_LA_REFERENCIA) {
 			return;
 		}
-		pagoRepository.idPorReferencia(referencia).ifPresent(conciliacionDePagos::conciliar);
+		try {
+			pagoRepository.idPorReferencia(referencia).ifPresent(conciliacionDePagos::conciliar);
+		} catch (RuntimeException error) {
+			// La pantalla y la tarea de cada minuto vuelven a consultar: el proveedor no tiene que reintentar
+			log.warn("No se pudo procesar el aviso de pago {}: {}", referencia, error.getClass().getSimpleName());
+		}
 	}
 
 	// Solo el dueño simula el pago de su reserva (RF-22)
