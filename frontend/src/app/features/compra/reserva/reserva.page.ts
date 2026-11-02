@@ -31,8 +31,10 @@ import { idDeLaUrl } from '../../../shared/navegacion/id-de-la-url';
 // periódica mientras está pendiente y el resultado. Quien decide si se pagó es
 // el backend, consultando al sistema de pago. Solo el Cliente llega (rolGuard).
 
-// RF-25: cada cuánto se pregunta por un pago pendiente
+// RF-25: cada cuánto se pregunta por un pago pendiente. Con la reserva vencida,
+// más espaciado: solo puede llegar un pago tardío (FA-03)
 const INTERVALO_DE_CONSULTA = 3000;
+const INTERVALO_DE_PAGO_TARDIO = 15000;
 @Component({
 	selector: 'app-reserva',
 	imports: [RouterLink, CodigoQr],
@@ -85,7 +87,7 @@ export class ReservaPage {
 
 	protected readonly confirmada = computed(() => this.pago()?.estado === 'PAGADO' && !this.pago()?.requiereDevolucion);
 	protected readonly textoConfirmada = computed(() => {
-		const entradas = this.pago()?.entradas ?? 0;
+		const entradas = this.reserva()?.cantidad ?? 0;
 		return entradas === 1
 			? 'Compra confirmada. Te enviamos tu entrada por correo.'
 			: `Compra confirmada. Te enviamos tus ${entradas} entradas por correo.`;
@@ -115,6 +117,12 @@ export class ReservaPage {
 	);
 	protected readonly ofrecePagar = computed(() => this.sinCobro() && this.contando());
 	protected readonly esperandoPago = computed(() => this.pago()?.estado === 'PENDIENTE' && this.contando());
+	// FA-03: la reserva venció con el cobro sin resolver. Un pago que llegue tarde
+	// todavía puede confirmarse, así que se sigue preguntando
+	protected readonly esperandoPagoTardio = computed(() => {
+		const estado = this.pago()?.estado;
+		return (estado === 'PENDIENTE' || estado === 'EXPIRADO') && this.vencida();
+	});
 	protected readonly cuenta = computed(() => {
 		const segundos = this.segundos();
 		const minutos = Math.floor(segundos / 60);
@@ -131,13 +139,18 @@ export class ReservaPage {
 		const reloj = setInterval(() => this.ahora.set(Date.now()), 1000);
 		inject(DestroyRef).onDestroy(() => clearInterval(reloj));
 		void this.consultarAlAbrir();
-		// RF-25: solo mientras el pago está pendiente y la reserva vigente. Al
-		// llegar a un estado final, al vencer o al salir, el intervalo se limpia
+		// RF-25: mientras el pago está pendiente, y después de vencer por si llega
+		// tarde. Al llegar a un estado final o al salir, el intervalo se limpia
 		effect((alLimpiar) => {
-			if (!this.esperandoPago()) {
+			const intervalo = this.esperandoPago()
+				? INTERVALO_DE_CONSULTA
+				: this.esperandoPagoTardio()
+					? INTERVALO_DE_PAGO_TARDIO
+					: null;
+			if (intervalo === null) {
 				return;
 			}
-			const consulta = setInterval(() => void this.consultar(), INTERVALO_DE_CONSULTA);
+			const consulta = setInterval(() => void this.consultar(), intervalo);
 			alLimpiar(() => clearInterval(consulta));
 		});
 		// Al vencer con el pago pendiente se pregunta una última vez: pudo llegar después de la última vuelta

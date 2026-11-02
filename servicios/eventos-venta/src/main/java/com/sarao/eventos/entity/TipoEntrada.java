@@ -85,6 +85,15 @@ public class TipoEntrada {
 		cantidadDisponible -= cantidad;
 	}
 
+	// CU-07: un error del pago devuelve el cupo de una reserva vigente. La devolución de las vencidas es en bloque
+	// (TipoEntradaRepository.devolverDisponibilidad)
+	public void liberarDisponibilidad(int cantidad) {
+		if (cantidad < 1 || cantidadDisponible + cantidad > cantidadTotal) {
+			throw new IllegalArgumentException("No se pueden devolver " + cantidad + " entradas");
+		}
+		cantidadDisponible += cantidad;
+	}
+
 	private void cambiarCantidadTotal(int nueva) {
 		if (nueva < cantidadComprometida()) {
 			throw new IllegalArgumentException("La cantidad total no puede quedar por debajo de lo vendido y reservado");

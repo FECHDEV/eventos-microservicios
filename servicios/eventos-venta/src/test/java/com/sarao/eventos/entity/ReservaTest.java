@@ -82,4 +82,31 @@ class ReservaTest {
 		assertThat(reserva.estadoAl(AHORA)).isEqualTo(EstadoReserva.EXPIRADA);
 		assertThat(reserva.segundosRestantes(AHORA)).isZero();
 	}
+
+	// CU-07 RF-11 y RF-15: se confirma vigente o, con pago tardío, vencida; nunca dos veces
+	@Test
+	void seConfirmaUnaSolaVez() {
+		Reserva vigente = Reserva.crear(ANA, general, 1, AHORA);
+		vigente.confirmar();
+		assertThat(vigente.getEstado()).isEqualTo(EstadoReserva.CONFIRMADA);
+		assertThatThrownBy(vigente::confirmar).isInstanceOf(IllegalStateException.class);
+
+		Reserva vencida = Reserva.crear(ANA, general, 1, AHORA);
+		ReflectionTestUtils.setField(vencida, "estado", EstadoReserva.EXPIRADA);
+		vencida.confirmar();
+		assertThat(vencida.getEstado()).isEqualTo(EstadoReserva.CONFIRMADA);
+	}
+
+	// CU-07 FA-01: solo una vigente se libera
+	@Test
+	void soloSeLiberaUnaVigente() {
+		Reserva reserva = Reserva.crear(ANA, general, 1, AHORA);
+		reserva.liberar();
+		assertThat(reserva.getEstado()).isEqualTo(EstadoReserva.EXPIRADA);
+		assertThatThrownBy(reserva::liberar).isInstanceOf(IllegalStateException.class);
+
+		Reserva confirmada = Reserva.crear(ANA, general, 1, AHORA);
+		confirmada.confirmar();
+		assertThatThrownBy(confirmada::liberar).isInstanceOf(IllegalStateException.class);
+	}
 }

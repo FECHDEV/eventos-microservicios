@@ -29,7 +29,8 @@ con 232 pruebas, gateway con 8 y frontend con 900.
 
 **Pendientes para las próximas historias** (de las revisiones del sprint):
 
-- **HU-18:** al vencer la reserva, la pantalla deja de consultar el pago y no muestra un pago tardío.
+- **HU-18 (resuelto):** al vencer la reserva, la pantalla deja de consultar el pago y no muestra un
+  pago tardío.
 - **HU-19:** el lector de QR reintenta sin pausa tras un error del servidor.
 - **HU-22:** en el VPS, `EVENTOS_SITIO_URL` con el dominio real y `EVENTOS_CORREO_PROVEEDOR=smtp`:
   sin ellos, los enlaces apuntan a localhost o el simulador queda activo sin avisar.
@@ -55,3 +56,16 @@ concurrencia contra MySQL, y consulta de entradas. Eventos y Venta con 325 prueb
 
 **Límite conocido:** la compra llega hasta la reserva. El aviso de la pantalla de reserva sigue
 hasta HU-18, y las pantallas de entradas se probaron sin entradas reales, porque las emite el pago.
+
+---
+
+## Sprint 3 (17/11 a 25/11)
+
+**Objetivo:** el Cliente paga su reserva con QR y recibe sus entradas por correo, con los correos
+desde un servicio propio de Notificaciones y el pago desde un servicio propio de Pagos.
+
+**Backlog:** HU-17 y HU-18.
+
+**Avance:** HU-17 hecha el 31/10/2026, con el servidor de correo propio en Docker. HU-18 en curso:
+pago, verificación, pago tardío, entradas y correos con el simulador. El adaptador de Libélula va en
+una rama propia, porque necesita una librería para leer el QR.

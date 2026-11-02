@@ -5,12 +5,14 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.sarao.eventos.entity.EstadoReserva;
 import com.sarao.eventos.entity.Reserva;
+import jakarta.persistence.LockModeType;
 
 // La reserva llega al evento por su tipo: no tiene FK a evento (decisiones.md → reserva y entrada no tienen FK a evento)
 public interface ReservaRepository extends JpaRepository<Reserva, Long> {
@@ -55,6 +57,18 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long> {
 			""")
 	long cantidadVigenteDelCliente(@Param("idCliente") Long idCliente, @Param("idEvento") Long idEvento,
 			@Param("ahora") LocalDateTime ahora);
+
+	// CU-07: para bloquear primero el evento, sin cargar la reserva
+	@Query("select r.tipoEntrada.evento.idEvento from Reserva r where r.idReserva = :idReserva")
+	Optional<Long> idEventoDe(@Param("idReserva") Long idReserva);
+
+	// CU-07 RF-14: después del evento y antes del tipo
+	@Lock(LockModeType.PESSIMISTIC_WRITE)
+	Optional<Reserva> findConBloqueoByIdReserva(Long idReserva);
+
+	// CU-07 RF-17: con el tipo y el evento, para los correos
+	@Query("select r from Reserva r join fetch r.tipoEntrada t join fetch t.evento where r.idReserva = :idReserva")
+	Optional<Reserva> buscarConSuEvento(@Param("idReserva") Long idReserva);
 
 	// Otro cliente recibe lo mismo que una reserva inexistente (CU-06 RF-20)
 	@Query("""

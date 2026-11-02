@@ -36,6 +36,10 @@ public interface EntradaRepository extends JpaRepository<Entrada, Long> {
 			""")
 	Optional<Entrada> buscarDelCliente(@Param("idEntrada") Long idEntrada, @Param("idCliente") Long idCliente);
 
+	// CU-07 RF-17: los códigos de una compra, para su correo
+	@Query("select e.codigoQrEntrada from Entrada e where e.reserva.idReserva = :idReserva order by e.idEntrada")
+	List<String> codigosDeLaCompra(@Param("idReserva") Long idReserva);
+
 	// CU-08 RF-8: para numerar una entrada dentro de su compra
 	@Query("select e.idEntrada from Entrada e where e.reserva.idReserva = :idReserva order by e.idEntrada")
 	List<Long> idsDeLaCompra(@Param("idReserva") Long idReserva);

@@ -25,6 +25,7 @@ import com.sun.net.httpserver.HttpServer;
 class EnrutamientoTest {
 
 	private static HttpServer seguridad;
+	private static HttpServer pagos;
 
 	@Value("${local.server.port}")
 	private int puerto;
@@ -38,11 +39,17 @@ class EnrutamientoTest {
 		seguridad.start();
 		propiedades.add("EVENTOS_SEGURIDAD_URL", () -> "http://localhost:" + seguridad.getAddress().getPort());
 		propiedades.add("EVENTOS_VENTA_URL", () -> "http://localhost:" + seguridad.getAddress().getPort());
+		pagos = HttpServer.create(new InetSocketAddress("localhost", 0), 0);
+		pagos.createContext("/", intercambio -> responder(intercambio, 200, "pagos:" + intercambio.getRequestURI().getPath()
+				+ "|" + intercambio.getRequestHeaders().getFirst("X-Usuario-Id")));
+		pagos.start();
+		propiedades.add("EVENTOS_PAGOS_URL", () -> "http://localhost:" + pagos.getAddress().getPort());
 	}
 
 	@AfterAll
 	static void apagar() {
 		seguridad.stop(0);
+		pagos.stop(0);
 	}
 
 	private static void resolverToken(HttpExchange intercambio) throws IOException {
@@ -94,6 +101,19 @@ class EnrutamientoTest {
 				.startsWith("/api/reservas/40|7|CLIENTE|clave-de-pruebas|");
 		assertThat(pedir("/api/entradas/81", "Authorization", "Bearer valido").body())
 				.startsWith("/api/entradas/81|7|CLIENTE|clave-de-pruebas|");
+	}
+
+	// CU-07: el pago de una reserva va a Pagos, con la identidad; la reserva sigue en Eventos y Venta
+	@Test
+	void elPagoDeUnaReservaVaAPagos() throws Exception {
+		assertThat(pedir("/api/reservas/40/pago", "Authorization", "Bearer valido").body())
+				.isEqualTo("pagos:/api/reservas/40/pago|7");
+		assertThat(pedir("/api/reservas/40/pago/simulacion", "Authorization", "Bearer valido").body())
+				.isEqualTo("pagos:/api/reservas/40/pago/simulacion|7");
+		assertThat(pedir("/api/reservas/40/pagos", "Authorization", "Bearer valido").body())
+				.startsWith("/api/reservas/40/pagos|7|");
+		assertThat(pedir("/api/reservas/pago", "Authorization", "Bearer valido").body())
+				.startsWith("/api/reservas/pago|7|");
 	}
 
 	// CU-05 RF-2: el catálogo no consulta la sesión, ni siquiera con Seguridad caída

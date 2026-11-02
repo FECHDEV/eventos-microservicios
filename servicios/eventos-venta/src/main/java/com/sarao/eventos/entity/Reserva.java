@@ -93,4 +93,20 @@ public class Reserva {
 	public BigDecimal total() {
 		return precioUnitario.multiply(BigDecimal.valueOf(cantidad));
 	}
+
+	// CU-07 RF-11 y RF-15: también una vencida, si el pago tardío encontró cupo
+	public void confirmar() {
+		if (estado == EstadoReserva.CONFIRMADA) {
+			throw new IllegalStateException("La reserva ya está confirmada");
+		}
+		estado = EstadoReserva.CONFIRMADA;
+	}
+
+	// CU-07 FA-01 y CU-06 FA-05: un error del pago libera la reserva antes de su vencimiento
+	public void liberar() {
+		if (estado != EstadoReserva.VIGENTE) {
+			throw new IllegalStateException("Solo se libera una reserva vigente");
+		}
+		estado = EstadoReserva.EXPIRADA;
+	}
 }

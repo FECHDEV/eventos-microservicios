@@ -378,6 +378,11 @@ mediante la columna discriminadora `rol` (estrategia de tabla única).
 
 ## 2.5. Tabla `pago`
 
+En microservicios vive en `pagos_db`: `id_reserva` es un id sin llave foránea, y se agregan
+`id_usuario` (BIGINT, NOT NULL), `fecha_expiracion` (DATETIME, NOT NULL) y
+`confirmacion_pendiente` (BOOLEAN, NOT NULL), y `codigo_qr` pasa a VARCHAR(1000)
+(`decisiones.md` → «0. Microservicios» → Compra).
+
 | Columna | Tipo | Modificadores |
 |---|---|---|
 | id_pago | BIGINT | PK, AUTO_INCREMENT |

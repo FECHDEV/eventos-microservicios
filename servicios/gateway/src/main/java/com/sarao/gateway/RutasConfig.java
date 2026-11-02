@@ -17,12 +17,19 @@ public class RutasConfig {
 	// Solo se enrutan rutas publicas de /api: las de /interno nunca salen por aca
 	@Bean
 	RouterFunction<ServerResponse> rutas(@Value("${eventos.seguridad-url}") String seguridad,
-			@Value("${eventos.venta-url}") String venta, IdentidadDeSesion identidad) {
-		return route("seguridad")
-				.route(path("/api/auth/**", "/api/cuenta/**", "/api/usuarios/**"), http())
-				.before(uri(seguridad))
+			@Value("${eventos.venta-url}") String venta, @Value("${eventos.pagos-url}") String pagos,
+			IdentidadDeSesion identidad) {
+		// El pago de una reserva va antes que /api/reservas/**: la primera ruta que coincide es la que atiende
+		return route("pagos")
+				.route(path("/api/reservas/*/pago", "/api/reservas/*/pago/**"), http())
+				.before(uri(pagos))
 				.before(identidad::aplicar)
 				.build()
+				.and(route("seguridad")
+						.route(path("/api/auth/**", "/api/cuenta/**", "/api/usuarios/**"), http())
+						.before(uri(seguridad))
+						.before(identidad::aplicar)
+						.build())
 				.and(route("eventos-venta")
 						.route(path("/api/eventos/**", "/api/reservas/**", "/api/entradas/**"), http())
 						.before(uri(venta))

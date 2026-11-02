@@ -88,4 +88,17 @@ class ReglasDeCompraTest {
 	void sinLimiteNoHayTope() {
 		assertThat(evento(null, null).verificarLimiteCompra(1_000, 1_000)).isTrue();
 	}
+
+	// CU-07 FA-01: el cupo vuelve, sin pasar del total
+	@Test
+	void liberarDevuelveElCupoSinPasarDelTotal() {
+		TipoEntrada general = TipoEntrada.registrar(evento(null, null), "General", new BigDecimal("50"), 3);
+		general.reducirDisponibilidad(2);
+
+		general.liberarDisponibilidad(2);
+
+		assertThat(general.getCantidadDisponible()).isEqualTo(3);
+		assertThatThrownBy(() -> general.liberarDisponibilidad(1)).isInstanceOf(IllegalArgumentException.class);
+		assertThatThrownBy(() -> general.liberarDisponibilidad(0)).isInstanceOf(IllegalArgumentException.class);
+	}
 }

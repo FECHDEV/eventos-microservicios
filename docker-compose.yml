@@ -70,8 +70,25 @@ services:
       EVENTOS_CLAVE_SERVICIO: ${EVENTOS_CLAVE_SERVICIO}
       EVENTOS_IMAGENES_DIRECTORIO: /datos/imagenes
       EVENTOS_SEGURIDAD_URL: http://seguridad:8081
+      EVENTOS_NOTIFICACIONES_URL: http://notificaciones:8083
     volumes:
       - imagenes-eventos:/datos/imagenes
+
+  pagos:
+    build:
+      context: ./servicios/pagos
+      dockerfile: ../Dockerfile
+    restart: unless-stopped
+    depends_on:
+      base:
+        condition: service_healthy
+    environment:
+      EVENTOS_DB_HOST: base
+      EVENTOS_PAGOS_DB_PASSWORD: ${EVENTOS_PAGOS_DB_PASSWORD}
+      EVENTOS_CLAVE_SERVICIO: ${EVENTOS_CLAVE_SERVICIO}
+      EVENTOS_VENTA_URL: http://eventos-venta:8082
+      # simulador por defecto (decisiones.md -> Pago: interfaz propia)
+      EVENTOS_PAGO_PROVEEDOR: ${EVENTOS_PAGO_PROVEEDOR:-simulador}
 
   gateway:
     build:
@@ -81,9 +98,11 @@ services:
     depends_on:
       - seguridad
       - eventos-venta
+      - pagos
     environment:
       EVENTOS_SEGURIDAD_URL: http://seguridad:8081
       EVENTOS_VENTA_URL: http://eventos-venta:8082
+      EVENTOS_PAGOS_URL: http://pagos:8084
       EVENTOS_CLAVE_SERVICIO: ${EVENTOS_CLAVE_SERVICIO}
     # Sin puertos publicados: se llega por nginx, bajo /api
 
