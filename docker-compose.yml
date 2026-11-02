@@ -6,6 +6,15 @@
 # Prueba de punta a punta, con datos y claves temporales que borra al terminar (no toca el .env):
 #   bash scripts/prueba-completa.sh
 
+# Chequeo de salud de los servicios Java: el puerto acepta conexiones. Spring abre el puerto
+# antes de terminar de arrancar (la carga inicial corre después), así que es una señal
+# cercana, no exacta. Por el puerto porque las imágenes no traen curl
+x-salud: &salud
+  interval: 5s
+  timeout: 3s
+  retries: 40
+  start_period: 20s
+
 services:
   base:
     image: mysql:8.0
@@ -44,13 +53,9 @@ services:
       EVENTOS_ADMIN_CORREO: ${EVENTOS_ADMIN_CORREO:-}
       EVENTOS_ADMIN_PASSWORD: ${EVENTOS_ADMIN_PASSWORD:-}
       EVENTOS_NOTIFICACIONES_URL: http://notificaciones:8083
-    # Listo cuando su puerto acepta conexiones: Tomcat lo abre al terminar de arrancar. Sin curl en la imagen
     healthcheck:
+      <<: *salud
       test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8081"]
-      interval: 5s
-      timeout: 3s
-      retries: 40
-      start_period: 20s
 
   notificaciones:
     build:
@@ -66,13 +71,9 @@ services:
       EVENTOS_CORREO_REMITENTE: Sarao <no-responder@${EVENTOS_CORREO_DOMINIO:-mail.com}>
       EVENTOS_SITIO_URL: ${EVENTOS_SITIO_URL:-http://localhost:${SARAO_PUERTO:-80}}
     # Sin puertos publicados y sin ruta en el gateway: solo lo llaman los otros servicios
-    # Listo cuando su puerto acepta conexiones: Tomcat lo abre al terminar de arrancar. Sin curl en la imagen
     healthcheck:
+      <<: *salud
       test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8083"]
-      interval: 5s
-      timeout: 3s
-      retries: 40
-      start_period: 20s
 
   eventos-venta:
     build:
@@ -94,13 +95,9 @@ services:
       EVENTOS_CORREO_DOMINIO: ${EVENTOS_CORREO_DOMINIO:-mail.com}
     volumes:
       - imagenes-eventos:/datos/imagenes
-    # Listo cuando su puerto acepta conexiones: Tomcat lo abre al terminar de arrancar. Sin curl en la imagen
     healthcheck:
+      <<: *salud
       test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8082"]
-      interval: 5s
-      timeout: 3s
-      retries: 40
-      start_period: 20s
 
   pagos:
     build:
@@ -122,40 +119,33 @@ services:
       EVENTOS_PAGO_LIBELULA_EMAIL: ${EVENTOS_PAGO_LIBELULA_EMAIL:-}
       # El aviso de pago y la vuelta del Cliente a su reserva
       EVENTOS_SITIO_URL: ${EVENTOS_SITIO_URL:-http://localhost:${SARAO_PUERTO:-80}}
-    # Listo cuando su puerto acepta conexiones: Tomcat lo abre al terminar de arrancar. Sin curl en la imagen
     healthcheck:
+      <<: *salud
       test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8084"]
-      interval: 5s
-      timeout: 3s
-      retries: 40
-      start_period: 20s
 
   gateway:
     build:
       context: ./servicios/gateway
       dockerfile: ../Dockerfile
     restart: unless-stopped
-    # El gateway abre cuando los servicios ya atienden: así las primeras peticiones no fallan con 503
+    # El gateway abre cuando Seguridad y Eventos y Venta ya atienden, así las primeras
+    # peticiones no fallan con 503. Pagos solo arrancado: si no levanta, el sitio sigue sin cobros
     depends_on:
       seguridad:
         condition: service_healthy
       eventos-venta:
         condition: service_healthy
       pagos:
-        condition: service_healthy
+        condition: service_started
     environment:
       EVENTOS_SEGURIDAD_URL: http://seguridad:8081
       EVENTOS_VENTA_URL: http://eventos-venta:8082
       EVENTOS_PAGOS_URL: http://pagos:8084
       EVENTOS_CLAVE_SERVICIO: ${EVENTOS_CLAVE_SERVICIO}
     # Sin puertos publicados: se llega por nginx, bajo /api
-    # Listo cuando su puerto acepta conexiones: Tomcat lo abre al terminar de arrancar. Sin curl en la imagen
     healthcheck:
+      <<: *salud
       test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8080"]
-      interval: 5s
-      timeout: 3s
-      retries: 40
-      start_period: 20s
 
   frontend:
     build: ./frontend
