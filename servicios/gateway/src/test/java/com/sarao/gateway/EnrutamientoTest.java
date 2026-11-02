@@ -116,6 +116,16 @@ class EnrutamientoTest {
 				.startsWith("/api/reservas/pago|7|");
 	}
 
+	// El aviso del sistema de pago llega a Pagos sin consultar la sesión ni pasar identidad
+	@Test
+	void elAvisoDePagoVaAPagosSinIdentidad() throws Exception {
+		var respuesta = pedir("/api/pagos/aviso?referencia=SARAO-R1-ab", "Authorization", "Bearer falla", "X-Usuario-Id",
+				"1");
+
+		assertThat(respuesta.statusCode()).isEqualTo(200);
+		assertThat(respuesta.body()).isEqualTo("pagos:/api/pagos/aviso|null");
+	}
+
 	// CU-05 RF-2: el catálogo no consulta la sesión, ni siquiera con Seguridad caída
 	@Test
 	void elCatalogoSeAtiendeSinConsultarLaSesion() throws Exception {

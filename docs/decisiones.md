@@ -1087,6 +1087,12 @@ se refleja en el reporte de ingresos.
 
 Por este caso, la multiplicidad `Pago — Entrada` es `1 — 0..*`.
 
+**Tardío es cuando se procesa, no cuando se pagó.** Decidido con el usuario el
+02/11/2026, al revisar HU-18: un pago hecho a los 9:30 que el sistema confirma
+después de los 10 minutos (la tarea de cada minuto, o Eventos y Venta lento)
+sigue el camino del pago tardío. Es lo que hacía el sistema base, y usar la fecha
+del pago obligaría a retener el cupo hasta resolverlo.
+
 ### Verificación del pago e idempotencia
 
 - En el servidor desplegado, Libélula avisa por `callback_url` (GET con

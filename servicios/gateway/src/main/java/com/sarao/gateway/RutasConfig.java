@@ -36,6 +36,12 @@ public class RutasConfig {
 						.before(identidad::aplicar)
 						.build())
 				// Público: no consulta la sesión, así un token vencido o una caída de Seguridad no afectan a estas rutas
+				// El aviso del sistema de pago: público, y no confirma nada
+				.and(route("aviso-de-pago")
+						.route(path("/api/pagos/aviso"), http())
+						.before(uri(pagos))
+						.before(IdentidadDeSesion::sinIdentidad)
+						.build())
 				.and(route("publicas")
 						.route(path("/api/catalogo/**", "/api/visitas/**"), http())
 						.before(uri(venta))

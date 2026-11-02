@@ -27,6 +27,9 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class PagoService {
 
+	// El largo de pago.referencia_externa
+	private static final int LARGO_DE_LA_REFERENCIA = 120;
+
 	private final PagoRepository pagoRepository;
 	private final ConsultaDeReservas consultaDeReservas;
 	private final ConciliacionDePagos conciliacionDePagos;
@@ -79,6 +82,15 @@ public class PagoService {
 			return pagoRepository.findById(pago.getIdPago()).orElseThrow();
 		}
 		return pago;
+	}
+
+	// El aviso del sistema de pago no confirma nada: adelanta la misma consulta que hacen la pantalla y la tarea de cada
+	// minuto. Una referencia que no es nuestra no llega a consultar
+	public void procesarAviso(String referencia) {
+		if (referencia == null || referencia.isBlank() || referencia.length() > LARGO_DE_LA_REFERENCIA) {
+			return;
+		}
+		pagoRepository.idPorReferencia(referencia).ifPresent(conciliacionDePagos::conciliar);
 	}
 
 	// Solo el dueño simula el pago de su reserva (RF-22)

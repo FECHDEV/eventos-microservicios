@@ -22,6 +22,10 @@ public interface PagoRepository extends JpaRepository<Pago, Long> {
 	@Lock(LockModeType.PESSIMISTIC_WRITE)
 	Optional<Pago> findConBloqueoByIdPago(Long idPago);
 
+	// El aviso del sistema de pago trae nuestra referencia (PagoService.procesarAviso)
+	@Query("select p.idPago from Pago p where p.referenciaExterna = :referencia")
+	Optional<Long> idPorReferencia(@Param("referencia") String referencia);
+
 	// La lectura previa a la consulta al sistema de pago, sin cargar la entidad ni bloquear. Vacío si ya está procesado
 	@Query("""
 			select p.referenciaExterna from Pago p

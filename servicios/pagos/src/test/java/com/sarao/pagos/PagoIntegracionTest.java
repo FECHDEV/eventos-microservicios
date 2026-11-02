@@ -372,4 +372,25 @@ class PagoIntegracionTest {
 		tieneCodigo(mvc.get().uri("/api/reservas/abc/pago").with(ana).exchange(), HttpStatus.BAD_REQUEST,
 				"DATOS_INVALIDOS");
 	}
+
+	// El aviso del sistema de pago: sin sesión, siempre 200, y solo adelanta la consulta
+	@Test
+	void elAvisoAdelantaLaConsultaSinConfirmarPorSiSolo() {
+		pagar(ana);
+		String referencia = jdbc.queryForObject("SELECT referencia_externa FROM pago", String.class);
+
+		assertThat(mvc.get().uri("/api/pagos/aviso?referencia=" + referencia).exchange()).hasStatusOk();
+		assertThat(columna("estado")).isEqualTo("PENDIENTE");
+
+		simular("PAGADO");
+		assertThat(mvc.post().uri("/api/pagos/aviso?referencia=" + referencia).exchange()).hasStatusOk();
+		assertThat(columna("estado")).isEqualTo("PAGADO");
+		then(consultaDeReservas).should(times(1)).confirmar(anyLong(), anyLong());
+
+		for (String otra : new String[] { "", "SIM-ajena", "x".repeat(500) }) {
+			assertThat(mvc.get().uri("/api/pagos/aviso?referencia=" + otra).exchange()).hasStatusOk();
+		}
+		assertThat(mvc.get().uri("/api/pagos/aviso").exchange()).hasStatusOk();
+		then(simulador).should(never()).consultar("SIM-ajena");
+	}
 }
