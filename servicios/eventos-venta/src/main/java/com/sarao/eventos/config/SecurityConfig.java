@@ -41,6 +41,8 @@ public class SecurityConfig {
 						.requestMatchers("/api/reservas/**").hasRole("CLIENTE")
 						// CU-08: sus entradas las consulta el Cliente, y solo las suyas (ConsultaDeEntradas)
 						.requestMatchers("/api/entradas/**").hasRole("CLIENTE")
+						// CU-15: validar entradas en la puerta es del Personal autorizado (RF-1)
+						.requestMatchers("/api/accesos/**").hasRole("PERSONAL")
 						// Solo otros servicios, con la clave y sin usuario: el gateway no publica /interno
 						.requestMatchers("/interno/**").hasRole("SERVICIO")
 						.anyRequest().denyAll())

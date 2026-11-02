@@ -73,6 +73,19 @@ public class Entrada {
 		return entrada;
 	}
 
+	// CU-15 paso 3: activa y de un evento que admite validar ahora (decisiones.md → Vigencia de una entrada)
+	public boolean verificarVigencia(LocalDateTime ahora) {
+		return estado == EstadoEntrada.ACTIVA && tipoEntrada.getEvento().admiteValidacion(ahora);
+	}
+
+	// CU-15 paso 5. Solo se llega con la entrada activa y bloqueada (ValidacionDeEntradas)
+	public void marcarUtilizada() {
+		if (estado != EstadoEntrada.ACTIVA) {
+			throw new IllegalStateException("Solo una entrada activa se marca utilizada");
+		}
+		estado = EstadoEntrada.UTILIZADA;
+	}
+
 	// CU-08 RF-9: el QR se muestra solo si puede servir para entrar. La vigencia de la puerta (CU-15) mira además que
 	// el evento esté activo y sea hoy
 	public boolean muestraSuCodigo() {

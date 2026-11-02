@@ -52,4 +52,13 @@ public interface EventoRepository extends JpaRepository<Evento, Long> {
 	// columnas, incluida una imagen que la otra acaba de reemplazar y cuyo archivo ya se borró
 	@Lock(LockModeType.PESSIMISTIC_WRITE)
 	Optional<Evento> findConBloqueoByIdEvento(Long idEvento);
+
+	// CU-15: validar lee el evento con un bloqueo compartido. Las validaciones no se esperan entre sí, pero una
+	// cancelación o una postergación en curso (que lo toma con el exclusivo) se confirma antes y la validación la ve
+	@Lock(LockModeType.PESSIMISTIC_READ)
+	Optional<Evento> findConBloqueoCompartidoByIdEvento(Long idEvento);
+
+	// CU-15 RF-2: los candidatos a validar; el servicio deja los que siguen en curso (Evento.admiteValidacion)
+	List<Evento> findByEstadoAndFechaBetweenOrderByFechaAscHoraInicioAsc(EstadoEvento estado, LocalDate desde,
+			LocalDate hasta);
 }

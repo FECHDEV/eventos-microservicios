@@ -1,6 +1,7 @@
 package com.sarao.eventos.entity;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -60,5 +61,37 @@ class EntradaTest {
 		Entrada dePostergado = emitida();
 		dePostergado.getTipoEntrada().getEvento().postergar(LocalDate.of(2026, 11, 8));
 		assertThat(dePostergado.muestraSuCodigo()).isTrue();
+	}
+
+	// CU-15 RF-8: vigente desde el día del evento hasta su fin, al día siguiente si cruza la medianoche
+	@Test
+	void esVigenteDesdeElDiaDelEventoHastaSuFin() {
+		Entrada entrada = emitida();
+		Evento evento = entrada.getTipoEntrada().getEvento();
+		ReflectionTestUtils.setField(evento, "estado", EstadoEvento.ACTIVO);
+
+		assertThat(entrada.verificarVigencia(LocalDateTime.of(2026, 10, 3, 23, 59))).isFalse();
+		assertThat(entrada.verificarVigencia(LocalDateTime.of(2026, 10, 4, 0, 0))).isTrue();
+		assertThat(entrada.verificarVigencia(LocalDateTime.of(2026, 10, 5, 2, 59))).isTrue();
+		assertThat(entrada.verificarVigencia(LocalDateTime.of(2026, 10, 5, 3, 0))).isFalse();
+
+		ReflectionTestUtils.setField(evento, "estado", EstadoEvento.POSTERGADO);
+		assertThat(entrada.verificarVigencia(LocalDateTime.of(2026, 10, 4, 22, 0))).isFalse();
+	}
+
+	// CU-15 paso 5: solo una activa pasa a utilizada
+	@Test
+	void soloUnaActivaSeMarcaUtilizada() {
+		Entrada entrada = emitida();
+		entrada.marcarUtilizada();
+		assertThat(entrada.getEstado()).isEqualTo(EstadoEntrada.UTILIZADA);
+		assertThatThrownBy(entrada::marcarUtilizada)
+				.isInstanceOf(IllegalStateException.class);
+
+		Entrada devuelta = emitida();
+		ReflectionTestUtils.setField(devuelta, "estado", EstadoEntrada.DEVUELTA);
+		assertThat(devuelta.verificarVigencia(LocalDateTime.of(2026, 10, 4, 22, 0))).isFalse();
+		assertThatThrownBy(devuelta::marcarUtilizada)
+				.isInstanceOf(IllegalStateException.class);
 	}
 }

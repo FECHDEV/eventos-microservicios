@@ -4,11 +4,13 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.sarao.eventos.entity.Entrada;
+import jakarta.persistence.LockModeType;
 
 public interface EntradaRepository extends JpaRepository<Entrada, Long> {
 
@@ -39,6 +41,17 @@ public interface EntradaRepository extends JpaRepository<Entrada, Long> {
 	// CU-07 RF-17: los códigos de una compra, para su correo
 	@Query("select e.codigoQrEntrada from Entrada e where e.reserva.idReserva = :idReserva order by e.idEntrada")
 	List<String> codigosDeLaCompra(@Param("idReserva") Long idReserva);
+
+	// CU-15 RF-5: sin cargar la entrada, que se relee con bloqueo (ValidacionDeEntradas)
+	@Query("""
+			select new com.sarao.eventos.repository.EntradaPorCodigo(e.idEntrada, e.tipoEntrada.evento.idEvento)
+			from Entrada e where e.codigoQrEntrada = :codigo
+			""")
+	Optional<EntradaPorCodigo> buscarPorCodigo(@Param("codigo") String codigo);
+
+	// CU-15 RF-11: dos validaciones de la misma entrada se serializan
+	@Lock(LockModeType.PESSIMISTIC_WRITE)
+	Optional<Entrada> findConBloqueoByIdEntrada(Long idEntrada);
 
 	// CU-08 RF-8: para numerar una entrada dentro de su compra
 	@Query("select e.idEntrada from Entrada e where e.reserva.idReserva = :idReserva order by e.idEntrada")

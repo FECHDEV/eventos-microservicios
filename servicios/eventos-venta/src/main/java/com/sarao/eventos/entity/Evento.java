@@ -160,6 +160,12 @@ public class Evento {
 		return !ahora.isBefore(finDeLaVenta());
 	}
 
+	// CU-15: admite validar entradas si está activo y es su día o sigue en curso, hasta su hora de fin (decisiones.md →
+	// Vigencia de una entrada)
+	public boolean admiteValidacion(LocalDateTime ahora) {
+		return estado == EstadoEvento.ACTIVO && !ahora.toLocalDate().isBefore(fecha) && !termino(ahora);
+	}
+
 	// CU-05: el catálogo muestra los activos y postergados que todavía no terminaron (decisiones.md → Catálogo de
 	// eventos). EventoRepository.buscarEnElCatalogo repite esta regla en JPQL para la lista
 	public boolean seMuestraEnElCatalogo(LocalDateTime ahora) {

@@ -28,6 +28,10 @@ import { idDeLaUrl } from '../../shared/navegacion/id-de-la-url';
 // ver su código; mientras tanto ese código no se reenvía
 const TIEMPO_EN_PANTALLA_MS = 5000;
 
+// Tras un error del servidor o de la red, la cámara espera esto antes de
+// reintentar el mismo código: sin pausa lo mandaría en cada cuadro
+const PAUSA_TRAS_UN_ERROR_MS = 2000;
+
 // El largo de la columna del código: ninguna entrada tiene uno más largo
 const LARGO_MAXIMO_DEL_CODIGO = 255;
 
@@ -96,6 +100,10 @@ export class ValidarEntradasPage {
 	protected readonly procesando = signal(false);
 	private numero = 0;
 	private retiro: ReturnType<typeof setTimeout> | undefined;
+	// El código que la cámara leyó y falló, y hasta cuándo no reenviarlo
+	private fallido: { codigo: string; hasta: number } | null = null;
+	// Lo deja el último error: sin red o del servidor se reintenta; un rechazo de los datos, no
+	private ultimoFallo: { reintentable: boolean } | null = null;
 
 	private readonly escrito = signal<CodigoEscrito>({ codigo: '' });
 	protected readonly formulario = form(
@@ -125,13 +133,27 @@ export class ValidarEntradasPage {
 	// RF-13 y RF-15: la cámara emite en cada cuadro que ve el QR. El código cuyo
 	// resultado está en pantalla no se reenvía: solo alarga el tiempo del
 	// resultado. Mientras hay una petición, validar descarta lo que llega; un
-	// error no deja resultado, así que el mismo código se reintenta
+	// error de red o del servidor no deja resultado, así que el mismo código se
+	// reintenta tras una pausa; uno que el backend rechaza no se reenvía mientras
+	// la cámara lo siga viendo
 	protected async leer(codigo: string): Promise<void> {
 		if (codigo === this.resultado()?.codigo) {
 			this.retirarDespues();
 			return;
 		}
-		await this.validar(codigo);
+		if (codigo === this.fallido?.codigo && Date.now() < this.fallido.hasta) {
+			return;
+		}
+		this.ultimoFallo = null;
+		const hubo = await this.validar(codigo);
+		// validar lo cambia durante el await
+		const fallo = this.ultimoFallo as { reintentable: boolean } | null;
+		if (hubo) {
+			this.fallido = null;
+		} else if (fallo !== null) {
+			const pausa = fallo.reintentable ? PAUSA_TRAS_UN_ERROR_MS : Number.POSITIVE_INFINITY;
+			this.fallido = { codigo, hasta: Date.now() + pausa };
+		}
 	}
 
 	// RF-5: el código escrito a mano, cuando la cámara no puede leerlo
@@ -174,6 +196,7 @@ export class ValidarEntradasPage {
 		} catch (error: unknown) {
 			const problema = comoError(error);
 			this.resultado.set(null);
+			this.ultimoFallo = { reintentable: problema.status === 0 || problema.status >= 500 };
 			// RF-4: el evento dejó de admitir validaciones o ya no existe; se vuelve a la lista, al día
 			if (problema.codigo !== undefined && EVENTO_PERDIDO.includes(problema.codigo)) {
 				this.recurso.reload();

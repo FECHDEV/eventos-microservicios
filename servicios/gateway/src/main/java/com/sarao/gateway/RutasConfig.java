@@ -31,7 +31,7 @@ public class RutasConfig {
 						.before(identidad::aplicar)
 						.build())
 				.and(route("eventos-venta")
-						.route(path("/api/eventos/**", "/api/reservas/**", "/api/entradas/**"), http())
+						.route(path("/api/eventos/**", "/api/reservas/**", "/api/entradas/**", "/api/accesos/**"), http())
 						.before(uri(venta))
 						.before(identidad::aplicar)
 						.build())

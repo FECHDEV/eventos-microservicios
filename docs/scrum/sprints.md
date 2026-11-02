@@ -31,7 +31,7 @@ con 232 pruebas, gateway con 8 y frontend con 900.
 
 - **HU-18 (resuelto):** al vencer la reserva, la pantalla deja de consultar el pago y no muestra un
   pago tardío.
-- **HU-19:** el lector de QR reintenta sin pausa tras un error del servidor.
+- **HU-19 (resuelto):** el lector de QR reintenta sin pausa tras un error del servidor.
 - **HU-22:** en el VPS, `EVENTOS_SITIO_URL` con el dominio real y `EVENTOS_CORREO_PROVEEDOR=smtp`:
   sin ellos, los enlaces apuntan a localhost o el simulador queda activo sin avisar.
 - **HU-22:** en el VPS, `EVENTOS_PAGO_PROVEEDOR=libelula`: vacío deja el simulador, y cualquier
