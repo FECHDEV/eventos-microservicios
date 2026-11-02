@@ -81,6 +81,18 @@ describe('erroresInterceptor', () => {
     expect(navegaciones).toEqual(['/inicio-sesion']);
   });
 
+  // Otra pestaña guardó una sesión nueva mientras la petición vieja esperaba
+  it('un 401 de un token que ya cambió no cierra la sesión nueva', () => {
+    sesion.iniciar(sesionVigente());
+    http.get('/api/cuenta/datos-personales').subscribe({ error: () => undefined });
+    sesion.iniciar({ ...sesionVigente(), token: 'jwt.nuevo' });
+
+    servidor.expectOne('/api/cuenta/datos-personales').flush(null, { status: 401, statusText: 'Unauthorized' });
+
+    expect(sesion.token()).toBe('jwt.nuevo');
+    expect(navegaciones).toEqual([]);
+  });
+
   // RF-10: la sesión sigue siendo válida, solo que ese rol no puede entrar
   it('ante un 403 no cierra la sesión', async () => {
     sesion.iniciar(sesionVigente());

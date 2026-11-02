@@ -165,83 +165,93 @@ describe('SesionService.actualizarUsuario', () => {
     expect(servicio.autenticado()).toBe(false);
     expect(localStorage.getItem(CLAVE_SESION)).toBeNull();
   });
+});
 
-  // Otra pestaña cambia el almacenamiento: el navegador avisa con un evento storage
-  function cambioEnOtraPestana() {
-    window.dispatchEvent(new StorageEvent('storage', { key: CLAVE_SESION }));
-  }
+// Otra pestaña cambia el almacenamiento: el navegador avisa con un evento storage
+function cambioEnOtraPestana() {
+  window.dispatchEvent(new StorageEvent('storage', { key: CLAVE_SESION }));
+}
 
-  describe('entre pestañas', () => {
-    it('cerrar sesión en otra pestaña la cierra en esta', () => {
-      guardarSesion(vigente());
-      const servicio = TestBed.inject(SesionService);
+describe('SesionService entre pestañas', () => {
+  let recarga: ReturnType<typeof espiarRecarga>;
 
-      localStorage.removeItem(CLAVE_SESION);
-      cambioEnOtraPestana();
+  beforeEach(() => {
+    localStorage.clear();
+    TestBed.resetTestingModule();
+    recarga = espiarRecarga();
+  });
 
-      expect(servicio.autenticado()).toBe(false);
-      expect(recarga).toHaveBeenCalledOnce();
-    });
 
-    it('iniciar sesión en otra pestaña la abre en esta', () => {
-      const servicio = TestBed.inject(SesionService);
+  it('cerrar sesión en otra pestaña la cierra en esta', () => {
+    guardarSesion(vigente());
+    const servicio = TestBed.inject(SesionService);
 
-      guardarSesion(vigente('ADMINISTRADOR'));
-      cambioEnOtraPestana();
+    localStorage.removeItem(CLAVE_SESION);
+    cambioEnOtraPestana();
 
-      expect(servicio.autenticado()).toBe(true);
-      expect(servicio.rol()).toBe('ADMINISTRADOR');
-      expect(recarga).toHaveBeenCalledOnce();
-    });
+    expect(servicio.autenticado()).toBe(false);
+    expect(recarga).toHaveBeenCalledOnce();
+  });
 
-    // La pantalla abierta tiene datos del usuario anterior
-    it('otro usuario en otra pestaña recarga esta', () => {
-      guardarSesion(vigente());
-      const servicio = TestBed.inject(SesionService);
-      const otro = vigente('ADMINISTRADOR');
-      guardarSesion({ ...otro, usuario: { ...otro.usuario, idUsuario: 1 } });
+  // Sin sesión antes no hay datos de nadie: no recarga, y no se pierde lo escrito
+  it('iniciar sesión en otra pestaña la abre en esta sin recargar', () => {
+    const servicio = TestBed.inject(SesionService);
 
-      cambioEnOtraPestana();
+    guardarSesion(vigente('ADMINISTRADOR'));
+    cambioEnOtraPestana();
 
-      expect(servicio.usuario()?.idUsuario).toBe(1);
-      expect(recarga).toHaveBeenCalledOnce();
-    });
+    expect(servicio.autenticado()).toBe(true);
+    expect(servicio.rol()).toBe('ADMINISTRADOR');
+    expect(recarga).not.toHaveBeenCalled();
+  });
 
-    // Cambiar los datos de la cuenta en otra pestaña no es otro usuario
-    it('el mismo usuario con datos nuevos no recarga', () => {
-      const inicial = vigente();
-      guardarSesion(inicial);
-      const servicio = TestBed.inject(SesionService);
-      guardarSesion({ ...inicial, usuario: { ...inicial.usuario, nombre: 'Ana María' } });
+  // La pantalla abierta tiene datos del usuario anterior
+  it('otro usuario en otra pestaña recarga esta', () => {
+    guardarSesion(vigente());
+    const servicio = TestBed.inject(SesionService);
+    const otro = vigente('ADMINISTRADOR');
+    guardarSesion({ ...otro, usuario: { ...otro.usuario, idUsuario: 1 } });
 
-      cambioEnOtraPestana();
+    cambioEnOtraPestana();
 
-      expect(servicio.usuario()?.nombre).toBe('Ana María');
-      expect(recarga).not.toHaveBeenCalled();
-    });
+    expect(servicio.usuario()?.idUsuario).toBe(1);
+    expect(recarga).toHaveBeenCalledOnce();
+  });
 
-    it('un cambio de otra clave no toca la sesión', () => {
-      guardarSesion(vigente());
-      const servicio = TestBed.inject(SesionService);
+  // Cambiar los datos de la cuenta en otra pestaña no es otro usuario
+  it('el mismo usuario con datos nuevos no recarga', () => {
+    const inicial = vigente();
+    guardarSesion(inicial);
+    const servicio = TestBed.inject(SesionService);
+    guardarSesion({ ...inicial, usuario: { ...inicial.usuario, nombre: 'Ana María' } });
 
-      localStorage.removeItem(CLAVE_SESION);
-      window.dispatchEvent(new StorageEvent('storage', { key: 'sarao.tema' }));
+    cambioEnOtraPestana();
 
-      expect(servicio.autenticado()).toBe(true);
-      expect(recarga).not.toHaveBeenCalled();
-    });
+    expect(servicio.usuario()?.nombre).toBe('Ana María');
+    expect(recarga).not.toHaveBeenCalled();
+  });
 
-    // Un 401 con un token viejo no cierra la sesión nueva que otra pestaña guardó
-    it('cerrar no borra la sesión que otra pestaña guardó después', () => {
-      guardarSesion(vigente());
-      const servicio = TestBed.inject(SesionService);
-      const nueva: Sesion = { ...vigente(), token: 'jwt.nuevo' };
-      guardarSesion(nueva);
+  it('un cambio de otra clave no toca la sesión', () => {
+    guardarSesion(vigente());
+    const servicio = TestBed.inject(SesionService);
 
-      servicio.cerrar();
+    localStorage.removeItem(CLAVE_SESION);
+    window.dispatchEvent(new StorageEvent('storage', { key: 'sarao.tema' }));
 
-      expect(servicio.autenticado()).toBe(false);
-      expect(JSON.parse(localStorage.getItem(CLAVE_SESION)!).token).toBe('jwt.nuevo');
-    });
+    expect(servicio.autenticado()).toBe(true);
+    expect(recarga).not.toHaveBeenCalled();
+  });
+
+  // Un 401 con un token viejo no cierra la sesión nueva que otra pestaña guardó
+  it('cerrar no borra la sesión que otra pestaña guardó después', () => {
+    guardarSesion(vigente());
+    const servicio = TestBed.inject(SesionService);
+    const nueva: Sesion = { ...vigente(), token: 'jwt.nuevo' };
+    guardarSesion(nueva);
+
+    servicio.cerrar();
+
+    expect(servicio.autenticado()).toBe(false);
+    expect(JSON.parse(localStorage.getItem(CLAVE_SESION)!).token).toBe('jwt.nuevo');
   });
 });

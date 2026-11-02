@@ -30,8 +30,9 @@ export class SesionService {
 					this.sesion.set(leerSesion());
 					this.programarCierre();
 					// Otro usuario o sin sesión: la pantalla abierta muestra datos del
-					// anterior, y al recargar los guards deciden de nuevo
-					if (this.sesion()?.usuario.idUsuario !== antes) {
+					// anterior, y al recargar los guards deciden de nuevo. Sin sesión antes
+					// no hay datos de nadie: basta con el encabezado, sin perder lo escrito
+					if (antes !== undefined && this.sesion()?.usuario.idUsuario !== antes) {
 						this.recargar();
 					}
 				});
