@@ -1,6 +1,5 @@
 package com.sarao.eventos.service;
 
-import java.net.http.HttpClient;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -14,7 +13,6 @@ import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
-import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
@@ -27,7 +25,6 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class ConsultaDeClientes {
 
-	private static final Duration PLAZO_CONEXION = Duration.ofSeconds(1);
 	// La compra espera poco; los reportes traen listas y pueden tardar más sin frenar a nadie
 	private static final Duration PLAZO_RESPUESTA = Duration.ofSeconds(2);
 	private static final Duration PLAZO_DE_LISTAS = Duration.ofSeconds(5);
@@ -36,26 +33,16 @@ public class ConsultaDeClientes {
 
 	private final RestClient seguridad;
 	private final RestClient seguridadParaListas;
-	private final String claveServicio;
 
 	public ConsultaDeClientes(@Value("${eventos.seguridad-url}") String urlSeguridad,
 			@Value("${eventos.clave-servicio}") String claveServicio) {
-		this.seguridad = cliente(urlSeguridad, PLAZO_RESPUESTA);
-		this.seguridadParaListas = cliente(urlSeguridad, PLAZO_DE_LISTAS);
-		this.claveServicio = claveServicio;
-	}
-
-	private static RestClient cliente(String url, Duration plazo) {
-		var conexiones = HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1).connectTimeout(PLAZO_CONEXION).build();
-		var fabrica = new JdkClientHttpRequestFactory(conexiones);
-		fabrica.setReadTimeout(plazo);
-		return RestClient.builder().baseUrl(url).requestFactory(fabrica).build();
+		this.seguridad = ClienteInterno.crear(urlSeguridad, claveServicio, PLAZO_RESPUESTA);
+		this.seguridadParaListas = ClienteInterno.crear(urlSeguridad, claveServicio, PLAZO_DE_LISTAS);
 	}
 
 	public LocalDate fechaNacimiento(Long idCliente) {
 		try {
-			return seguridad.get().uri("/interno/usuarios/{id}/fecha-nacimiento", idCliente)
-					.header("X-Clave-Servicio", claveServicio).retrieve().body(FechaNacimiento.class).fechaNacimiento();
+			return seguridad.get().uri("/interno/usuarios/{id}/fecha-nacimiento", idCliente).retrieve().body(FechaNacimiento.class).fechaNacimiento();
 		} catch (RestClientException e) {
 			log.warn("No se pudo consultar la cuenta en Seguridad: {}", e.getMessage());
 			throw new ServicioNoDisponibleException();
@@ -65,8 +52,7 @@ public class ConsultaDeClientes {
 	// CU-07 RF-17: a quién mandar los correos de la compra
 	public Contacto contacto(Long idCliente) {
 		try {
-			return seguridad.get().uri("/interno/usuarios/{id}/contacto", idCliente)
-					.header("X-Clave-Servicio", claveServicio).retrieve().body(Contacto.class);
+			return seguridad.get().uri("/interno/usuarios/{id}/contacto", idCliente).retrieve().body(Contacto.class);
 		} catch (RestClientException e) {
 			log.warn("No se pudo consultar el contacto en Seguridad: {}", e.getMessage());
 			throw new ServicioNoDisponibleException();
@@ -83,8 +69,7 @@ public class ConsultaDeClientes {
 		try {
 			for (int desde = 0; desde < distintos.size(); desde += TANDA) {
 				List<Long> tanda = distintos.subList(desde, Math.min(desde + TANDA, distintos.size()));
-				Cuenta[] cuentas = seguridadParaListas.post().uri("/interno/usuarios/lote")
-						.header("X-Clave-Servicio", claveServicio).contentType(MediaType.APPLICATION_JSON)
+				Cuenta[] cuentas = seguridadParaListas.post().uri("/interno/usuarios/lote").contentType(MediaType.APPLICATION_JSON)
 						.body(Map.of("ids", tanda)).retrieve().body(Cuenta[].class);
 				if (cuentas != null) {
 					Arrays.stream(cuentas).forEach(cuenta -> todas.put(cuenta.idUsuario(), cuenta));
@@ -102,8 +87,7 @@ public class ConsultaDeClientes {
 		try {
 			Cuenta[] cuentas = seguridadParaListas.get().uri(uri -> uri.path("/interno/usuarios/clientes")
 					.queryParamIfPresent("desde", Optional.ofNullable(desde))
-					.queryParamIfPresent("hasta", Optional.ofNullable(hasta)).build())
-					.header("X-Clave-Servicio", claveServicio).retrieve().body(Cuenta[].class);
+					.queryParamIfPresent("hasta", Optional.ofNullable(hasta)).build()).retrieve().body(Cuenta[].class);
 			return cuentas == null ? List.of() : List.of(cuentas);
 		} catch (RestClientException e) {
 			log.warn("No se pudieron consultar los clientes en Seguridad: {}", e.getMessage());

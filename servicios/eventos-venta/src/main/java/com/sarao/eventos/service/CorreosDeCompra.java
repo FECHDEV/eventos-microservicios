@@ -1,12 +1,10 @@
 package com.sarao.eventos.service;
 
-import java.net.http.HttpClient;
 import java.time.Duration;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
-import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
@@ -25,24 +23,18 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class CorreosDeCompra {
 
-	private static final Duration PLAZO_CONEXION = Duration.ofSeconds(1);
 	private static final Duration PLAZO_RESPUESTA = Duration.ofSeconds(2);
 
 	private final ConsultaDeCompras consultaDeCompras;
 	private final ConsultaDeClientes consultaDeClientes;
 	private final RestClient notificaciones;
-	private final String claveServicio;
 
 	public CorreosDeCompra(ConsultaDeCompras consultaDeCompras, ConsultaDeClientes consultaDeClientes,
 			@Value("${eventos.notificaciones-url}") String urlNotificaciones,
 			@Value("${eventos.clave-servicio}") String claveServicio) {
 		this.consultaDeCompras = consultaDeCompras;
 		this.consultaDeClientes = consultaDeClientes;
-		var conexiones = HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1).connectTimeout(PLAZO_CONEXION).build();
-		var fabrica = new JdkClientHttpRequestFactory(conexiones);
-		fabrica.setReadTimeout(PLAZO_RESPUESTA);
-		this.notificaciones = RestClient.builder().baseUrl(urlNotificaciones).requestFactory(fabrica).build();
-		this.claveServicio = claveServicio;
+		this.notificaciones = ClienteInterno.crear(urlNotificaciones, claveServicio, PLAZO_RESPUESTA);
 	}
 
 	@Async
@@ -63,7 +55,7 @@ public class CorreosDeCompra {
 
 	private void pedir(String ruta, Object cuerpo) {
 		try {
-			notificaciones.post().uri(ruta).header("X-Clave-Servicio", claveServicio)
+			notificaciones.post().uri(ruta)
 					.contentType(MediaType.APPLICATION_JSON).body(cuerpo).retrieve().toBodilessEntity();
 		} catch (RestClientException e) {
 			log.error("No se pudo pedir el correo {}: {}", ruta, e.getClass().getSimpleName());

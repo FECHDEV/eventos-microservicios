@@ -1,11 +1,9 @@
 package com.sarao.eventos.service;
 
-import java.net.http.HttpClient;
 import java.time.Duration;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
-import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
@@ -19,24 +17,18 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class PedidoDeCorreoDeReporte {
 
-	private static final Duration PLAZO_CONEXION = Duration.ofSeconds(1);
 	private static final Duration PLAZO_RESPUESTA = Duration.ofSeconds(5);
 
 	private final RestClient notificaciones;
-	private final String claveServicio;
 
 	public PedidoDeCorreoDeReporte(@Value("${eventos.notificaciones-url}") String urlNotificaciones,
 			@Value("${eventos.clave-servicio}") String claveServicio) {
-		var conexiones = HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1).connectTimeout(PLAZO_CONEXION).build();
-		var fabrica = new JdkClientHttpRequestFactory(conexiones);
-		fabrica.setReadTimeout(PLAZO_RESPUESTA);
-		this.notificaciones = RestClient.builder().baseUrl(urlNotificaciones).requestFactory(fabrica).build();
-		this.claveServicio = claveServicio;
+		this.notificaciones = ClienteInterno.crear(urlNotificaciones, claveServicio, PLAZO_RESPUESTA);
 	}
 
 	public void pedir(Object correo) {
 		try {
-			notificaciones.post().uri("/interno/correos/reporte").header("X-Clave-Servicio", claveServicio)
+			notificaciones.post().uri("/interno/correos/reporte")
 					.contentType(MediaType.APPLICATION_JSON).body(correo).retrieve().toBodilessEntity();
 		} catch (RestClientException e) {
 			// Sin el contenido: lleva los datos del reporte
