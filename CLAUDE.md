@@ -32,8 +32,8 @@ las decisiones técnicas anteriores del mismo archivo.
 | Servicio | Casos de uso | Base | Tablas |
 |---|---|---|---|
 | Seguridad | CU-01 a 04, CU-09 | `seguridad_db` | `usuario`, `recuperacion_contrasena` |
-| Eventos y Venta | CU-05, 06, 08, 10 a 12, 14, 15 | `eventos_db` | `evento`, `tipo_entrada`, `reserva`, `entrada`, `acceso`, `reporte`, `visita_pagina` |
-| Pagos | CU-07, CU-13 | `pagos_db` | `pago` |
+| Eventos y Venta | CU-05, 06, 08, 10 a 15 | `eventos_db` | `evento`, `tipo_entrada`, `reserva`, `entrada`, `acceso`, `reporte`, `visita_pagina` |
+| Pagos | CU-07 | `pagos_db` | `pago` |
 | Notificaciones | Correo (transversal) | Ninguna | Ninguna |
 | Gateway | Entrada única `/api` | Ninguna | Ninguna |
 

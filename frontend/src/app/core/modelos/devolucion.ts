@@ -23,7 +23,8 @@ export interface EntradaParaDevolucion {
 export interface CompraParaDevolucion {
 	idReserva: number;
 	cliente: string;
-	correo: string;
+	// Sin correo si Seguridad no devolvió la cuenta: la compra se puede devolver igual
+	correo: string | null;
 	telefono: string | null;
 	tipoEntrada: string;
 	cantidad: number;

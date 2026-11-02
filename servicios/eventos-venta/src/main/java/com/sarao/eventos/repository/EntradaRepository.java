@@ -83,6 +83,60 @@ public interface EntradaRepository extends JpaRepository<Entrada, Long> {
 			""")
 	List<ComprasDelCliente> comprasPorCliente(@Param("idEvento") Long idEvento);
 
+	// CU-13 RF-2: las activas de cada evento cancelado, que son las pendientes de devolución
+	@Query("""
+			select new com.sarao.eventos.repository.PendientesDelEvento(t.evento.idEvento, count(e))
+			from Entrada e join e.tipoEntrada t
+			where t.evento.estado = com.sarao.eventos.entity.EstadoEvento.CANCELADO
+			  and e.estado = com.sarao.eventos.entity.EstadoEntrada.ACTIVA
+			group by t.evento.idEvento
+			""")
+	List<PendientesDelEvento> pendientesDeLosCancelados();
+
+	// CU-13 RF-4 a RF-6: todas las entradas del evento, por compra, con su reserva. Se traen también las usadas para
+	// numerar cada entrada dentro de su compra
+	@Query("""
+			select e from Entrada e join fetch e.reserva r join fetch e.tipoEntrada t
+			where t.evento.idEvento = :idEvento
+			order by r.idReserva, e.idEntrada
+			""")
+	List<Entrada> delEventoConSuCompra(@Param("idEvento") Long idEvento);
+
+	// CU-13: el evento de una compra con entradas; una reserva sin entradas no es una compra
+	@Query("select distinct e.tipoEntrada.evento.idEvento from Entrada e where e.reserva.idReserva = :idReserva")
+	Optional<Long> idEventoDeLaCompra(@Param("idReserva") Long idReserva);
+
+	@Query("select e.tipoEntrada.evento.idEvento from Entrada e where e.idEntrada = :idEntrada")
+	Optional<Long> idEventoDeLaEntrada(@Param("idEntrada") Long idEntrada);
+
+	// CU-13 RF-11 y RF-12: una compra sin activas, ¿ya se devolvió o solo tiene usadas?
+	@Query("""
+			select count(e) > 0 from Entrada e
+			where e.reserva.idReserva = :idReserva
+			  and e.estado = com.sarao.eventos.entity.EstadoEntrada.DEVUELTA
+			""")
+	boolean hayDevueltasEnLaCompra(@Param("idReserva") Long idReserva);
+
+	@Query("select e.estado from Entrada e where e.idEntrada = :idEntrada")
+	Optional<EstadoEntrada> estadoDe(@Param("idEntrada") Long idEntrada);
+
+	// CU-13 RF-9: cumple el papel de Entrada.marcarDevuelta() para toda la compra. Condicionada a ACTIVA: devuelve 0 si
+	// otra petición ya la registró (FA-02, RF-13)
+	@Modifying
+	@Query("""
+			update Entrada e set e.estado = com.sarao.eventos.entity.EstadoEntrada.DEVUELTA
+			where e.estado = com.sarao.eventos.entity.EstadoEntrada.ACTIVA and e.reserva.idReserva = :idReserva
+			""")
+	int devolverLasActivasDeLaCompra(@Param("idReserva") Long idReserva);
+
+	// CU-13 RF-10: una sola entrada, con la misma condición
+	@Modifying
+	@Query("""
+			update Entrada e set e.estado = com.sarao.eventos.entity.EstadoEntrada.DEVUELTA
+			where e.idEntrada = :idEntrada and e.estado = com.sarao.eventos.entity.EstadoEntrada.ACTIVA
+			""")
+	int devolver(@Param("idEntrada") Long idEntrada);
+
 	// CU-08 RF-8: para numerar una entrada dentro de su compra
 	@Query("select e.idEntrada from Entrada e where e.reserva.idReserva = :idReserva order by e.idEntrada")
 	List<Long> idsDeLaCompra(@Param("idReserva") Long idReserva);

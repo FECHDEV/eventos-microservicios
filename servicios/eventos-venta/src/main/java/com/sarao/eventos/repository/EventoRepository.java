@@ -64,4 +64,7 @@ public interface EventoRepository extends JpaRepository<Evento, Long> {
 
 	// CU-14 RF-2: los eventos del filtro. Un borrador no vende
 	List<Evento> findByEstadoNotOrderByFechaDescHoraInicioDesc(EstadoEvento estado);
+
+	// CU-13 RF-2: los cancelados, del más reciente al más antiguo
+	List<Evento> findByEstadoOrderByFechaDescHoraInicioDesc(EstadoEvento estado);
 }

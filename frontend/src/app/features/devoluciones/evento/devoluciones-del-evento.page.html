@@ -113,7 +113,9 @@
 <ng-template #datosDeLaCompra let-compra let-id="id">
   <h3 [id]="id">{{ compra.cliente }}</h3>
   <p class="contacto">
-    <a [href]="'mailto:' + compra.correo">{{ compra.correo }}</a>
+    @if (compra.correo) {
+      <a [href]="'mailto:' + compra.correo">{{ compra.correo }}</a>
+    }
     @if (compra.telefono) {
       <a class="telefono" [href]="'tel:' + compra.telefono">{{ compra.telefono }}</a>
     }
