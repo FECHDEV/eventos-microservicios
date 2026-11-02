@@ -31,4 +31,15 @@ Spec: `docs/criterios-aceptacion/CU-13.md`. Las pantallas ya vinieron con HU-09 
   siguen PAGADO; el reporte de ingresos da 150 bruto, 150 devuelto y 0 neto; Cliente recibe 403. Sin
   errores en el log.
 - **Prueba manual en el navegador:** pasada por el usuario.
-- **Pendiente:** `/code-review`, `/security-review` y CI, que necesitan el commit.
+- **CI:** en verde.
+- **`/security-review`:** sin vulnerabilidades.
+- **`/code-review`, corregidos:** sin Seguridad, las compras se ven y se registran igual, sin los
+  datos del cliente, y la pantalla no arma un `mailto:` sin correo; la prueba cambia solo sus propias
+  filas.
+- **`/code-review`, no corregido:**
+  - **El monto de una compra devuelta en parte es el total:** así lo decidió el sistema base, que
+    muestra al lado el precio por entrada, lo que se devuelve por cada una.
+  - **El listado no tiene transacción:** un registro que se cruza solo puede cambiar lo que se ve un
+    instante; el evento cancelado no cambia más.
+  - **Consultas que se podrían juntar** (eventos con su cuenta, una entrada leída tres veces): son
+    del sistema base y con pocos datos no pesan.

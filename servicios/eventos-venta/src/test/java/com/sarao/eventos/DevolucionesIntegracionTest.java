@@ -98,8 +98,9 @@ class DevolucionesIntegracionTest {
 		compraDeAna = comprar(ANA, 3, 41L);
 		compraDeLuis = comprar(LUIS, 1, 42L);
 		// La primera entrada de Ana ya se usó; el evento se cancela
-		jdbc.update("UPDATE entrada SET estado = 'UTILIZADA' WHERE id_entrada = (SELECT MIN(id_entrada) FROM entrada)");
-		jdbc.update("UPDATE evento SET estado = 'CANCELADO', venta_abierta = FALSE");
+		jdbc.update("UPDATE entrada SET estado = 'UTILIZADA' WHERE id_entrada = "
+				+ "(SELECT MIN(id_entrada) FROM entrada WHERE id_reserva = ?)", compraDeAna);
+		jdbc.update("UPDATE evento SET estado = 'CANCELADO', venta_abierta = FALSE WHERE id_evento = ?", idEvento);
 	}
 
 	@AfterEach
@@ -190,7 +191,7 @@ class DevolucionesIntegracionTest {
 	void unEventoInexistenteONoCanceladoSeRechaza() {
 		tieneCodigo(mvc.get().uri("/api/devoluciones/999999").with(admin).exchange(), HttpStatus.NOT_FOUND,
 				"EVENTO_NO_ENCONTRADO");
-		jdbc.update("UPDATE evento SET estado = 'ACTIVO'");
+		jdbc.update("UPDATE evento SET estado = 'ACTIVO' WHERE id_evento = ?", idEvento);
 		tieneCodigo(mvc.get().uri("/api/devoluciones/" + idEvento).with(admin).exchange(), HttpStatus.CONFLICT,
 				"EVENTO_NO_CANCELADO");
 		tieneCodigo(devolverCompra(compraDeAna), HttpStatus.CONFLICT, "EVENTO_NO_CANCELADO");
@@ -228,6 +229,19 @@ class DevolucionesIntegracionTest {
 
 		jdbc.update("UPDATE entrada SET estado = 'UTILIZADA' WHERE id_reserva = ?", compraDeLuis);
 		tieneCodigo(devolverCompra(compraDeLuis), HttpStatus.CONFLICT, "ENTRADA_NO_DEVOLVIBLE");
+	}
+
+	// Sin Seguridad, las compras se ven igual, sin los datos del cliente
+	@Test
+	void sinSeguridadLasComprasSeVenIgual() {
+		org.mockito.BDDMockito.willThrow(new com.sarao.eventos.exception.ServicioNoDisponibleException())
+				.given(consultaDeClientes).cuentas(any());
+
+		MvcTestResult evento = mvc.get().uri("/api/devoluciones/" + idEvento).with(admin).exchange();
+
+		assertThat(evento).hasStatusOk();
+		assertThat(evento).bodyJson().extractingPath("$.pendientes.length()").isEqualTo(2);
+		assertThat(evento).bodyJson().extractingPath("$.pendientes[0].correo").isNull();
 	}
 
 	// RF-13: dos Administradores, la misma compra, a la vez: se registra una sola vez

@@ -20,6 +20,7 @@ import com.sarao.eventos.exception.EntradaNoEncontradaException;
 import com.sarao.eventos.exception.EntradaYaDevueltaException;
 import com.sarao.eventos.exception.EventoNoCanceladoException;
 import com.sarao.eventos.exception.EventoNoEncontradoException;
+import com.sarao.eventos.exception.ServicioNoDisponibleException;
 import com.sarao.eventos.repository.EntradaRepository;
 import com.sarao.eventos.repository.EventoRepository;
 import com.sarao.eventos.repository.PendientesDelEvento;
@@ -57,8 +58,7 @@ public class GestionDevolucionesService {
 		for (Entrada entrada : entradaRepository.delEventoConSuCompra(idEvento)) {
 			porCompra.computeIfAbsent(entrada.getReserva().getIdReserva(), id -> new ArrayList<>()).add(entrada);
 		}
-		Map<Long, Cuenta> clientes = consultaDeClientes.cuentas(porCompra.values().stream()
-				.map(deLaCompra -> deLaCompra.get(0).getIdCliente()).collect(Collectors.toSet()));
+		Map<Long, Cuenta> clientes = clientes(porCompra);
 		List<CompraParaDevolucion> pendientes = new ArrayList<>();
 		List<CompraParaDevolucion> devueltas = new ArrayList<>();
 		for (List<Entrada> deLaCompra : porCompra.values()) {
@@ -67,6 +67,16 @@ public class GestionDevolucionesService {
 			CompraParaDevolucion.de(deLaCompra, cliente, EstadoEntrada.DEVUELTA).ifPresent(devueltas::add);
 		}
 		return new DevolucionesDelEvento(evento, pendientes, devueltas);
+	}
+
+	// Los datos de contacto ayudan a devolver el dinero, pero sin Seguridad las compras se ven y se registran igual
+	private Map<Long, Cuenta> clientes(Map<Long, List<Entrada>> porCompra) {
+		try {
+			return consultaDeClientes.cuentas(porCompra.values().stream()
+					.map(deLaCompra -> deLaCompra.get(0).getIdCliente()).collect(Collectors.toSet()));
+		} catch (ServicioNoDisponibleException error) {
+			return Map.of();
+		}
 	}
 
 	// RF-9. Con el evento bloqueado y en READ_COMMITTED: dos registros de la misma compra se serializan y el segundo
