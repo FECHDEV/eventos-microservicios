@@ -28,6 +28,10 @@ import { idDeLaUrl } from '../../shared/navegacion/id-de-la-url';
 // ver su código; mientras tanto ese código no se reenvía
 const TIEMPO_EN_PANTALLA_MS = 5000;
 
+// Tras un error del servidor o de la red, la cámara espera esto antes de
+// reintentar el mismo código: sin pausa lo mandaría en cada cuadro
+const PAUSA_TRAS_UN_ERROR_MS = 2000;
+
 // El largo de la columna del código: ninguna entrada tiene uno más largo
 const LARGO_MAXIMO_DEL_CODIGO = 255;
 
@@ -96,6 +100,7 @@ export class ValidarEntradasPage {
 	protected readonly procesando = signal(false);
 	private numero = 0;
 	private retiro: ReturnType<typeof setTimeout> | undefined;
+	private fallido: { codigo: string; hasta: number } | null = null;
 
 	private readonly escrito = signal<CodigoEscrito>({ codigo: '' });
 	protected readonly formulario = form(
@@ -125,10 +130,13 @@ export class ValidarEntradasPage {
 	// RF-13 y RF-15: la cámara emite en cada cuadro que ve el QR. El código cuyo
 	// resultado está en pantalla no se reenvía: solo alarga el tiempo del
 	// resultado. Mientras hay una petición, validar descarta lo que llega; un
-	// error no deja resultado, así que el mismo código se reintenta
+	// error no deja resultado, así que el mismo código se reintenta tras una pausa
 	protected async leer(codigo: string): Promise<void> {
 		if (codigo === this.resultado()?.codigo) {
 			this.retirarDespues();
+			return;
+		}
+		if (codigo === this.fallido?.codigo && Date.now() < this.fallido.hasta) {
 			return;
 		}
 		await this.validar(codigo);
@@ -174,6 +182,7 @@ export class ValidarEntradasPage {
 		} catch (error: unknown) {
 			const problema = comoError(error);
 			this.resultado.set(null);
+			this.fallido = { codigo, hasta: Date.now() + PAUSA_TRAS_UN_ERROR_MS };
 			// RF-4: el evento dejó de admitir validaciones o ya no existe; se vuelve a la lista, al día
 			if (problema.codigo !== undefined && EVENTO_PERDIDO.includes(problema.codigo)) {
 				this.recurso.reload();
