@@ -2,6 +2,9 @@
 #   cp .env.example .env    (y completar los valores)
 #   docker compose up -d --build
 # El sitio queda en http://localhost (o el puerto de SARAO_PUERTO).
+#
+# Prueba de punta a punta, con datos y claves temporales que borra al terminar (no toca el .env):
+#   bash scripts/prueba-completa.sh
 
 services:
   base:
