@@ -187,6 +187,25 @@ class InicioSesionIntegracionTest {
 				.header("X-Usuario-Rol", "CLIENTE").exchange()).hasStatus(HttpStatus.FORBIDDEN);
 	}
 
+	// CU-07 RF-17: a quién mandar los correos de una compra, y solo a otro servicio
+	@Test
+	void elContactoSoloSeLoDaAOtroServicio() {
+		Long id = usuarioRepository.findByCorreo("ana@mail.com").orElseThrow().getIdUsuario();
+		String ruta = "/interno/usuarios/" + id + "/contacto";
+
+		MvcTestResult contacto = mvc.get().uri(ruta).header("X-Clave-Servicio", "clave-de-pruebas").exchange();
+		assertThat(contacto).hasStatus(HttpStatus.OK);
+		assertThat(contacto).bodyJson().extractingPath("$.correo").isEqualTo("ana@mail.com");
+		assertThat(contacto).bodyJson().extractingPath("$.nombre")
+				.isEqualTo(usuarioRepository.findById(id).orElseThrow().getNombre());
+
+		assertThat(mvc.get().uri("/interno/usuarios/999999/contacto").header("X-Clave-Servicio", "clave-de-pruebas")
+				.exchange()).hasStatus(HttpStatus.NOT_FOUND);
+		assertThat(mvc.get().uri(ruta).exchange()).hasStatus(HttpStatus.UNAUTHORIZED);
+		assertThat(mvc.get().uri(ruta).header("X-Clave-Servicio", "clave-de-pruebas").header("X-Usuario-Id", id.toString())
+				.header("X-Usuario-Rol", "CLIENTE").exchange()).hasStatus(HttpStatus.FORBIDDEN);
+	}
+
 	@Test
 	void encabezadosDeUsuarioSinClaveDeServicioNoAutentican() {
 		assertThat(mvc.get().uri("/api/cuenta").header("X-Usuario-Id", "1").header("X-Usuario-Rol", "ADMINISTRADOR")

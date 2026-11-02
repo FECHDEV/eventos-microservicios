@@ -41,7 +41,6 @@ const COBRO: Pago = {
   urlPasarela: null,
   segundosRestantes: 581,
   requiereDevolucion: false,
-  entradas: 0,
   simulador: true,
 };
 
@@ -361,11 +360,11 @@ describe('ReservaPage', () => {
       await asentar();
       expect(reservas.consultarPago).toHaveBeenCalledTimes(2);
 
-      reservas.consultarPago.mockResolvedValue({ ...COBRO, estado: 'PAGADO', estadoReserva: 'CONFIRMADA', entradas: 2 });
+      reservas.consultarPago.mockResolvedValue({ ...COBRO, estado: 'PAGADO', estadoReserva: 'CONFIRMADA' });
       await pasar(3);
       await asentar();
 
-      expect(estado()).toContain('Compra confirmada. Te enviamos tus 2 entradas por correo.');
+      expect(estado()).toContain('Compra confirmada. Te enviamos tus 3 entradas por correo.');
       expect(cuenta()).toBe('');
       expect(vi.getTimerCount()).toBeLessThan(timersMientrasEspera);
       await pasar(9);
@@ -385,17 +384,45 @@ describe('ReservaPage', () => {
       expect(reservas.consultarPago).toHaveBeenCalledTimes(3);
     });
 
-    it('al vencer la reserva deja de consultar', async () => {
+    // FA-03: vencida, sigue preguntando más espaciado, por si el pago llega tarde
+    it('al vencer la reserva consulta cada 15 segundos y muestra un pago tardío', async () => {
       await abrirConCobro();
+      reservas.consultarPago.mockResolvedValue({ ...COBRO, estado: 'EXPIRADO', estadoReserva: 'EXPIRADA' });
 
       await pasar(581);
       await asentar();
       const consultas = reservas.consultarPago.mock.calls.length;
+      expect(estado()).toContain('La reserva venció');
+      expect(boton('Simular pago')).toBeDefined();
+
       await pasar(9);
+      await asentar();
+      expect(reservas.consultarPago).toHaveBeenCalledTimes(consultas);
+
+      reservas.consultarPago.mockResolvedValue({ ...COBRO, estado: 'PAGADO', estadoReserva: 'CONFIRMADA' });
+      await pasar(6);
+      await asentar();
+      expect(reservas.consultarPago).toHaveBeenCalledTimes(consultas + 1);
+      expect(estado()).toContain('Compra confirmada. Te enviamos tus 3 entradas por correo.');
+      expect(estado()).not.toContain('La reserva venció');
+
+      await pasar(30);
+      await asentar();
+      expect(reservas.consultarPago).toHaveBeenCalledTimes(consultas + 1);
+    });
+
+    it('vencida con el pago con error deja de consultar', async () => {
+      await abrirConCobro();
+      reservas.consultarPago.mockResolvedValue({ ...COBRO, estado: 'ERROR', estadoReserva: 'EXPIRADA' });
+      await pasar(581);
+      await asentar();
+      const consultas = reservas.consultarPago.mock.calls.length;
+
+      await pasar(30);
       await asentar();
 
       expect(reservas.consultarPago).toHaveBeenCalledTimes(consultas);
-      expect(estado()).toContain('La reserva venció');
+      expect(boton('Simular pago')).toBeUndefined();
     });
 
     // Un pago que llega en el último segundo, después de la última vuelta: al vencer se pregunta una vez más
@@ -403,7 +430,7 @@ describe('ReservaPage', () => {
       await abrirConCobro();
       await pasar(580);
       await asentar();
-      reservas.consultarPago.mockResolvedValue({ ...COBRO, estado: 'PAGADO', estadoReserva: 'CONFIRMADA', entradas: 3 });
+      reservas.consultarPago.mockResolvedValue({ ...COBRO, estado: 'PAGADO', estadoReserva: 'CONFIRMADA' });
 
       await pasar(1);
       await asentar();
@@ -431,7 +458,7 @@ describe('ReservaPage', () => {
 
     it('al abrir una reserva ya pagada muestra la confirmación y no ofrece pagar', async () => {
       await abrir('/reservas/40', { ...RESERVA, estado: 'CONFIRMADA', segundosRestantes: 0 }, (falso) =>
-        falso.consultarPago.mockResolvedValue({ ...COBRO, estado: 'PAGADO', estadoReserva: 'CONFIRMADA', entradas: 3 }),
+        falso.consultarPago.mockResolvedValue({ ...COBRO, estado: 'PAGADO', estadoReserva: 'CONFIRMADA' }),
       );
       await asentar();
 

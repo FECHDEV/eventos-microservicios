@@ -86,6 +86,10 @@ public class AutenticacionService {
 		return contrasena.getBytes(StandardCharsets.UTF_8).length <= MAXIMO_BYTES_CONTRASENA;
 	}
 
+	public Optional<Usuario> usuario(Long idUsuario) {
+		return usuarioRepository.findById(idUsuario);
+	}
+
 	public Optional<Usuario> usuarioActivo(Long idUsuario) {
 		return usuarioRepository.findById(idUsuario).filter(Usuario::estaActiva);
 	}

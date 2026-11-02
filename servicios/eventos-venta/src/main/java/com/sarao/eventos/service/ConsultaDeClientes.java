@@ -43,6 +43,20 @@ public class ConsultaDeClientes {
 		}
 	}
 
+	// CU-07 RF-17: a quién mandar los correos de la compra
+	public Contacto contacto(Long idCliente) {
+		try {
+			return seguridad.get().uri("/interno/usuarios/{id}/contacto", idCliente)
+					.header("X-Clave-Servicio", claveServicio).retrieve().body(Contacto.class);
+		} catch (RestClientException e) {
+			log.warn("No se pudo consultar el contacto en Seguridad: {}", e.getMessage());
+			throw new ServicioNoDisponibleException();
+		}
+	}
+
+	public record Contacto(String correo, String nombre) {
+	}
+
 	private record FechaNacimiento(LocalDate fechaNacimiento) {
 	}
 }

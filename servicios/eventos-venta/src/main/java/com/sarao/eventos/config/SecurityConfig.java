@@ -41,6 +41,8 @@ public class SecurityConfig {
 						.requestMatchers("/api/reservas/**").hasRole("CLIENTE")
 						// CU-08: sus entradas las consulta el Cliente, y solo las suyas (ConsultaDeEntradas)
 						.requestMatchers("/api/entradas/**").hasRole("CLIENTE")
+						// Solo otros servicios, con la clave y sin usuario: el gateway no publica /interno
+						.requestMatchers("/interno/**").hasRole("SERVICIO")
 						.anyRequest().denyAll())
 				// El 401 y el 403 pasan por ManejadorErrores para salir con el mismo formato que el resto de la API
 				.exceptionHandling(errores -> errores

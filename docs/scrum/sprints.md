@@ -29,10 +29,16 @@ con 232 pruebas, gateway con 8 y frontend con 900.
 
 **Pendientes para las próximas historias** (de las revisiones del sprint):
 
-- **HU-18:** al vencer la reserva, la pantalla deja de consultar el pago y no muestra un pago tardío.
+- **HU-18 (resuelto):** al vencer la reserva, la pantalla deja de consultar el pago y no muestra un
+  pago tardío.
 - **HU-19:** el lector de QR reintenta sin pausa tras un error del servidor.
 - **HU-22:** en el VPS, `EVENTOS_SITIO_URL` con el dominio real y `EVENTOS_CORREO_PROVEEDOR=smtp`:
   sin ellos, los enlaces apuntan a localhost o el simulador queda activo sin avisar.
+- **HU-22:** en el VPS, `EVENTOS_PAGO_PROVEEDOR=libelula`: vacío deja el simulador, y cualquier
+  Cliente podría marcar su pago como hecho. Pagos lo avisa en el log al arrancar.
+- **Adaptador de Libélula:** con otro proveedor que el simulador, Pagos no arranca hasta que exista
+  su adaptador. La tarea de cada minuto consulta al proveedor por cada cobro abandonado durante 24
+  horas: medir su costo con el proveedor real.
 - **HU-22:** límite de frecuencia en nginx para las rutas públicas de escritura (`/api/visitas`).
 - **HU-22:** healthcheck de Seguridad en compose, y revisar la IP real según lo que quede delante
   de nginx. Sin Caddy, un cliente por IPv6 llega con IP interna y puede inventar su IP.
@@ -55,3 +61,16 @@ concurrencia contra MySQL, y consulta de entradas. Eventos y Venta con 325 prueb
 
 **Límite conocido:** la compra llega hasta la reserva. El aviso de la pantalla de reserva sigue
 hasta HU-18, y las pantallas de entradas se probaron sin entradas reales, porque las emite el pago.
+
+---
+
+## Sprint 3 (17/11 a 25/11)
+
+**Objetivo:** el Cliente paga su reserva con QR y recibe sus entradas por correo, con los correos
+desde un servicio propio de Notificaciones y el pago desde un servicio propio de Pagos.
+
+**Backlog:** HU-17 y HU-18.
+
+**Avance:** HU-17 hecha el 31/10/2026, con el servidor de correo propio en Docker. HU-18 en curso:
+pago, verificación, pago tardío, entradas y correos con el simulador. El adaptador de Libélula va en
+una rama propia, porque necesita una librería para leer el QR.

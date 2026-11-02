@@ -35,7 +35,6 @@ const PAGO: Pago = {
   urlPasarela: null,
   segundosRestantes: 581,
   requiereDevolucion: false,
-  entradas: 0,
   simulador: true,
 };
 
@@ -114,9 +113,9 @@ describe('ReservasService', () => {
   it('consultar el pago pregunta al backend cómo va', async () => {
     const respuesta = servicio.consultarPago(40);
 
-    http.expectOne({ method: 'GET', url: '/api/reservas/40/pago' }).flush({ ...PAGO, estado: 'PAGADO', entradas: 3 });
+    http.expectOne({ method: 'GET', url: '/api/reservas/40/pago' }).flush({ ...PAGO, estado: 'PAGADO' });
 
-    await expect(respuesta).resolves.toMatchObject({ estado: 'PAGADO', entradas: 3 });
+    await expect(respuesta).resolves.toMatchObject({ estado: 'PAGADO' });
   });
 
   it('simular manda el resultado elegido', async () => {

@@ -92,21 +92,22 @@
           <a [href]="cobro.urlPasarela" target="_blank" rel="noopener noreferrer">Abrir la página de pago</a>
         }
         <p class="ayuda">Cuando llegue el pago, esta pantalla se actualiza sola.</p>
-
-        @if (cobro.simulador) {
-          <div class="pruebas" role="group" aria-labelledby="titulo-pruebas">
-            <p id="titulo-pruebas" class="titulo-pruebas">Herramienta de pruebas</p>
-            <div class="acciones">
-              <button type="button" class="secundario" [disabled]="simulando()" (click)="simular('PAGADO')">
-                Simular pago
-              </button>
-              <button type="button" class="secundario" [disabled]="simulando()" (click)="simular('ERROR')">
-                Simular error
-              </button>
-            </div>
-          </div>
-        }
       </section>
+    }
+
+    <!-- También con la reserva vencida: así se prueba un pago tardío -->
+    @if ((esperandoPago() || esperandoPagoTardio()) && pago()?.simulador) {
+      <div class="pruebas" role="group" aria-labelledby="titulo-pruebas">
+        <p id="titulo-pruebas" class="titulo-pruebas">Herramienta de pruebas</p>
+        <div class="acciones">
+          <button type="button" class="secundario" [disabled]="simulando()" (click)="simular('PAGADO')">
+            Simular pago
+          </button>
+          <button type="button" class="secundario" [disabled]="simulando()" (click)="simular('ERROR')">
+            Simular error
+          </button>
+        </div>
+      </div>
     }
   </section>
 } @else if (noEncontrada()) {

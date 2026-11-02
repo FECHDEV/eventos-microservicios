@@ -10,7 +10,8 @@ export type EstadoPago = 'PENDIENTE' | 'PAGADO' | 'EXPIRADO' | 'ERROR';
 export type ResultadoSimulado = 'PAGADO' | 'ERROR';
 
 // El cobro de una reserva y cómo va (PagoResponse). codigoQr es el texto del QR
-// de cobro; simulador avisa que la pantalla puede mostrar los botones de prueba
+// de cobro; simulador avisa que la pantalla puede mostrar los botones de prueba.
+// Las entradas de una compra confirmada son la cantidad de la reserva
 export interface Pago {
 	idReserva: number;
 	estado: EstadoPago;
@@ -19,6 +20,5 @@ export interface Pago {
 	urlPasarela: string | null;
 	segundosRestantes: number;
 	requiereDevolucion: boolean;
-	entradas: number;
 	simulador: boolean;
 }

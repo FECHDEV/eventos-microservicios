@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.sarao.seguridad.dto.ContactoResponse;
 import com.sarao.seguridad.dto.FechaNacimientoResponse;
 import com.sarao.seguridad.dto.IdentidadResponse;
 import com.sarao.seguridad.dto.SesionInternaRequest;
@@ -34,5 +35,11 @@ public class InternoController {
 	public ResponseEntity<FechaNacimientoResponse> fechaNacimiento(@PathVariable Long idUsuario) {
 		return ResponseEntity.of(autenticacionService.usuarioActivo(idUsuario).map(Usuario::getFechaNacimiento)
 				.map(FechaNacimientoResponse::new));
+	}
+
+	// CU-07 RF-17: los correos de una compra. También de una cuenta desactivada: un pago tardío pudo llegar después
+	@GetMapping("/usuarios/{idUsuario}/contacto")
+	public ResponseEntity<ContactoResponse> contacto(@PathVariable Long idUsuario) {
+		return ResponseEntity.of(autenticacionService.usuario(idUsuario).map(ContactoResponse::from));
 	}
 }

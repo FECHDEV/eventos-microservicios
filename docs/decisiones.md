@@ -69,6 +69,27 @@ gateway y tres bases. El reparto de casos de uso y tablas está en `CLAUDE.md`.
 - **Tareas programadas:** `CierreAutomaticoDeVenta` va a Eventos y Venta;
   `ConciliacionAutomaticaDePagos`, a Pagos.
 
+Al implementarlo en HU-18 (02/11/2026) se sumaron estas reglas técnicas:
+
+- **Eventos y Venta decide la compra** con los bloqueos de CU-06 (evento,
+  reserva, tipo): confirma, vuelve a descontar en un pago tardío o responde
+  `SIN_CUPO` sin cambiar nada. Una reserva ya confirmada responde `CONFIRMADA` sin
+  emitir otras entradas.
+- **Pagos bloquea su pago mientras pide la confirmación.** Dos verificaciones a la
+  vez no reciben respuestas distintas, y la primera no marca para devolución una
+  compra que la segunda confirmó. Es una fila de otra base: no frena las reservas.
+- **Una confirmación sin respuesta queda pendiente** (`pago.confirmacion_pendiente`)
+  y la tarea de cada minuto la repite, sin ventana de 24 horas: una compra cobrada
+  no se pierde.
+- **Un error del sistema de pago** se registra primero en Pagos; después se pide la
+  liberación. Si esa llamada falla, la reserva se libera sola al vencer.
+- **`pago` copia de la reserva lo que necesita:** `id_usuario` (el dueño, sin
+  llamar a Eventos y Venta en cada consulta) y `fecha_expiracion` (para EXPIRADO y
+  la ventana de la tarea). `id_reserva` sigue UNIQUE, sin llave foránea.
+- **El pago de otro Cliente** responde `PAGO_NO_ENCONTRADO`, igual que una reserva
+  sin cobro: Pagos no pregunta a Eventos y Venta para distinguirlos, y no revela
+  nada.
+
 ### Sesión
 
 Decidido de nuevo el 30/10/2026, en lugar de validar la firma en el gateway: solo
