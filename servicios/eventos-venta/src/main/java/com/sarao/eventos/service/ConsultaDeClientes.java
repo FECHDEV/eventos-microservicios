@@ -6,12 +6,11 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -29,18 +28,28 @@ import lombok.extern.slf4j.Slf4j;
 public class ConsultaDeClientes {
 
 	private static final Duration PLAZO_CONEXION = Duration.ofSeconds(1);
-	private static final Duration PLAZO_RESPUESTA = Duration.ofSeconds(5);
+	// La compra espera poco; los reportes traen listas y pueden tardar más sin frenar a nadie
+	private static final Duration PLAZO_RESPUESTA = Duration.ofSeconds(2);
+	private static final Duration PLAZO_DE_LISTAS = Duration.ofSeconds(5);
+	// Lo que admite /interno/usuarios/lote por pedido
+	private static final int TANDA = 1000;
 
 	private final RestClient seguridad;
+	private final RestClient seguridadParaListas;
 	private final String claveServicio;
 
 	public ConsultaDeClientes(@Value("${eventos.seguridad-url}") String urlSeguridad,
 			@Value("${eventos.clave-servicio}") String claveServicio) {
+		this.seguridad = cliente(urlSeguridad, PLAZO_RESPUESTA);
+		this.seguridadParaListas = cliente(urlSeguridad, PLAZO_DE_LISTAS);
+		this.claveServicio = claveServicio;
+	}
+
+	private static RestClient cliente(String url, Duration plazo) {
 		var conexiones = HttpClient.newBuilder().version(HttpClient.Version.HTTP_1_1).connectTimeout(PLAZO_CONEXION).build();
 		var fabrica = new JdkClientHttpRequestFactory(conexiones);
-		fabrica.setReadTimeout(PLAZO_RESPUESTA);
-		this.seguridad = RestClient.builder().baseUrl(urlSeguridad).requestFactory(fabrica).build();
-		this.claveServicio = claveServicio;
+		fabrica.setReadTimeout(plazo);
+		return RestClient.builder().baseUrl(url).requestFactory(fabrica).build();
 	}
 
 	public LocalDate fechaNacimiento(Long idCliente) {
@@ -67,17 +76,21 @@ public class ConsultaDeClientes {
 	public record Contacto(String correo, String nombre) {
 	}
 
-	// CU-14: las cuentas de unos ids, en una sola llamada. Una que no existe no viene
+	// CU-14: las cuentas de unos ids, por tandas de mil. Una que no existe no viene
 	public Map<Long, Cuenta> cuentas(Collection<Long> ids) {
-		if (ids.isEmpty()) {
-			return Map.of();
-		}
+		List<Long> distintos = List.copyOf(Set.copyOf(ids));
+		Map<Long, Cuenta> todas = new HashMap<>();
 		try {
-			Cuenta[] cuentas = seguridad.post().uri("/interno/usuarios/lote").header("X-Clave-Servicio", claveServicio)
-					.contentType(MediaType.APPLICATION_JSON).body(Map.of("ids", Set.copyOf(ids))).retrieve()
-					.body(Cuenta[].class);
-			return cuentas == null ? Map.of()
-					: Arrays.stream(cuentas).collect(Collectors.toMap(Cuenta::idUsuario, Function.identity()));
+			for (int desde = 0; desde < distintos.size(); desde += TANDA) {
+				List<Long> tanda = distintos.subList(desde, Math.min(desde + TANDA, distintos.size()));
+				Cuenta[] cuentas = seguridadParaListas.post().uri("/interno/usuarios/lote")
+						.header("X-Clave-Servicio", claveServicio).contentType(MediaType.APPLICATION_JSON)
+						.body(Map.of("ids", tanda)).retrieve().body(Cuenta[].class);
+				if (cuentas != null) {
+					Arrays.stream(cuentas).forEach(cuenta -> todas.put(cuenta.idUsuario(), cuenta));
+				}
+			}
+			return todas;
 		} catch (RestClientException e) {
 			log.warn("No se pudieron consultar las cuentas en Seguridad: {}", e.getMessage());
 			throw new ServicioNoDisponibleException();
@@ -87,7 +100,7 @@ public class ConsultaDeClientes {
 	// CU-14 RF-10: los Clientes registrados en el rango; un null no filtra y hasta es exclusivo
 	public List<Cuenta> clientes(LocalDateTime desde, LocalDateTime hasta) {
 		try {
-			Cuenta[] cuentas = seguridad.get().uri(uri -> uri.path("/interno/usuarios/clientes")
+			Cuenta[] cuentas = seguridadParaListas.get().uri(uri -> uri.path("/interno/usuarios/clientes")
 					.queryParamIfPresent("desde", Optional.ofNullable(desde))
 					.queryParamIfPresent("hasta", Optional.ofNullable(hasta)).build())
 					.header("X-Clave-Servicio", claveServicio).retrieve().body(Cuenta[].class);

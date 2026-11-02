@@ -64,8 +64,8 @@ public class ReporteService {
 		this.clock = clock;
 	}
 
-	// Pasos 4 y 5, y RF-13
-	@Transactional
+	// Pasos 4 y 5, y RF-13. Sin transacción propia: armar llama a Pagos y Seguridad, y no se retiene una conexión de la
+	// base mientras tanto. Cada consulta trae lo que el reporte muestra, y guardar el registro tiene la suya
 	public ReporteGenerado generar(Long idAdministrador, TipoReporte tipo, CriteriosDeReporte criterios) {
 		ArmadorDeReporte armador = armadores.get(tipo);
 		validar(armador, criterios);
@@ -80,7 +80,6 @@ public class ReporteService {
 
 	// Pasos 6 y 7 (RF-14): con los datos de ahora y los criterios del reporte registrado. El archivo dice cuándo se
 	// generó y cuándo se exportó, para que se note si los datos cambiaron en el medio
-	@Transactional(readOnly = true)
 	public ReporteGenerado paraExportar(Long idReporte) {
 		Reporte reporte = reporteRepository.findById(idReporte).orElseThrow(ReporteNoEncontradoException::new);
 		CriteriosDeReporte criterios = CriteriosDeReporte.leer(reporte.getCriteriosFiltro());

@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.sarao.eventos.exception.CamposInvalidosException;
+import com.sarao.eventos.exception.ServicioNoDisponibleException;
 import com.sarao.eventos.exception.CamposInvalidosException.CampoInvalido;
 import com.sarao.eventos.service.reporte.ExportadorExcel;
 import com.sarao.eventos.service.reporte.ExportadorPdf;
@@ -52,13 +53,13 @@ public class EnvioDeReporte {
 		this.exportadorExcel = exportadorExcel;
 		this.consultaDeClientes = consultaDeClientes;
 		this.pedido = pedido;
-		this.dominio = dominio;
+		this.dominio = dominio.toLowerCase(Locale.ROOT);
 	}
 
 	public int enviar(Long idAdministrador, Long idReporte, List<String> destinatarios, FormatoDeEnvio formato) {
 		List<String> validos = validar(destinatarios);
 		ReporteGenerado generado = reporteService.paraExportar(idReporte);
-		String enviadoPor = Textos.nombre(consultaDeClientes.cuentas(List.of(idAdministrador)).get(idAdministrador));
+		String enviadoPor = nombreDe(idAdministrador);
 		pedido.pedir(Map.of("titulo", Textos.titulo(generado.reporte().getTipo()), "enviadoPor", enviadoPor,
 				"criterios", generado.criterios().stream().map(criterio -> criterio.nombre() + ": " + criterio.valor())
 						.toList(),
@@ -67,6 +68,15 @@ public class EnvioDeReporte {
 		log.info("El usuario {} envió por correo el reporte {} a {} destinatarios", idAdministrador, idReporte,
 				validos.size());
 		return validos.size();
+	}
+
+	// Solo para el texto del correo: si Seguridad no responde, el correo sale igual
+	private String nombreDe(Long idAdministrador) {
+		try {
+			return Textos.nombre(consultaDeClientes.cuentas(List.of(idAdministrador)).get(idAdministrador));
+		} catch (ServicioNoDisponibleException error) {
+			return Textos.nombre(null);
+		}
 	}
 
 	// Para que la pantalla diga a qué dominio se puede mandar

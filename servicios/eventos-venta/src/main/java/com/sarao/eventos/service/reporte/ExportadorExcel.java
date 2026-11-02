@@ -89,14 +89,23 @@ public class ExportadorExcel {
 					yield null;
 				}
 			};
-			// El formato y la negrita en un solo estilo: uno segundo reemplazaría al primero
-			if (formato != null && negrita) {
-				hoja.style(fila, i).format(formato).bold().set();
-			} else if (formato != null) {
-				hoja.style(fila, i).format(formato).set();
-			} else if (negrita) {
-				hoja.style(fila, i).bold().set();
+			// El formato, la negrita y el centrado en un solo estilo: uno segundo reemplazaría al primero. Las cifras van
+			// centradas, como en la pantalla y el PDF (CLAUDE.md)
+			boolean cifra = tipo == TipoDato.ENTERO || tipo == TipoDato.MONTO;
+			if (formato == null && !negrita && !cifra) {
+				continue;
 			}
+			var estilo = hoja.style(fila, i);
+			if (formato != null) {
+				estilo = estilo.format(formato);
+			}
+			if (negrita) {
+				estilo = estilo.bold();
+			}
+			if (cifra) {
+				estilo = estilo.horizontalAlignment("center");
+			}
+			estilo.set();
 		}
 	}
 }

@@ -23,6 +23,7 @@ class ConsultaDeClientesTest {
 	private volatile String cuerpo;
 	private volatile String claveRecibida;
 	private volatile String rutaRecibida;
+	private final java.util.List<String> cuerpos = new java.util.concurrent.CopyOnWriteArrayList<>();
 
 	@BeforeEach
 	void levantar() throws IOException {
@@ -40,6 +41,7 @@ class ConsultaDeClientesTest {
 	private void responder(HttpExchange intercambio) throws IOException {
 		claveRecibida = intercambio.getRequestHeaders().getFirst("X-Clave-Servicio");
 		rutaRecibida = intercambio.getRequestURI().getPath();
+		cuerpos.add(new String(intercambio.getRequestBody().readAllBytes()));
 		byte[] bytes = cuerpo.getBytes();
 		intercambio.getResponseHeaders().add("Content-Type", "application/json");
 		intercambio.sendResponseHeaders(estado, bytes.length == 0 ? -1 : bytes.length);
@@ -73,5 +75,21 @@ class ConsultaDeClientesTest {
 		seguridad.stop(0);
 
 		assertThatThrownBy(() -> consulta.fechaNacimiento(7L)).isInstanceOf(ServicioNoDisponibleException.class);
+	}
+
+	// CU-14: Seguridad admite mil ids por pedido; más se piden por tandas y se juntan
+	@Test
+	void lasCuentasSePidenPorTandas() {
+		estado = 200;
+		cuerpo = "[{\"idUsuario\":7,\"nombre\":\"Ana\",\"apellido\":\"Rojas\",\"estado\":\"ACTIVA\"}]";
+		java.util.List<Long> ids = java.util.stream.LongStream.rangeClosed(1, 1500).boxed().toList();
+
+		var cuentas = consulta.cuentas(ids);
+
+		assertThat(cuerpos).hasSize(2);
+		assertThat(rutaRecibida).isEqualTo("/interno/usuarios/lote");
+		assertThat(cuentas).containsOnlyKeys(7L);
+		assertThat(consulta.cuentas(java.util.List.of())).isEmpty();
+		assertThat(cuerpos).hasSize(2);
 	}
 }
