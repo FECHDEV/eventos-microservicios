@@ -39,7 +39,7 @@ class NotificadorCorreoSmtpTest {
 
 	private final JavaMailSender mailSender = mock(JavaMailSender.class);
 	private final NotificadorCorreo notificador = new NotificadorCorreoSmtp(mailSender,
-			new CorreoProperties("Sarao <no-responder@mail.com>", "https://sarao.bo/"));
+			new CorreoProperties("Sarao <no-responder@mail.com>", "https://sarao.bo/", "mail.com"));
 
 	private final CorreoDeCompra compra = new CorreoDeCompra("ana@mail.com", "Ana", "Noche de jazz",
 			LocalDate.of(2026, 10, 4), LocalTime.of(22, 0), "Teatro Municipal", "General", 2, new BigDecimal("50.00"),
@@ -157,5 +157,24 @@ class NotificadorCorreoSmtpTest {
 			textos.add(texto);
 		}
 		return textos;
+	}
+
+	// CU-14 RF-21: un solo correo a todos, con los adjuntos y quién lo manda
+	@Test
+	void elReporteVaAUnSoloCorreoConSusAdjuntos() throws Exception {
+		notificador.enviarReporte(new com.sarao.notificaciones.dto.ReporteRequest("Reporte de ventas", "Ana <b>",
+				List.of("Desde: 01/09/2026"), java.time.LocalDateTime.of(2026, 9, 23, 15, 30),
+				List.of("gerencia@mail.com", "caja@mail.com"),
+				List.of(new com.sarao.notificaciones.dto.ReporteRequest.Adjunto("reporte-ventas-12.pdf",
+						"%PDF-".getBytes()))));
+
+		MimeMessage mensaje = enviado();
+		assertThat(mensaje.getAllRecipients()).extracting(Object::toString)
+				.containsExactly("gerencia@mail.com", "caja@mail.com");
+		assertThat(mensaje.getSubject()).isEqualTo("Reporte de ventas — Sarao");
+		java.io.ByteArrayOutputStream bytes = new java.io.ByteArrayOutputStream();
+		mensaje.writeTo(bytes);
+		assertThat(bytes.toString()).contains("reporte-ventas-12.pdf").contains("Ana &lt;b&gt;")
+				.contains("Desde: 01/09/2026");
 	}
 }

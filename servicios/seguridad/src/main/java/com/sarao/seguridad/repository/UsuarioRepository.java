@@ -1,5 +1,6 @@
 package com.sarao.seguridad.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -59,4 +60,14 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 		}
 		return false;
 	}
+
+	// CU-14 RF-10: los Clientes por fecha de registro. Un null no filtra; hasta es exclusivo
+	@Query("""
+			select u from Usuario u
+			where u.rol = com.sarao.seguridad.entity.Rol.CLIENTE
+			  and (:desde is null or u.fechaRegistro >= :desde)
+			  and (:hasta is null or u.fechaRegistro < :hasta)
+			order by u.fechaRegistro, u.idUsuario
+			""")
+	List<Usuario> clientesParaReporte(@Param("desde") LocalDateTime desde, @Param("hasta") LocalDateTime hasta);
 }

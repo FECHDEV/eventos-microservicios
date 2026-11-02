@@ -18,6 +18,9 @@ import org.springframework.stereotype.Service;
 
 import com.sarao.notificaciones.config.CorreoProperties;
 import com.sarao.notificaciones.dto.CorreoDeCompra;
+import com.sarao.notificaciones.dto.ReporteRequest;
+import org.springframework.core.io.ByteArrayResource;
+
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +36,7 @@ public class NotificadorCorreoSmtp implements NotificadorCorreo {
 
 	private static final DateTimeFormatter FECHA = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 	private static final DateTimeFormatter HORA = DateTimeFormatter.ofPattern("HH:mm");
+	private static final DateTimeFormatter FECHA_Y_HORA = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
 	private final JavaMailSender mailSender;
 	private final CorreoProperties propiedades;
@@ -129,7 +133,44 @@ public class NotificadorCorreoSmtp implements NotificadorCorreo {
 		enviar("entradas", compra.correo(), "Tus entradas de Sarao", texto, html);
 	}
 
+	// CU-14 RF-19 a RF-23: un solo correo, con todos los destinatarios en Para y los archivos adjuntos. Quien lo recibe
+	// no lo pidió: dice quién lo manda, con qué filtros y de cuándo son los datos
+	@Async
+	@Override
+	public void enviarReporte(ReporteRequest reporte) {
+		// El título va con minúscula dentro del texto: «Reporte de ventas», «Reporte de ingresos»…
+		String tipo = reporte.titulo().toLowerCase(Locale.ROOT);
+		String datosAl = reporte.datosAl().format(FECHA_Y_HORA);
+		List<String> filtros = reporte.criterios().isEmpty() ? List.of("Sin filtros: todos los datos disponibles")
+				: reporte.criterios();
+		List<String> archivos = reporte.adjuntos().stream().map(ReporteRequest.Adjunto::nombre).toList();
+		String texto = """
+				%s te envió el %s de Sarao, con los datos al %s.
+
+				Filtros:
+				%s
+
+				Archivos adjuntos:
+				%s
+				""".formatted(reporte.enviadoPor(), tipo, datosAl, lista(filtros), lista(archivos));
+		String html = """
+				<p>%s te envió el <strong>%s</strong> de Sarao, con los datos al %s.</p>
+				<p style="margin-bottom:4px">Filtros:</p>
+				<ul style="margin-top:0;padding-left:20px">%s</ul>
+				<p style="margin-bottom:4px">Archivos adjuntos:</p>
+				<ul style="margin-top:0;padding-left:20px;font-family:monospace">%s</ul>
+				""".formatted(htmlEscape(reporte.enviadoPor()), htmlEscape(tipo), datosAl, listaHtml(filtros),
+				listaHtml(archivos));
+		enviar("reporte", reporte.destinatarios().toArray(String[]::new), reporte.titulo() + " — Sarao", texto, html,
+				reporte.adjuntos());
+	}
+
 	private void enviar(String cual, String para, String asunto, String texto, String cuerpoHtml) {
+		enviar(cual, new String[] { para }, asunto, texto, cuerpoHtml, List.of());
+	}
+
+	private void enviar(String cual, String[] para, String asunto, String texto, String cuerpoHtml,
+			List<ReporteRequest.Adjunto> adjuntos) {
 		try {
 			MimeMessage mensaje = mailSender.createMimeMessage();
 			MimeMessageHelper ayudante = new MimeMessageHelper(mensaje, true, StandardCharsets.UTF_8.name());
@@ -137,12 +178,23 @@ public class NotificadorCorreoSmtp implements NotificadorCorreo {
 			ayudante.setTo(para);
 			ayudante.setSubject(asunto);
 			ayudante.setText(texto, plantilla(cuerpoHtml));
+			for (ReporteRequest.Adjunto adjunto : adjuntos) {
+				ayudante.addAttachment(adjunto.nombre(), new ByteArrayResource(adjunto.contenido()));
+			}
 			mailSender.send(mensaje);
 		} catch (MessagingException | RuntimeException error) {
 			// Cualquier fallo, también uno inesperado: en segundo plano no hay quién lo atrape. Sin el contenido del
 			// correo: el de recuperación lleva el token
-			log.error("No se pudo enviar el correo de {} a {}: {}", cual, para, error.getMessage());
+			log.error("No se pudo enviar el correo de {} a {}: {}", cual, String.join(", ", para), error.getMessage());
 		}
+	}
+
+	private static String lista(List<String> elementos) {
+		return elementos.stream().map(elemento -> "- " + elemento).collect(Collectors.joining("\n"));
+	}
+
+	private static String listaHtml(List<String> elementos) {
+		return elementos.stream().map(elemento -> "<li>" + htmlEscape(elemento) + "</li>").collect(Collectors.joining());
 	}
 
 	// Como en el sitio: 1.250,00

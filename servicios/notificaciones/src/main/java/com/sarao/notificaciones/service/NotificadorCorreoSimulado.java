@@ -6,6 +6,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import com.sarao.notificaciones.dto.CorreoDeCompra;
+import com.sarao.notificaciones.dto.ReporteRequest;
 import lombok.extern.slf4j.Slf4j;
 
 // La implementación por defecto: nadie recibe el correo. El token y los códigos solo salen con este logger en DEBUG, porque
@@ -27,6 +28,13 @@ public class NotificadorCorreoSimulado implements NotificadorCorreo {
 				compra.nombre(), compra.correo(), compra.cantidad(), compra.tipo(), compra.evento(), compra.fecha(),
 				compra.horaInicio(), compra.lugar(), compra.precioUnitario().toPlainString(),
 				compra.total().toPlainString());
+	}
+
+	@Override
+	public void enviarReporte(ReporteRequest reporte) {
+		log.info("[Correo simulado] {} de {} para {}, con {}.", reporte.titulo(), reporte.enviadoPor(),
+				String.join(", ", reporte.destinatarios()),
+				String.join(", ", reporte.adjuntos().stream().map(ReporteRequest.Adjunto::nombre).toList()));
 	}
 
 	@Override

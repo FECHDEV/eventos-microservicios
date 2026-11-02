@@ -1,6 +1,7 @@
 package com.sarao.eventos.repository;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -69,6 +70,10 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long> {
 	// CU-07 RF-17: con el tipo y el evento, para los correos
 	@Query("select r from Reserva r join fetch r.tipoEntrada t join fetch t.evento where r.idReserva = :idReserva")
 	Optional<Reserva> buscarConSuEvento(@Param("idReserva") Long idReserva);
+
+	// CU-14: las reservas de unos pagos, con su tipo y su evento, en una sola consulta
+	@Query("select r from Reserva r join fetch r.tipoEntrada t join fetch t.evento where r.idReserva in :ids")
+	List<Reserva> conTipoYEvento(@Param("ids") Collection<Long> ids);
 
 	// Otro cliente recibe lo mismo que una reserva inexistente (CU-06 RF-20)
 	@Query("""

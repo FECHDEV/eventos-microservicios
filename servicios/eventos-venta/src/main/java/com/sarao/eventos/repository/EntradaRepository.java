@@ -1,5 +1,6 @@
 package com.sarao.eventos.repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -10,6 +11,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.sarao.eventos.entity.Entrada;
+import com.sarao.eventos.entity.EstadoEntrada;
 import jakarta.persistence.LockModeType;
 
 public interface EntradaRepository extends JpaRepository<Entrada, Long> {
@@ -52,6 +54,34 @@ public interface EntradaRepository extends JpaRepository<Entrada, Long> {
 	// CU-15 RF-11: dos validaciones de la misma entrada se serializan
 	@Lock(LockModeType.PESSIMISTIC_WRITE)
 	Optional<Entrada> findConBloqueoByIdEntrada(Long idEntrada);
+
+	// CU-14 RF-8: cuántas entradas devueltas tiene cada pago. No se llama con la lista vacía
+	@Query("""
+			select new com.sarao.eventos.repository.CantidadPorId(e.idPago, count(e)) from Entrada e
+			where e.estado = com.sarao.eventos.entity.EstadoEntrada.DEVUELTA and e.idPago in :idsPago
+			group by e.idPago
+			""")
+	List<CantidadPorId> devueltasPorPago(@Param("idsPago") Collection<Long> idsPago);
+
+	// CU-14 RF-9: sin el código de la entrada en ninguna parte del reporte (RNF-03)
+	@Query("""
+			select e from Entrada e join fetch e.tipoEntrada t join fetch t.evento ev
+			where (:idEvento is null or ev.idEvento = :idEvento)
+			  and (:idTipo is null or t.idTipoEntrada = :idTipo)
+			  and (:estado is null or e.estado = :estado)
+			order by ev.fecha, ev.idEvento, t.idTipoEntrada, e.idEntrada
+			""")
+	List<Entrada> paraReporte(@Param("idEvento") Long idEvento, @Param("idTipo") Long idTipo,
+			@Param("estado") EstadoEntrada estado);
+
+	// CU-14 RF-10: una compra es un pago con entradas; con evento, solo las de ese evento
+	@Query("""
+			select new com.sarao.eventos.repository.ComprasDelCliente(e.idCliente, count(distinct e.idPago), count(e))
+			from Entrada e
+			where (:idEvento is null or e.tipoEntrada.evento.idEvento = :idEvento)
+			group by e.idCliente
+			""")
+	List<ComprasDelCliente> comprasPorCliente(@Param("idEvento") Long idEvento);
 
 	// CU-08 RF-8: para numerar una entrada dentro de su compra
 	@Query("select e.idEntrada from Entrada e where e.reserva.idReserva = :idReserva order by e.idEntrada")

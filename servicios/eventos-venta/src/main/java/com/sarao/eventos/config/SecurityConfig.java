@@ -36,6 +36,8 @@ public class SecurityConfig {
 						// El contador del pie de cada página, también sin sesión. Solo sumar una visita
 						.requestMatchers(HttpMethod.POST, "/api/visitas/*").permitAll()
 						.requestMatchers("/api/eventos/**").hasRole("ADMINISTRADOR")
+						// CU-14: los reportes son del Administrador (RF-1)
+						.requestMatchers("/api/reportes/**").hasRole("ADMINISTRADOR")
 						// CU-06: comprar es del Cliente, el único con fecha de nacimiento para validar la edad
 						// (decisiones.md → Adquirir entradas (CU-06))
 						.requestMatchers("/api/reservas/**").hasRole("CLIENTE")

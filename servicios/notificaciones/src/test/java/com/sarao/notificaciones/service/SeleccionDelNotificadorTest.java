@@ -16,7 +16,7 @@ class SeleccionDelNotificadorTest {
 			.withUserConfiguration(CorreoConfig.class, NotificadorCorreoSimulado.class, NotificadorCorreoSmtp.class)
 			.withBean(JavaMailSender.class, () -> mock(JavaMailSender.class))
 			.withPropertyValues("eventos.correo.remitente=Sarao <no-responder@mail.com>",
-					"eventos.correo.url-del-sitio=http://localhost");
+					"eventos.correo.url-del-sitio=http://localhost", "eventos.correo.dominio=mail.com");
 
 	@Test
 	void sinProveedorSeUsaElSimulador() {

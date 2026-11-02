@@ -54,4 +54,16 @@ public interface PagoRepository extends JpaRepository<Pago, Long> {
 			order by p.idPago
 			""")
 	List<Long> idsPorConciliar(@Param("desde") LocalDateTime desde);
+
+	// CU-14 RF-7 y RF-8: PAGADO y ya confirmado; uno que espera la confirmación se resuelve en el minuto (plan de HU-20)
+	@Query("""
+			select p from Pago p
+			where p.estado = com.sarao.pagos.entity.EstadoPago.PAGADO and p.confirmacionPendiente = false
+			  and (:conDevolucion = true or p.requiereDevolucion = false)
+			  and (:desde is null or p.fechaPago >= :desde)
+			  and (:hasta is null or p.fechaPago < :hasta)
+			order by p.fechaPago, p.idPago
+			""")
+	List<Pago> cobrados(@Param("conDevolucion") boolean conDevolucion, @Param("desde") LocalDateTime desde,
+			@Param("hasta") LocalDateTime hasta);
 }

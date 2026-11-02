@@ -3,6 +3,7 @@ package com.sarao.notificaciones.service;
 import java.util.List;
 
 import com.sarao.notificaciones.dto.CorreoDeCompra;
+import com.sarao.notificaciones.dto.ReporteRequest;
 
 // Los tres correos a clientes (CLAUDE.md → Correos). El detalle de compra y las entradas van separados (decisiones.md →
 // Dos correos al confirmar la compra)
@@ -13,4 +14,8 @@ public interface NotificadorCorreo {
 	void enviarDetalleDeCompra(CorreoDeCompra compra);
 
 	void enviarEntradas(CorreoDeCompra compra, List<String> codigos);
+
+	// CU-14: no es un correo a clientes, sino un reporte que el Administrador manda al dominio propio (CLAUDE.md →
+	// Correos, excepción ya decidida)
+	void enviarReporte(ReporteRequest reporte);
 }
