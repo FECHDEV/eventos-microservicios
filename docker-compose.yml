@@ -2,6 +2,9 @@
 #   cp .env.example .env    (y completar los valores)
 #   docker compose up -d --build
 # El sitio queda en http://localhost (o el puerto de SARAO_PUERTO).
+#
+# Prueba de punta a punta, con datos y claves temporales que borra al terminar (no toca el .env):
+#   bash scripts/prueba-completa.sh
 
 # Chequeo de salud de los servicios Java: el puerto acepta conexiones. Spring abre el puerto
 # antes de terminar de arrancar (la carga inicial corre después), así que es una señal
