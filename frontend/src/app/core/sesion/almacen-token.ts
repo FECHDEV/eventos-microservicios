@@ -43,6 +43,15 @@ export function borrarSesion(): void {
 	}
 }
 
+// Solo si la guardada es la misma: otra pestaña pudo iniciar sesión de nuevo y
+// su token no se borra por el 401 o el cierre de una sesión anterior
+export function borrarSesionSiEs(token: string): void {
+	const guardado = leerCrudo();
+	if (guardado !== null && interpretar(guardado)?.token === token) {
+		borrarSesion();
+	}
+}
+
 function leerCrudo(): string | null {
 	try {
 		return localStorage.getItem(CLAVE_SESION);

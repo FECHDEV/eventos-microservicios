@@ -17,6 +17,8 @@ export const MANEJA_SU_401 = new HttpContextToken<boolean>(() => false);
 export const erroresInterceptor: HttpInterceptorFn = (peticion, siguiente) => {
 	const sesion = inject(SesionService);
 	const router = inject(Router);
+	// El token con que salió la petición: si otra pestaña ya guardó otro, este 401 es viejo
+	const token = sesion.token();
 
 	return siguiente(peticion).pipe(
 		catchError((error: unknown) => {
@@ -24,7 +26,8 @@ export const erroresInterceptor: HttpInterceptorFn = (peticion, siguiente) => {
 				error instanceof HttpErrorResponse &&
 				error.status === 401 &&
 				!peticion.context.get(MANEJA_SU_401) &&
-				!PUBLICAS.some((prefijo) => peticion.url.startsWith(prefijo));
+				!PUBLICAS.some((prefijo) => peticion.url.startsWith(prefijo)) &&
+				sesion.token() === token;
 
 			if (esSesionCaida) {
 				sesion.cerrar();
