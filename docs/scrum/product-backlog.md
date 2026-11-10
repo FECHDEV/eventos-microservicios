@@ -24,7 +24,7 @@ Orden de arriba abajo por prioridad. Estado: Pendiente, En curso o Hecha.
 | HU-17 | Como sistema, quiero enviar los correos desde un servicio propio, para que una falla de correo no afecte la compra. | Transversal | Notificaciones | 3 | Hecha |
 | HU-18 | Como cliente, quiero pagar con QR, para confirmar mi compra. | CU-07 | Pagos | 3 | Hecha |
 | HU-19 | Como personal autorizado, quiero validar entradas, para controlar el acceso. | CU-15 | Eventos y Venta | 4 | Hecha |
-| HU-20 | Como administrador, quiero generar reportes y enviarlos en PDF por correo, para analizar el negocio. | CU-14, req. 7 | Eventos y Venta | 4 | En curso |
-| HU-21 | Como administrador, quiero gestionar devoluciones, para registrar las entradas devueltas. | CU-13 | Eventos y Venta | 4 | En curso |
-| HU-22 | Como equipo, quiero desplegar en el VPS nuevo, para publicar el sistema. | Técnica | Todos | 4 | Pendiente |
+| HU-20 | Como administrador, quiero generar reportes y enviarlos en PDF por correo, para analizar el negocio. | CU-14, req. 7 | Eventos y Venta | 4 | Hecha |
+| HU-21 | Como administrador, quiero gestionar devoluciones, para registrar las entradas devueltas. | CU-13 | Eventos y Venta | 4 | Hecha |
+| HU-22 | Como equipo, quiero desplegar en el VPS nuevo, para publicar el sistema. | Técnica | Todos | 4 | En curso |
 | HU-23 | Como equipo, quiero la documentación de perfil con Scrum, para cerrar la entrega. | Entrega | Ninguno | 5 | Pendiente |

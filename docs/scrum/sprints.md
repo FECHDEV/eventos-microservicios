@@ -71,6 +71,43 @@ desde un servicio propio de Notificaciones y el pago desde un servicio propio de
 
 **Backlog:** HU-17 y HU-18.
 
-**Avance:** HU-17 hecha el 31/10/2026, con el servidor de correo propio en Docker. HU-18 hecha el
-02/11/2026: pago, verificación, pago tardío, entradas y correos con el simulador. El adaptador de
-Libélula sigue en una rama propia, con zxing para leer el QR.
+**Resultado:** HU-17 y HU-18 hechas, antes de la fecha prevista.
+
+- **HU-17**, el 31/10/2026: Notificaciones manda los tres correos desde el servidor de correo propio
+  en Docker, sin que una falla de correo afecte la compra.
+- **HU-18**, el 02/11/2026: pago, verificación, pago tardío, entradas y correos con el simulador, y
+  la conciliación cada minuto (#13). El adaptador de Libélula (#14) lee el QR con zxing y recibe el
+  aviso de pago. Se probó con un pago real de Bs 0,01: compra confirmada y correos recibidos.
+
+Pagos con 30 pruebas, Eventos y Venta con 340, Seguridad con 238 y gateway con 14.
+
+---
+
+## Sprint 4 (26/11 a 02/12)
+
+**Objetivo:** el Personal autorizado valida entradas en la puerta, el Administrador saca reportes y
+registra devoluciones, y el sistema queda publicado en el VPS nuevo.
+
+**Backlog:** HU-19 a HU-22.
+
+**Avance:**
+
+- **HU-19, HU-20 y HU-21 hechas el 02/11/2026**, antes de la fecha prevista, probadas por el usuario
+  en el navegador:
+  - validación de entradas con la cámara (#15);
+  - cinco reportes filtrables, exportables a PDF y Excel, y enviados por correo al dominio propio
+    (#16);
+  - devoluciones de compras y entradas de eventos cancelados (#17). CU-13 pasó de Pagos a Eventos y
+    Venta.
+- **Mejoras fuera de las historias:**
+  - el 06/11/2026: la sesión se comparte entre pestañas (#18), un cliente interno común con
+    healthchecks en compose (#19) y la prueba de punta a punta en Docker
+    `scripts/prueba-completa.sh` (#20), que pasa 34 de 34;
+  - el 10/11/2026: iniciar sesión con la sesión abierta lleva al destino, y cerrar sesión borra la
+    sesión guardada (#21).
+- **HU-22, en curso.** El 10/11/2026 quedó lista la preparación (#22): proveedor de pago obligatorio,
+  límites en nginx, HTTPS con Caddy y el despliegue de un comando. Falta desplegar y probar en el
+  VPS.
+
+Eventos y Venta con 380 pruebas, Seguridad con 239, Pagos con 64, Notificaciones con 23, gateway con
+15 y frontend con 920.
