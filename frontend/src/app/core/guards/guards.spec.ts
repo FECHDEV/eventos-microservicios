@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import {
   ActivatedRouteSnapshot,
+  convertToParamMap,
   GuardResult,
   Router,
   RouterStateSnapshot,
@@ -11,7 +12,7 @@ import { Sesion } from '../modelos/sesion';
 import { Rol } from '../modelos/usuario';
 import { SesionService } from '../sesion/sesion.service';
 import { rolGuard } from './rol.guard';
-import { sesionGuard } from './sesion.guard';
+import { sesionGuard, sinSesionGuard } from './sesion.guard';
 
 function sesionCon(rol: Rol): Sesion {
   return {
@@ -74,6 +75,35 @@ describe('guards de ruta', () => {
       expect(resultado).toBeInstanceOf(UrlTree);
       expect(router.serializeUrl(resultado as UrlTree)).toContain('/inicio-sesion');
       expect(router.serializeUrl(resultado as UrlTree)).toContain('destino=%2Fmi-cuenta');
+    });
+  });
+
+  describe('sinSesionGuard', () => {
+    function correrCon(destino: string | null) {
+      const conDestino = { queryParamMap: convertToParamMap(destino === null ? {} : { destino }) };
+      return TestBed.runInInjectionContext(() =>
+        (sinSesionGuard as unknown as (r: unknown, e: RouterStateSnapshot) => GuardResult)(
+          conDestino,
+          estado('/inicio-sesion'),
+        ),
+      );
+    }
+
+    it('sin sesión deja pasar', () => {
+      expect(correrCon(null)).toBe(true);
+    });
+
+    it('con sesión lleva al destino', () => {
+      sesion.iniciar(sesionCon('CLIENTE'));
+
+      expect(router.serializeUrl(correrCon('/mis-entradas') as UrlTree)).toBe('/mis-entradas');
+    });
+
+    // Un destino externo sería un redirect abierto
+    it('con sesión y un destino ajeno va a la portada', () => {
+      sesion.iniciar(sesionCon('CLIENTE'));
+
+      expect(router.serializeUrl(correrCon('//sitio-ajeno.example') as UrlTree)).toBe('/');
     });
   });
 

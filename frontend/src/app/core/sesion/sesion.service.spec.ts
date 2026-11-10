@@ -242,6 +242,18 @@ describe('SesionService entre pestañas', () => {
     expect(recarga).not.toHaveBeenCalled();
   });
 
+  // Pedido por la persona: no queda ninguna sesión guardada, aunque no fuera la de esta pestaña
+  it('salir borra la sesión guardada aunque sea otra', () => {
+    guardarSesion(vigente());
+    const servicio = TestBed.inject(SesionService);
+    guardarSesion({ ...vigente(), token: 'jwt.nuevo' });
+
+    servicio.salir();
+
+    expect(servicio.autenticado()).toBe(false);
+    expect(localStorage.getItem(CLAVE_SESION)).toBeNull();
+  });
+
   // Un 401 con un token viejo no cierra la sesión nueva que otra pestaña guardó
   it('cerrar no borra la sesión que otra pestaña guardó después', () => {
     guardarSesion(vigente());

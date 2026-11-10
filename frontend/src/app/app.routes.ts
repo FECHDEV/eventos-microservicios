@@ -2,7 +2,7 @@ import { Routes } from '@angular/router';
 
 import { cambiosSinGuardarGuard } from './core/guards/cambios-sin-guardar.guard';
 import { rolGuard } from './core/guards/rol.guard';
-import { sesionGuard } from './core/guards/sesion.guard';
+import { sesionGuard, sinSesionGuard } from './core/guards/sesion.guard';
 
 // Cada pantalla se carga cuando hace falta, para que el paquete inicial no
 // arrastre las pantallas de administración. data.pagina es la página que suma
@@ -13,6 +13,7 @@ export const routes: Routes = [
     path: 'inicio-sesion',
     title: 'Iniciar sesión · Sarao',
     data: { pagina: 'INICIO_SESION' },
+    canActivate: [sinSesionGuard],
     loadComponent: () =>
       import('./features/inicio-sesion/inicio-sesion.page').then((m) => m.InicioSesionPage),
   },
@@ -20,6 +21,7 @@ export const routes: Routes = [
     path: 'registro',
     title: 'Crear cuenta · Sarao',
     data: { pagina: 'REGISTRO' },
+    canActivate: [sinSesionGuard],
     loadComponent: () => import('./features/registro/registro.page').then((m) => m.RegistroPage),
   },
   {
