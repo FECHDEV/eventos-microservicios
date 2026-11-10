@@ -112,8 +112,9 @@ services:
       EVENTOS_PAGOS_DB_PASSWORD: ${EVENTOS_PAGOS_DB_PASSWORD}
       EVENTOS_CLAVE_SERVICIO: ${EVENTOS_CLAVE_SERVICIO}
       EVENTOS_VENTA_URL: http://eventos-venta:8082
-      # simulador por defecto (decisiones.md -> Pago: interfaz propia)
-      EVENTOS_PAGO_PROVEEDOR: ${EVENTOS_PAGO_PROVEEDOR:-simulador}
+      # Sin valor por defecto: un simulador olvidado en el servidor dejaría confirmar
+      # compras sin pagar (decisiones.md -> Proveedor de pago obligatorio en Docker)
+      EVENTOS_PAGO_PROVEEDOR: ${EVENTOS_PAGO_PROVEEDOR:?Falta EVENTOS_PAGO_PROVEEDOR en .env (simulador o libelula)}
       # Solo con libelula: sin appkey ni correo Pagos no arranca
       EVENTOS_PAGO_LIBELULA_APPKEY: ${EVENTOS_PAGO_LIBELULA_APPKEY:-}
       EVENTOS_PAGO_LIBELULA_EMAIL: ${EVENTOS_PAGO_LIBELULA_EMAIL:-}

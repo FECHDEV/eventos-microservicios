@@ -17,7 +17,7 @@ Organizado por subsistema, en el orden de implementación del sistema base.
 Una línea por sección; cada decisión lleva a su detalle.
 
 - **[0. Microservicios](#0-microservicios)**: corte, comunicación, compra, sesión, reportes y contraseñas.
-- **[Transversales](#transversales)**: [Spring Boot 4.1.1](#spring-boot-411) · [Variables de entorno con prefijo `EVENTOS_`](#variables-de-entorno-con-prefijo-eventos_) · [Despliegue con Docker: cinco servicios (seis en la nube) y un solo origen](#despliegue-con-docker-cinco-servicios-seis-en-la-nube-y-un-solo-origen) · [Tipos del diagrama que no son entidades](#tipos-del-diagrama-que-no-son-entidades) · [El sistema no notifica los imprevistos de los eventos](#el-sistema-no-notifica-los-imprevistos-de-los-eventos) · [Actor "Tiempo": dos mecanismos distintos](#actor-tiempo-dos-mecanismos-distintos) · [Pago: interfaz propia con dos implementaciones](#pago-interfaz-propia-con-dos-implementaciones) · [Requisitos de la materia: tres mejoras](#requisitos-de-la-materia-tres-mejoras)
+- **[Transversales](#transversales)**: [Spring Boot 4.1.1](#spring-boot-411) · [Variables de entorno con prefijo `EVENTOS_`](#variables-de-entorno-con-prefijo-eventos_) · [Despliegue con Docker: cinco servicios (seis en la nube) y un solo origen](#despliegue-con-docker-cinco-servicios-seis-en-la-nube-y-un-solo-origen) · [Proveedor de pago obligatorio en Docker](#proveedor-de-pago-obligatorio-en-docker) · [Límites de nginx y HTTPS con Caddy en el servidor](#límites-de-nginx-y-https-con-caddy-en-el-servidor) · [Tipos del diagrama que no son entidades](#tipos-del-diagrama-que-no-son-entidades) · [El sistema no notifica los imprevistos de los eventos](#el-sistema-no-notifica-los-imprevistos-de-los-eventos) · [Actor "Tiempo": dos mecanismos distintos](#actor-tiempo-dos-mecanismos-distintos) · [Pago: interfaz propia con dos implementaciones](#pago-interfaz-propia-con-dos-implementaciones) · [Requisitos de la materia: tres mejoras](#requisitos-de-la-materia-tres-mejoras)
 - **[1. Seguridad](#1-seguridad)**: [`Usuario` es una sola clase con `rol` enumerado](#usuario-es-una-sola-clase-con-rol-enumerado) · [Sin `codigoAdministrador` ni `codigoPersonal`](#sin-codigoadministrador-ni-codigopersonal) · [Autenticación por JWT stateless](#autenticación-por-jwt-stateless) · [Contraseñas con BCrypt](#contraseñas-con-bcrypt) · [Recuperación de contraseña en tabla aparte](#recuperación-de-contraseña-en-tabla-aparte) · [Administrador inicial con `CommandLineRunner`](#administrador-inicial-con-commandlinerunner) · [Operaciones rechazadas en CU-09](#operaciones-rechazadas-en-cu-09) · [Registro de clientes](#registro-de-clientes) · [Inicio de sesión](#inicio-de-sesión) · [Recuperación de contraseña](#recuperación-de-contraseña) · [Datos personales (CU-04)](#datos-personales-cu-04) · [Gestión de usuarios (CU-09)](#gestión-de-usuarios-cu-09)
 - **[2. Notificaciones](#2-notificaciones)**: [Envío de correo detrás de una interfaz `NotificadorCorreo`](#envío-de-correo-detrás-de-una-interfaz-notificadorcorreo) · [El servidor de correo en Docker, con buzones del propio dominio](#el-servidor-de-correo-en-docker-con-buzones-del-propio-dominio)
 - **[3. Gestión de Eventos](#3-gestión-de-eventos)**: [Estado `BORRADOR`](#estado-borrador) · [CU-05 lista eventos activos y postergados](#cu-05-lista-eventos-activos-y-postergados) · [Catálogo de eventos (CU-05)](#catálogo-de-eventos-cu-05) · ["Un evento por fecha" no es una validación del sistema](#un-evento-por-fecha-no-es-una-validación-del-sistema) · [`evento.id_usuario`](#eventoid_usuario) · [`evento.fecha_original`](#eventofecha_original) · [Imagen del evento (amplía el modelo)](#imagen-del-evento-amplía-el-modelo) · [Edición de un evento según su estado](#edición-de-un-evento-según-su-estado) · [Fecha y horario al registrar o editar](#fecha-y-horario-al-registrar-o-editar) · [Restricción de edad y límite de compra](#restricción-de-edad-y-límite-de-compra) · [Cierre automático de la venta con `@Scheduled`](#cierre-automático-de-la-venta-con-scheduled) · [Tipos de entrada según el estado del evento](#tipos-de-entrada-según-el-estado-del-evento) · [Cambiar la cantidad total de un tipo](#cambiar-la-cantidad-total-de-un-tipo) · [Precio de un tipo de entrada](#precio-de-un-tipo-de-entrada) · [Nombre único dentro del evento](#nombre-único-dentro-del-evento) · [Los tipos de entrada no se eliminan](#los-tipos-de-entrada-no-se-eliminan) · [Transiciones de estado del evento (CU-12)](#transiciones-de-estado-del-evento-cu-12) · [La venta se abre al activar y se cierra al cancelar](#la-venta-se-abre-al-activar-y-se-cierra-al-cancelar) · [Fecha nueva al postergar](#fecha-nueva-al-postergar) · [Fecha de nacimiento del Cliente](#fecha-de-nacimiento-del-cliente) · [Espera máxima de un bloqueo en Eventos y Venta](#espera-máxima-de-un-bloqueo-en-eventos-y-venta) · [La entrada conoce su reserva](#la-entrada-conoce-su-reserva) · [Reactivar entradas utilizadas: cuando exista la Venta](#reactivar-entradas-utilizadas-cuando-exista-la-venta) · [Bloqueo del evento al cambiar su estado](#bloqueo-del-evento-al-cambiar-su-estado)
@@ -207,6 +207,35 @@ origen reproduce en producción cómo funciona el desarrollo. Decidido el
 23/09/2026 con tres contenedores (base, API y nginx). El correo y el webmail se
 sumaron con el adaptador SMTP, y Caddy con el despliegue con HTTPS (PR #26 y
 los commits de despliegue a `main`).
+
+### Proveedor de pago obligatorio en Docker
+
+Decidido con el usuario el 10/11/2026, al preparar HU-22. En `docker-compose.yml`,
+`EVENTOS_PAGO_PROVEEDOR` no tiene valor por defecto: va `simulador` o `libelula`,
+y si falta el compose no arranca. Antes, vacío usaba el simulador.
+
+**Motivo:** el simulador confirma compras sin cobrar. Olvidar la variable en el
+servidor no puede dejarlo activo. Fuera de Docker (`mvnw`, las pruebas) el
+simulador sigue siendo el valor por defecto de `application.properties`.
+
+### Límites de nginx y HTTPS con Caddy en el servidor
+
+Decidido el 10/11/2026, al preparar HU-22, como en el sistema base.
+
+- **Límite por IP en nginx** para las dos rutas públicas que escriben sin sesión:
+  `/api/visitas/` (2 por segundo, ráfaga de 20) y `/api/pagos/aviso` (1 por
+  segundo, ráfaga de 10). El exceso recibe 429. El resto de la API pide sesión o
+  ya tiene sus límites (intentos de inicio de sesión).
+- **`docker-compose.nube.yml` suma Caddy**, el único servicio que publica puertos
+  (80 y 443): pide el certificado de Let's Encrypt para `SARAO_DOMINIO` y entrega
+  el sitio y `correo.SARAO_DOMINIO` (webmail). También fija `EVENTOS_SITIO_URL`
+  en `https://SARAO_DOMINIO`. HTTPS hace falta para la cámara del celular (CU-15).
+- **La IP real detrás de Caddy:** Caddy reemplaza `X-Forwarded-For` con la IP del
+  cliente, y nginx la toma (`real_ip`) solo si la petición viene de la red de
+  Docker. Publicado directo, el cliente llega con su IP pública y el encabezado se
+  ignora: cambiarlo no saltea los límites.
+- **En el servidor, siempre con Caddy.** Sin él, un cliente por IPv6 entra por el
+  proxy de Docker con una IP interna, y podría inventar su IP en el encabezado.
 
 ### Tipos del diagrama que no son entidades
 

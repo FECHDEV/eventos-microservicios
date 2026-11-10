@@ -1,0 +1,41 @@
+# Sarao en un servidor con HTTPS: se suma a docker-compose.yml.
+#   docker compose -f docker-compose.yml -f docker-compose.nube.yml --profile correo up -d --build
+# Caddy publica los puertos 80 y 443 y reparte: el sitio en https://SARAO_DOMINIO y el
+# webmail en https://correo.SARAO_DOMINIO. Nada más queda publicado.
+
+services:
+  caddy:
+    image: caddy:2.10.2-alpine
+    restart: unless-stopped
+    depends_on:
+      - frontend
+      - webmail
+    environment:
+      SARAO_DOMINIO: ${SARAO_DOMINIO:?Falta SARAO_DOMINIO en .env}
+    ports:
+      - "${SARAO_HTTP_PUERTO:-80}:80"
+      - "${SARAO_HTTPS_PUERTO:-443}:443"
+    volumes:
+      - ./nube/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-datos:/data
+      - caddy-config:/config
+
+  # Detrás de Caddy: sin puertos propios en la máquina
+  frontend:
+    ports: !reset []
+
+  webmail:
+    ports: !reset []
+
+  # Los enlaces de los correos y la vuelta del pago, con la dirección pública
+  notificaciones:
+    environment:
+      EVENTOS_SITIO_URL: https://${SARAO_DOMINIO}
+
+  pagos:
+    environment:
+      EVENTOS_SITIO_URL: https://${SARAO_DOMINIO}
+
+volumes:
+  caddy-datos:
+  caddy-config:
