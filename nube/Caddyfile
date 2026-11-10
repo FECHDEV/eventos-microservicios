@@ -1,0 +1,15 @@
+# HTTPS en el servidor: Caddy saca y renueva solo el certificado de Let's Encrypt.
+# SARAO_DOMINIO llega del .env: un dominio propio o uno de sslip.io armado con la IP
+# del servidor (1-2-3-4.sslip.io), que no necesita DNS.
+# Caddy pone en X-Forwarded-For la IP del cliente (no la que diga el cliente):
+# nginx la toma para sus límites y el gateway para los límites de intentos.
+
+{$SARAO_DOMINIO} {
+	encode zstd gzip
+	reverse_proxy frontend:80
+}
+
+correo.{$SARAO_DOMINIO} {
+	encode zstd gzip
+	reverse_proxy webmail:80
+}
