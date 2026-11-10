@@ -2,7 +2,7 @@ import { computed, DestroyRef, DOCUMENT, inject, Injectable, NgZone, signal } fr
 
 import { Sesion } from '../modelos/sesion';
 import { Rol, Usuario } from '../modelos/usuario';
-import { borrarSesionSiEs, CLAVE_SESION, guardarSesion, leerSesion } from './almacen-token';
+import { borrarSesion, borrarSesionSiEs, CLAVE_SESION, guardarSesion, leerSesion } from './almacen-token';
 
 // Estado de la sesión para toda la aplicación. Quien autoriza de verdad es el
 // backend: acá solo se guarda lo necesario para mostrar la interfaz que
@@ -60,6 +60,13 @@ export class SesionService {
 			borrarSesionSiEs(propia.token);
 		}
 		this.sesion.set(null);
+	}
+
+	// La persona pidió salir: se borra lo guardado aunque no coincida con esta
+	// pestaña (una restaurada del historial pudo perderse el aviso de otra)
+	salir(): void {
+		this.cerrar();
+		borrarSesion();
 	}
 
 	// CU-04: los datos de la cuenta cambiaron pero el token sigue valiendo. Se

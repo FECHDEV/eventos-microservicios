@@ -156,7 +156,7 @@ export class AppComponent {
   }
 
   protected salir(): void {
-    this.sesion.cerrar();
+    this.sesion.salir();
     void this.router.navigate(['/inicio-sesion']);
   }
 }
