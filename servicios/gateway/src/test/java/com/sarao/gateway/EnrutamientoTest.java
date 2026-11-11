@@ -199,7 +199,10 @@ class EnrutamientoTest {
 
 	@Test
 	void seguridadConErrorDevuelve503YNoCierraLaSesion() throws Exception {
-		assertThat(pedir("/api/cuenta", "Authorization", "Bearer falla").statusCode()).isEqualTo(503);
+		var respuesta = pedir("/api/cuenta", "Authorization", "Bearer falla");
+
+		assertThat(respuesta.statusCode()).isEqualTo(503);
+		assertThat(respuesta.body()).contains("\"codigo\":\"SERVICIO_NO_DISPONIBLE\"");
 	}
 
 	@Test

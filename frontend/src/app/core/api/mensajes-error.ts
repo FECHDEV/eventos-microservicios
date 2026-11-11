@@ -51,6 +51,7 @@ const MENSAJES: Record<string, string> = {
 	REPORTE_SIN_RESULTADOS: 'No hay datos que cumplan esos criterios. Prueba con otros filtros.',
 	REPORTE_NO_ENCONTRADO: 'No encontramos ese reporte. Vuelve a generarlo.',
 	SIN_CONEXION: 'No pudimos conectar con el servidor. Intenta de nuevo.',
+	SERVICIO_NO_DISPONIBLE: 'Esta parte del sistema no está disponible en este momento. Intenta de nuevo en unos minutos.',
 };
 
 const GENERICO = 'No pudimos completar la operación. Intenta de nuevo.';

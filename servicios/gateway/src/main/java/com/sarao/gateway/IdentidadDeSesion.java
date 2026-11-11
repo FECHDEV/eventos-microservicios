@@ -5,17 +5,13 @@ import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
-import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.function.ServerRequest;
 
 // Resuelve el token con Seguridad, la unica que tiene la clave JWT, y pasa la identidad a los servicios. Un token invalido
@@ -28,7 +24,6 @@ public class IdentidadDeSesion {
 	static final String ID_USUARIO = "X-Usuario-Id";
 	static final String ROL = "X-Usuario-Rol";
 
-	private static final Logger log = LoggerFactory.getLogger(IdentidadDeSesion.class);
 	private static final String PREFIJO = "Bearer ";
 	private static final Duration PLAZO_CONEXION = Duration.ofSeconds(1);
 	private static final Duration PLAZO_RESPUESTA = Duration.ofSeconds(2);
@@ -72,19 +67,15 @@ public class IdentidadDeSesion {
 	}
 
 	private Optional<Identidad> consultar(String token) {
-		try {
-			return Optional.ofNullable(seguridad.post().uri("/interno/sesiones").header(CLAVE, claveServicio)
-					.contentType(MediaType.APPLICATION_JSON).body(Map.of("token", token))
-					.exchange((pedido, respuesta) -> {
-						if (respuesta.getStatusCode().is5xxServerError()) {
-							throw new RestClientException("Seguridad respondio " + respuesta.getStatusCode());
-						}
-						return respuesta.getStatusCode().is2xxSuccessful() ? respuesta.bodyTo(Identidad.class) : null;
-					}));
-		} catch (RestClientException e) {
-			log.warn("No se pudo consultar la sesion en Seguridad: {}", e.getMessage());
-			throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE);
-		}
+		// Si Seguridad falla, la excepción llega a RutasConfig.siElServicioNoResponde: 503
+		return Optional.ofNullable(seguridad.post().uri("/interno/sesiones").header(CLAVE, claveServicio)
+				.contentType(MediaType.APPLICATION_JSON).body(Map.of("token", token))
+				.exchange((pedido, respuesta) -> {
+					if (respuesta.getStatusCode().is5xxServerError()) {
+						throw new RestClientException("Seguridad respondio " + respuesta.getStatusCode());
+					}
+					return respuesta.getStatusCode().is2xxSuccessful() ? respuesta.bodyTo(Identidad.class) : null;
+				}));
 	}
 
 	record Identidad(Long idUsuario, String rol) {

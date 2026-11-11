@@ -22,6 +22,13 @@ describe('mensajeDeError', () => {
     );
   });
 
+  // Un servicio apagado o que no responde: el gateway y los servicios lo avisan con este código
+  it('traduce el servicio no disponible', () => {
+    expect(mensajeDeError({ status: 503, detail: 'x', codigo: 'SERVICIO_NO_DISPONIBLE' })).toBe(
+      'Esta parte del sistema no está disponible en este momento. Intenta de nuevo en unos minutos.',
+    );
+  });
+
   it('traduce la cuenta desactivada', () => {
     expect(mensajeDeError(error('CUENTA_DESACTIVADA'))).toContain('desactivada');
   });
