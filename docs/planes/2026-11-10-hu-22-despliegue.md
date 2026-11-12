@@ -38,6 +38,21 @@ No es un caso de uso: publica el sistema completo. Decisiones en `docs/decisione
    en la puerta y los correos en los buzones.
 9. **Medir** el costo de la conciliación de cada minuto con Libélula.
 
+## Resultado en el VPS (12/11/2026)
+
+- **Despliegue:** `subir-al-vps.sh` en un VPS Ubuntu 26.10 (2 CPU, 3,4 GB y swap). El primer intento
+  falló en MySQL 8.0.46: la imagen carga `mysql/crear-bases.sh` con `source` y su `set -eu` abortaba
+  el script de la imagen por una variable sin definir. Se corrigió con un subshell y el segundo
+  intento levantó los 10 contenedores. Los buzones se crean a mano con `ssh -t`, porque piden la
+  contraseña por teclado.
+- **Prueba del usuario por HTTPS:** recuperación de contraseña con el correo en el buzón, compra real
+  de Bs 0,01 con Libélula (pago `PAGADO`, reserva `CONFIRMADA`, correos de detalle y de entradas),
+  validación con la cámara del celular (entrada `UTILIZADA`, acceso registrado) y reporte de ventas
+  en PDF y Excel enviado a dos buzones. Sin WARN ni ERROR en los servicios.
+- **Costo de la conciliación:** solo consulta a Libélula los pagos pendientes de la ventana; con el
+  pago confirmado no hace llamadas. En reposo, cada servicio Java usa cerca de 3 % de CPU, y el
+  servidor completo 2,5 GB de RAM, con 821 MB disponibles y casi sin swap.
+
 ## Resultado de la preparación
 
 - **Prueba local de `docker-compose.nube.yml`** (Caddy con certificado interno para `localhost`):

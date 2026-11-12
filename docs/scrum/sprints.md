@@ -105,9 +105,16 @@ registra devoluciones, y el sistema queda publicado en el VPS nuevo.
     `scripts/prueba-completa.sh` (#20), que pasa 34 de 34;
   - el 10/11/2026: iniciar sesión con la sesión abierta lleva al destino, y cerrar sesión borra la
     sesión guardada (#21).
-- **HU-22, en curso.** El 10/11/2026 quedó lista la preparación (#22): proveedor de pago obligatorio,
-  límites en nginx, HTTPS con Caddy y el despliegue de un comando. Falta desplegar y probar en el
-  VPS.
+- **HU-22 hecha el 12/11/2026.** El 10/11/2026 quedó lista la preparación (#22): proveedor de pago
+  obligatorio, límites en nginx, HTTPS con Caddy y el despliegue de un comando. El 12/11/2026 se
+  desplegó en un VPS Ubuntu 26.10 de 2 CPU y 3,4 GB, y el usuario lo probó por HTTPS:
+  - una compra real de Bs 0,01 con Libélula, confirmada sola, con los correos de detalle y de
+    entradas en el buzón del cliente;
+  - la validación de la entrada con la cámara del celular;
+  - el reporte de ventas en PDF y Excel, enviado a dos buzones del dominio propio.
+
+  El primer arranque falló: con MySQL 8.0.46, el `set -eu` de `mysql/crear-bases.sh` cortaba el
+  script de la imagen. Se corrigió en `main` con un subshell.
 
 Eventos y Venta con 380 pruebas, Seguridad con 239, Pagos con 64, Notificaciones con 23, gateway con
 15 y frontend con 920.
