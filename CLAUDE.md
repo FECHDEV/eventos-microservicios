@@ -3,7 +3,7 @@
 Sistema de gestión de eventos y venta de entradas, rehecho en microservicios a
 partir de un sistema en capas ya terminado. Se desarrolla con **Scrum**. El
 usuario trabaja solo y tiene todos los roles (Product Owner, Scrum Master y
-equipo). Entrega máxima: **09/12/2026**.
+equipo). Entrega y defensa final: **02/12/2026**.
 
 El sistema base (carpeta `proyecto tecno` del Escritorio) es **solo lectura**:
 se consulta y se copia de él, nunca se modifica.

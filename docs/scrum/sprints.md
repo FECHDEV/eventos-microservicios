@@ -1,7 +1,11 @@
 # Sprints
 
-Entrega máxima: 09/12/2026. Cada sprint anota su resultado al cerrar, porque de
+Entrega y defensa final: 02/12/2026. Cada sprint anota su resultado al cerrar, porque de
 acá sale la documentación final.
+
+**Cambio de fecha (12/11/2026):** la entrega pasó del 09/12 al 02/12, el día de la defensa final. Como
+los sprints 1 a 4 terminaron antes de lo previsto (HU-22, la última, el 12/11), el sprint 5 se adelanta y
+va del 13/11 al 02/12.
 
 | Sprint | Fechas | Objetivo |
 |---|---|---|
@@ -9,7 +13,7 @@ acá sale la documentación final.
 | 2 | 08/11 a 16/11 | Eventos y Venta: catálogo, gestión de eventos, reservas y entradas |
 | 3 | 17/11 a 25/11 | Notificaciones y Pagos con Libélula; compra de punta a punta |
 | 4 | 26/11 a 02/12 | Acceso, reportes, devoluciones, despliegue en el VPS nuevo y pruebas |
-| 5 | 03/12 a 09/12 | Documentación de perfil con Scrum, correcciones y margen de la entrega |
+| 5 | 13/11 a 02/12 | Documentación de perfil con Scrum, correcciones y defensa final |
 
 ---
 
