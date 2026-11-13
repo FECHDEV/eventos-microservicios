@@ -8,7 +8,7 @@ los sprints 1 a 4 terminaron antes de lo previsto (HU-22, la última, el 12/11),
 empieza el 13/11.
 
 **Replanificación (13/11/2026):** el plan reparte el rango del 30/10 al 25/11 entre los sprints 1 a 4,
-con más días para los más complejos, y deja la última semana para el sprint 5. Las fechas de la tabla son
+con los días según el esfuerzo y el riesgo de cada uno, y deja la última semana para el sprint 5. Las fechas de la tabla son
 las del plan; lo que se trabajó cada día es lo real, tomado de git, y está en el resultado de cada sprint.
 La estimación del Product Backlog es en puntos de historia (128 en total).
 
@@ -88,7 +88,8 @@ desde un servicio propio de Notificaciones y el pago desde un servicio propio de
   la conciliación cada minuto (#13). El adaptador de Libélula (#14) lee el QR con zxing y recibe el
   aviso de pago. Se probó con un pago real de Bs 0,01: compra confirmada y correos recibidos.
 
-Pagos con 30 pruebas, Eventos y Venta con 340, Seguridad con 238 y gateway con 14.
+Pagos con 63 pruebas, Eventos y Venta con 341, Seguridad con 238, Notificaciones con 21, gateway con 15 y
+frontend con 906 (CI del cierre del sprint, #14).
 
 ---
 
