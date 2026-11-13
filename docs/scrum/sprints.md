@@ -5,19 +5,24 @@ acá sale la documentación final.
 
 **Cambio de fecha (12/11/2026):** la entrega pasó del 09/12 al 02/12, el día de la defensa final. Como
 los sprints 1 a 4 terminaron antes de lo previsto (HU-22, la última, el 12/11), el sprint 5 se adelanta y
-va del 13/11 al 02/12.
+empieza el 13/11.
+
+**Replanificación (13/11/2026):** el plan reparte el rango del 30/10 al 25/11 entre los sprints 1 a 4,
+con más días para los más complejos, y deja la última semana para el sprint 5. Las fechas de la tabla son
+las del plan; lo que se trabajó cada día es lo real, tomado de git, y está en el resultado de cada sprint.
+La estimación del Product Backlog es en puntos de historia (128 en total).
 
 | Sprint | Fechas | Objetivo |
 |---|---|---|
-| 1 | 30/10 a 07/11 | Repositorio, Docker, CI, gateway y Seguridad, con la complejidad de la contraseña |
-| 2 | 08/11 a 16/11 | Eventos y Venta: catálogo, gestión de eventos, reservas y entradas |
-| 3 | 17/11 a 25/11 | Notificaciones y Pagos con Libélula; compra de punta a punta |
-| 4 | 26/11 a 02/12 | Acceso, reportes, devoluciones, despliegue en el VPS nuevo y pruebas |
-| 5 | 13/11 a 02/12 | Documentación de perfil con Scrum, correcciones y defensa final |
+| 1 | 30/10 a 05/11 | Repositorio, Docker, CI, gateway y Seguridad, con la complejidad de la contraseña |
+| 2 | 06/11 a 11/11 | Eventos y Venta: catálogo, gestión de eventos, reservas y entradas |
+| 3 | 12/11 a 18/11 | Notificaciones y Pagos con Libélula; compra de punta a punta |
+| 4 | 19/11 a 25/11 | Acceso, reportes, devoluciones, despliegue en el VPS nuevo y pruebas |
+| 5 | 26/11 a 02/12 | Documentación de perfil con Scrum, correcciones y defensa final |
 
 ---
 
-## Sprint 1 (30/10 a 07/11)
+## Sprint 1 (30/10 a 05/11)
 
 **Objetivo:** un usuario se registra, inicia sesión y gestiona su cuenta a través
 del gateway, con el sistema levantado en Docker y el CI en verde.
@@ -51,7 +56,7 @@ con 232 pruebas, gateway con 8 y frontend con 900.
 
 ---
 
-## Sprint 2 (08/11 a 16/11)
+## Sprint 2 (06/11 a 11/11)
 
 **Objetivo:** el catálogo es público, el Administrador gestiona sus eventos y el Cliente reserva y
 consulta sus entradas, en un servicio propio de Eventos y Venta.
@@ -68,7 +73,7 @@ hasta HU-18, y las pantallas de entradas se probaron sin entradas reales, porque
 
 ---
 
-## Sprint 3 (17/11 a 25/11)
+## Sprint 3 (12/11 a 18/11)
 
 **Objetivo:** el Cliente paga su reserva con QR y recibe sus entradas por correo, con los correos
 desde un servicio propio de Notificaciones y el pago desde un servicio propio de Pagos.
@@ -87,7 +92,7 @@ Pagos con 30 pruebas, Eventos y Venta con 340, Seguridad con 238 y gateway con 1
 
 ---
 
-## Sprint 4 (26/11 a 02/12)
+## Sprint 4 (19/11 a 25/11)
 
 **Objetivo:** el Personal autorizado valida entradas en la puerta, el Administrador saca reportes y
 registra devoluciones, y el sistema queda publicado en el VPS nuevo.
