@@ -127,4 +127,4 @@ registra devoluciones, y el sistema queda publicado en el VPS nuevo.
   script de la imagen. Se corrigió en `main` con un subshell.
 
 Eventos y Venta con 380 pruebas, Seguridad con 239, Pagos con 64, Notificaciones con 23, gateway con
-15 y frontend con 920.
+17 y frontend con 921 (CI del cierre del sprint, 12/11).
