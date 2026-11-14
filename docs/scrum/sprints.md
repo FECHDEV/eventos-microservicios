@@ -128,3 +128,17 @@ registra devoluciones, y el sistema queda publicado en el VPS nuevo.
 
 Eventos y Venta con 380 pruebas, Seguridad con 239, Pagos con 64, Notificaciones con 23, gateway con
 17 y frontend con 921 (CI del cierre del sprint, 12/11).
+
+---
+
+## Sprint 5 (26/11 a 02/12)
+
+**Objetivo:** la documentación del proyecto queda completa: perfil, Sprint 0, los cuatro sprints de
+desarrollo y los artefactos de todo el proyecto, a partir del código, de git y de este registro.
+
+**Backlog:** HU-23.
+
+**Resultado:** HU-23 hecha el 14/11/2026, antes de la fecha prevista. El documento se trabajó el 12/11
+(perfil, Sprint 0 y Sprint 1), el 13/11 (revisión, estimación en puntos y Sprints 2 y 3) y el 14/11
+(Sprint 4, artefactos, conclusiones, recomendaciones, bibliografía y anexos), y se revisó sprint por
+sprint contra el código, git y el CI. Queda la defensa final del 02/12.
