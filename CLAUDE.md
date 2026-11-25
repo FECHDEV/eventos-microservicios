@@ -270,5 +270,6 @@ No cargar todo de entrada. Consultar según la tarea:
 | `docs/criterios-aceptacion/<CU-XX>.md` | Requisitos del CU en EARS: la spec del plan. |
 | `docs/modelo-diseno-y-datos.md` | Antes de escribir una entidad. Es el modelo del sistema base: el reparto por servicio está en «Arquitectura». |
 | `docs/decisiones.md` | Antes de resolver una ambigüedad. Empezar por su índice. |
+| `docs/estado-del-proyecto.md` | Para saber qué está terminado, cómo es la documentación final y qué falta para la defensa. |
 | `docs/flujo-sdd.md` | Antes de empezar una historia. |
 | `docs/requisitos-no-funcionales.md` | Antes de resolver algo transversal. |
