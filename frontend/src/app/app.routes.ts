@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 
 import { cambiosSinGuardarGuard } from './core/guards/cambios-sin-guardar.guard';
 import { rolGuard } from './core/guards/rol.guard';
+import { ROLES_POR_AREA } from './core/modelos/usuario';
 import { sesionGuard, sinSesionGuard } from './core/guards/sesion.guard';
 
 // Cada pantalla se carga cuando hace falta, para que el paquete inicial no
@@ -106,14 +107,14 @@ export const routes: Routes = [
     path: 'usuarios',
     title: 'Usuarios · Sarao',
     canActivate: [rolGuard],
-    data: { rol: 'ADMINISTRADOR', pagina: 'USUARIOS' },
+    data: { rol: ROLES_POR_AREA.usuarios, pagina: 'USUARIOS' },
     loadComponent: () => import('./features/usuarios/usuarios.page').then((m) => m.UsuariosPage),
   },
   {
     path: 'eventos',
     title: 'Eventos · Sarao',
     canActivate: [rolGuard],
-    data: { rol: 'ADMINISTRADOR', pagina: 'EVENTOS' },
+    data: { rol: ROLES_POR_AREA.eventos, pagina: 'EVENTOS' },
     loadComponent: () => import('./features/eventos/lista/eventos.page').then((m) => m.EventosPage),
   },
   // Antes que la ficha: «nuevo» no es un id
@@ -122,7 +123,7 @@ export const routes: Routes = [
     title: 'Nuevo evento · Sarao',
     canActivate: [rolGuard],
     canDeactivate: [cambiosSinGuardarGuard],
-    data: { rol: 'ADMINISTRADOR', pagina: 'NUEVO_EVENTO' },
+    data: { rol: ROLES_POR_AREA.eventos, pagina: 'NUEVO_EVENTO' },
     loadComponent: () =>
       import('./features/eventos/datos/datos-evento.page').then((m) => m.DatosEventoPage),
   },
@@ -131,7 +132,7 @@ export const routes: Routes = [
     path: 'eventos/:id',
     title: 'Evento · Sarao',
     canActivate: [rolGuard],
-    data: { rol: 'ADMINISTRADOR', pagina: 'FICHA_DE_EVENTO' },
+    data: { rol: ROLES_POR_AREA.eventos, pagina: 'FICHA_DE_EVENTO' },
     loadComponent: () => import('./features/eventos/ficha/evento.page').then((m) => m.EventoPage),
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'datos' },
@@ -159,14 +160,14 @@ export const routes: Routes = [
     path: 'devoluciones',
     title: 'Devoluciones · Sarao',
     canActivate: [rolGuard],
-    data: { rol: 'ADMINISTRADOR', pagina: 'DEVOLUCIONES' },
+    data: { rol: ROLES_POR_AREA.devoluciones, pagina: 'DEVOLUCIONES' },
     loadComponent: () => import('./features/devoluciones/lista/devoluciones.page').then((m) => m.DevolucionesPage),
   },
   {
     path: 'devoluciones/:id',
     title: 'Devoluciones del evento · Sarao',
     canActivate: [rolGuard],
-    data: { rol: 'ADMINISTRADOR', pagina: 'DEVOLUCIONES_DEL_EVENTO' },
+    data: { rol: ROLES_POR_AREA.devoluciones, pagina: 'DEVOLUCIONES_DEL_EVENTO' },
     loadComponent: () =>
       import('./features/devoluciones/evento/devoluciones-del-evento.page').then((m) => m.DevolucionesDelEventoPage),
   },
@@ -175,15 +176,15 @@ export const routes: Routes = [
     path: 'reportes',
     title: 'Reportes · Sarao',
     canActivate: [rolGuard],
-    data: { rol: 'ADMINISTRADOR', pagina: 'REPORTES' },
+    data: { rol: ROLES_POR_AREA.reportes, pagina: 'REPORTES' },
     loadComponent: () => import('./features/reportes/reportes.page').then((m) => m.ReportesPage),
   },
-  // CU-15: validar entradas en la puerta es del Personal autorizado
+  // CU-15: validar entradas en la puerta es de Control de acceso y del Administrador
   {
     path: 'validar',
     title: 'Validar entradas · Sarao',
     canActivate: [rolGuard],
-    data: { rol: 'PERSONAL', pagina: 'VALIDACION' },
+    data: { rol: ROLES_POR_AREA.validar, pagina: 'VALIDACION' },
     loadComponent: () => import('./features/validacion/validar-entradas.page').then((m) => m.ValidarEntradasPage),
   },
   { path: '**', redirectTo: '' },

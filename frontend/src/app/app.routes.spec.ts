@@ -139,11 +139,21 @@ describe('rutas', () => {
     expect(await navegarComo(null, '/reportes')).toBe('/inicio-sesion?destino=%2Freportes');
   });
 
-  // CU-15: validar entradas es del personal autorizado
-  it('validar entradas es del personal autorizado', async () => {
+  // CU-15: validar entradas es de Control de acceso y del Administrador
+  it('validar entradas es de control de acceso y del administrador', async () => {
     expect(await navegarComo('PERSONAL', '/validar')).toBe('/validar');
     expect(await navegarComo('CLIENTE', '/validar')).toBe('/');
-    expect(await navegarComo('ADMINISTRADOR', '/validar')).toBe('/');
+    expect(await navegarComo('ADMINISTRADOR', '/validar')).toBe('/validar');
+    expect(await navegarComo('CONTADOR', '/validar')).toBe('/');
+  });
+
+  // Roles del personal: eventos del Organizador, reportes del Contador
+  it('cada rol del personal entra solo a lo suyo', async () => {
+    expect(await navegarComo('ORGANIZADOR', '/eventos')).toBe('/eventos');
+    expect(await navegarComo('ORGANIZADOR', '/reportes')).toBe('/');
+    expect(await navegarComo('CONTADOR', '/reportes')).toBe('/reportes');
+    expect(await navegarComo('CONTADOR', '/eventos')).toBe('/');
+    expect(await navegarComo('CONTADOR', '/usuarios')).toBe('/');
     expect(await navegarComo(null, '/validar')).toBe('/inicio-sesion?destino=%2Fvalidar');
   });
 

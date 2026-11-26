@@ -1,4 +1,38 @@
-<h1>Usuarios</h1>
+<div class="encabezado">
+  <h1>Usuarios</h1>
+  @if (filtros().grupo === 'personal' && !mostrandoAlta()) {
+    <button type="button" class="principal" (click)="mostrandoAlta.set(true)">Dar de alta personal</button>
+  }
+</div>
+
+<!-- CU-09 RF-27: el personal y los clientes son listas separadas -->
+<div class="pestanas" role="group" aria-label="Qué cuentas ver">
+  <button type="button" [attr.aria-pressed]="filtros().grupo === 'personal'" (click)="alElegirGrupo('personal')">
+    Personal
+  </button>
+  <button type="button" [attr.aria-pressed]="filtros().grupo === 'clientes'" (click)="alElegirGrupo('clientes')">
+    Clientes
+  </button>
+</div>
+
+@if (filtros().grupo === 'personal') {
+  @if (mostrandoAlta()) {
+    <app-alta-personal (creada)="alCrearPersonal($event)" (cancelada)="mostrandoAlta.set(false)" />
+  }
+  <details class="guia">
+    <summary>Qué hace cada rol</summary>
+    <dl>
+      @for (rol of roles; track rol) {
+        <div>
+          <dt>{{ nombresDeRol[rol] }}</dt>
+          <dd>{{ descripcionesDeRol[rol] }}</dd>
+        </div>
+      }
+    </dl>
+  </details>
+} @else {
+  <p class="nota">Los clientes se registran solos en la web para comprar. Aquí solo se activan o desactivan sus cuentas.</p>
+}
 
 <form class="filtros" role="search" aria-label="Filtrar usuarios" (submit)="$event.preventDefault()">
   <div class="campo busqueda">
@@ -15,15 +49,17 @@
     />
   </div>
 
-  <div class="campo">
-    <label for="filtro-rol">Tipo de cuenta</label>
-    <select id="filtro-rol" name="rol" (change)="alElegirRol($any($event.target).value)">
-      <option value="" [selected]="filtros().rol === null">Todos</option>
-      @for (rol of roles; track rol) {
-        <option [value]="rol" [selected]="filtros().rol === rol">{{ nombresDeRol[rol] }}</option>
-      }
-    </select>
-  </div>
+  @if (filtros().grupo === 'personal') {
+    <div class="campo">
+      <label for="filtro-rol">Rol</label>
+      <select id="filtro-rol" name="rol" (change)="alElegirRol($any($event.target).value)">
+        <option value="" [selected]="filtros().rol === null">Todos</option>
+        @for (rol of roles; track rol) {
+          <option [value]="rol" [selected]="filtros().rol === rol">{{ nombresDeRol[rol] }}</option>
+        }
+      </select>
+    </div>
+  }
 
   <div class="campo">
     <label for="filtro-estado">Estado</label>
@@ -64,12 +100,14 @@
   } @else {
     <div class="contenedor-tabla">
       <table>
-        <caption class="solo-lectores">Usuarios registrados</caption>
+        <caption class="solo-lectores">{{ filtros().grupo === 'personal' ? 'Personal' : 'Clientes' }}</caption>
         <thead>
           <tr>
             <th scope="col">Nombre</th>
             <th scope="col">Correo</th>
-            <th scope="col">Tipo de cuenta</th>
+            @if (filtros().grupo === 'personal') {
+              <th scope="col">Rol</th>
+            }
             <th scope="col">Estado</th>
             <th scope="col">Alta</th>
             <th scope="col">Acciones</th>
@@ -80,7 +118,9 @@
             <tr>
               <th scope="row" data-etiqueta="Nombre">{{ usuario.nombre }} {{ usuario.apellido }}</th>
               <td data-etiqueta="Correo" class="correo">{{ usuario.correo }}</td>
-              <td data-etiqueta="Tipo de cuenta">{{ nombresDeRol[usuario.rol] }}</td>
+              @if (filtros().grupo === 'personal') {
+                <td data-etiqueta="Rol">{{ nombresDeRol[usuario.rol] }}</td>
+              }
               <td data-etiqueta="Estado">
                 <span class="estado" [class.desactivada]="usuario.estado === 'DESACTIVADA'">
                   {{ nombresDeEstado[usuario.estado] }}
@@ -94,10 +134,11 @@
                   @let desactivada = usuario.estado === 'DESACTIVADA';
                   @let ocupada = procesando().has(usuario.idUsuario);
                   <div class="acciones">
+                    @if (usuario.rol !== 'CLIENTE') {
                     <select
                       [name]="'rol-' + usuario.idUsuario"
                       autocomplete="off"
-                      [attr.aria-label]="'Tipo de cuenta de ' + nombreDe(usuario)"
+                      [attr.aria-label]="'Rol de ' + nombreDe(usuario)"
                       [attr.aria-describedby]="desactivada ? 'ayuda-rol-' + usuario.idUsuario : null"
                       [disabled]="desactivada || ocupada"
                       (change)="alElegirRolDe(usuario, $any($event.target))"
@@ -106,6 +147,7 @@
                         <option [value]="rol" [selected]="usuario.rol === rol">{{ nombresDeRol[rol] }}</option>
                       }
                     </select>
+                    }
                     <button
                       type="button"
                       class="secundario"
@@ -116,9 +158,9 @@
                       {{ desactivada ? 'Reactivar' : 'Desactivar' }}
                     </button>
                   </div>
-                  @if (desactivada) {
+                  @if (desactivada && usuario.rol !== 'CLIENTE') {
                     <p class="ayuda" [id]="'ayuda-rol-' + usuario.idUsuario">
-                      Reactívala para cambiar su tipo de cuenta.
+                      Reactívala para cambiar su rol.
                     </p>
                   }
                 }

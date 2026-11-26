@@ -144,15 +144,16 @@ class ValidacionIntegracionTest {
 		return jdbc.queryForObject("SELECT estado FROM entrada WHERE codigo_qr = ?", String.class, codigo);
 	}
 
-	// RF-1
+	// RF-1, con el cambio del 25/11: también valida el Administrador (decisiones.md → Roles del personal)
 	@Test
-	void soloElPersonalValida() throws Exception {
+	void soloControlDeAccesoYElAdministradorValidan() throws Exception {
 		int[] jazz = eventoDeHoy("Noche de jazz");
 
 		assertThat(mvc.get().uri("/api/accesos/eventos").exchange()).hasStatus(HttpStatus.UNAUTHORIZED);
 		assertThat(mvc.get().uri("/api/accesos/eventos").with(ana).exchange()).hasStatus(HttpStatus.FORBIDDEN);
-		assertThat(mvc.get().uri("/api/accesos/eventos").with(administrador()).exchange())
+		assertThat(mvc.get().uri("/api/accesos/eventos").with(SesionDelGateway.sesion(9L, "CONTADOR")).exchange())
 				.hasStatus(HttpStatus.FORBIDDEN);
+		assertThat(mvc.get().uri("/api/accesos/eventos").with(administrador()).exchange()).hasStatus(HttpStatus.OK);
 		assertThat(validar(ana, jazz[0], "x")).hasStatus(HttpStatus.FORBIDDEN);
 	}
 

@@ -20,7 +20,7 @@ const MENSAJES: Record<string, string> = {
 	ROL_PROPIO_NO_MODIFICABLE: 'No puedes cambiar tu propio rol.',
 	CUENTA_PROPIA_NO_DESACTIVABLE: 'No puedes desactivar tu propia cuenta.',
 	ULTIMO_ADMINISTRADOR_ACTIVO: 'Debe quedar al menos un administrador activo. Nombra a otro antes de hacer este cambio.',
-	FECHA_NACIMIENTO_REQUERIDA: 'Esta cuenta no tiene fecha de nacimiento, que es obligatoria para el tipo Cliente.',
+	CLIENTE_Y_PERSONAL_SEPARADOS: 'Una cuenta de cliente no pasa a ser del personal ni al revés. Al personal se lo da de alta.',
 	OPERACION_SIMULTANEA: 'Otra persona está modificando estos datos. Vuelve a intentar.',
 	EVENTO_NO_ENCONTRADO: 'No encontramos ese evento.',
 	EVENTO_CANCELADO: 'Este evento está cancelado y ya no se puede modificar.',

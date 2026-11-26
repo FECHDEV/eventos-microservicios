@@ -38,7 +38,7 @@ import com.sarao.seguridad.entity.Rol;
 import com.sarao.seguridad.entity.Usuario;
 import com.sarao.seguridad.exception.CuentaPropiaNoDesactivableException;
 import com.sarao.seguridad.exception.ErrorNegocioException;
-import com.sarao.seguridad.exception.FechaNacimientoRequeridaException;
+import com.sarao.seguridad.exception.ClienteYPersonalSeparadosException;
 import com.sarao.seguridad.exception.RolDeCuentaDesactivadaException;
 import com.sarao.seguridad.exception.RolPropioNoModificableException;
 import com.sarao.seguridad.exception.UltimoAdministradorActivoException;
@@ -129,7 +129,7 @@ class UsuariosControllerTest {
 
 	@Test
 	void listadoPasaLosFiltrosYDevuelveLaPaginaSinDatosSensibles() throws Exception {
-		given(gestionUsuariosService.listar(Rol.CLIENTE, EstadoCuenta.ACTIVA, "ana", 1, 5))
+		given(gestionUsuariosService.listar(Rol.CLIENTE, null, EstadoCuenta.ACTIVA, "ana", 1, 5))
 				.willReturn(new PageImpl<>(List.of(ana), PageRequest.of(1, 5), 6));
 
 		MvcTestResult resultado = listar("?rol=CLIENTE&estado=ACTIVA&texto=ana&pagina=1&tamano=5", admin);
@@ -154,12 +154,12 @@ class UsuariosControllerTest {
 
 	@Test
 	void listadoSinParametrosPideLaPrimeraPaginaDe20SinFiltros() {
-		given(gestionUsuariosService.listar(null, null, null, 0, 20))
+		given(gestionUsuariosService.listar(null, null, null, null, 0, 20))
 				.willReturn(new PageImpl<>(List.of(), PageRequest.of(0, 20), 0));
 
 		assertThat(listar("", admin)).hasStatus(HttpStatus.OK);
 
-		then(gestionUsuariosService).should().listar(null, null, null, 0, 20);
+		then(gestionUsuariosService).should().listar(null, null, null, null, 0, 20);
 	}
 
 	@Test
@@ -229,7 +229,7 @@ class UsuariosControllerTest {
 				Arguments.of(new RolPropioNoModificableException(), "ROL_PROPIO_NO_MODIFICABLE"),
 				Arguments.of(new UltimoAdministradorActivoException(), "ULTIMO_ADMINISTRADOR_ACTIVO"),
 				Arguments.of(new RolDeCuentaDesactivadaException(), "ROL_DE_CUENTA_DESACTIVADA"),
-				Arguments.of(new FechaNacimientoRequeridaException(), "FECHA_NACIMIENTO_REQUERIDA"));
+				Arguments.of(new ClienteYPersonalSeparadosException(), "CLIENTE_Y_PERSONAL_SEPARADOS"));
 	}
 
 	@ParameterizedTest

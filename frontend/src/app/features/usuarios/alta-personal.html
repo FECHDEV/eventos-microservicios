@@ -1,0 +1,84 @@
+<section class="alta" aria-labelledby="titulo-alta">
+  <h2 id="titulo-alta">Dar de alta a un miembro del personal</h2>
+  <p class="nota">
+    Recibe una contraseña inicial que puede cambiar en «Mis datos». Los clientes no se dan de alta aquí: se registran
+    solos en la web.
+  </p>
+
+  @if (avisoDeError()) {
+    <p class="aviso" role="alert">{{ avisoDeError() }}</p>
+  }
+
+  <form (submit)="enviar($event)" novalidate>
+    <div class="campo">
+      @let errorNombre = mensaje(formulario.nombre(), 'nombre');
+      <label for="nombre">Nombre</label>
+      <input id="nombre" type="text" autocomplete="off" [formField]="formulario.nombre"
+        [attr.aria-invalid]="errorNombre ? 'true' : null" [attr.aria-describedby]="errorNombre ? 'error-nombre' : null" />
+      @if (errorNombre) {
+        <p class="error" id="error-nombre">{{ errorNombre }}</p>
+      }
+    </div>
+
+    <div class="campo">
+      @let errorApellido = mensaje(formulario.apellido(), 'apellido');
+      <label for="apellido">Apellido</label>
+      <input id="apellido" type="text" autocomplete="off" [formField]="formulario.apellido"
+        [attr.aria-invalid]="errorApellido ? 'true' : null"
+        [attr.aria-describedby]="errorApellido ? 'error-apellido' : null" />
+      @if (errorApellido) {
+        <p class="error" id="error-apellido">{{ errorApellido }}</p>
+      }
+    </div>
+
+    <div class="campo">
+      @let errorCorreo = mensaje(formulario.correo(), 'correo');
+      <label for="correo">Correo</label>
+      <input id="correo" type="email" autocomplete="off" spellcheck="false" [formField]="formulario.correo"
+        [attr.aria-invalid]="errorCorreo ? 'true' : null" [attr.aria-describedby]="errorCorreo ? 'error-correo' : null" />
+      @if (errorCorreo) {
+        <p class="error" id="error-correo">{{ errorCorreo }}</p>
+      }
+    </div>
+
+    <div class="campo">
+      @let errorTelefono = mensaje(formulario.telefono(), 'telefono');
+      <label for="telefono">Teléfono <span class="opcional">(opcional)</span></label>
+      <input id="telefono" type="tel" autocomplete="off" [formField]="formulario.telefono"
+        [attr.aria-invalid]="errorTelefono ? 'true' : null"
+        [attr.aria-describedby]="errorTelefono ? 'error-telefono' : null" />
+      @if (errorTelefono) {
+        <p class="error" id="error-telefono">{{ errorTelefono }}</p>
+      }
+    </div>
+
+    <div class="campo">
+      @let errorRol = mensaje(formulario.rol(), 'rol');
+      <label for="rol">Rol</label>
+      <select id="rol" [formField]="formulario.rol" [attr.aria-invalid]="errorRol ? 'true' : null"
+        aria-describedby="descripcion-rol">
+        <option value="">Elige un rol…</option>
+        @for (rol of roles; track rol) {
+          <option [value]="rol">{{ nombresDeRol[rol] }}</option>
+        }
+      </select>
+      <p class="ayuda" id="descripcion-rol">{{ errorRol || descripcion() }}</p>
+    </div>
+
+    <div class="campo">
+      @let errorContrasena = mensaje(formulario.contrasena(), 'contrasena');
+      <label for="contrasena">Contraseña inicial</label>
+      <input id="contrasena" type="password" autocomplete="new-password" [formField]="formulario.contrasena"
+        [attr.aria-invalid]="errorContrasena ? 'true' : null"
+        [attr.aria-describedby]="errorContrasena ? 'error-contrasena' : null" />
+      @if (errorContrasena) {
+        <p class="error" id="error-contrasena">{{ errorContrasena }}</p>
+      }
+    </div>
+
+    <div class="botones">
+      <button type="submit" class="principal" [disabled]="enviando()">{{ enviando() ? 'Guardando…' : 'Dar de alta' }}</button>
+      <button type="button" class="secundario" (click)="cancelada.emit()">Cancelar</button>
+    </div>
+  </form>
+</section>

@@ -19,7 +19,7 @@ import { VisitasService } from './core/api/visitas.service';
 import { MARCA } from './core/marca';
 import { FiltrosDelCatalogo } from './core/modelos/catalogo';
 import { aConsulta, LARGO_MAXIMO_DEL_TEXTO, leerFiltros } from './core/modelos/filtros-en-la-url';
-import { nombreCompleto, Rol } from './core/modelos/usuario';
+import { nombreCompleto, Rol, ROLES_DEL_PERSONAL, ROLES_POR_AREA } from './core/modelos/usuario';
 import { PaginaVisitada } from './core/modelos/visitas';
 import { SesionService } from './core/sesion/sesion.service';
 import { TemaService } from './core/tema/tema.service';
@@ -31,13 +31,13 @@ import { cantidad } from './shared/formato/precios';
 // con sesión o sin ella. Ocultarlos según el rol es usabilidad: quien autoriza
 // es el backend
 const MODULOS: readonly { ruta: string; nombre: string; roles: readonly Rol[] }[] = [
-  { ruta: '/mis-entradas', nombre: 'Mis entradas', roles: ['CLIENTE'] },
-  { ruta: '/panel', nombre: 'Panel', roles: ['ADMINISTRADOR', 'PERSONAL'] },
-  { ruta: '/usuarios', nombre: 'Usuarios', roles: ['ADMINISTRADOR'] },
-  { ruta: '/eventos', nombre: 'Eventos', roles: ['ADMINISTRADOR'] },
-  { ruta: '/devoluciones', nombre: 'Devoluciones', roles: ['ADMINISTRADOR'] },
-  { ruta: '/reportes', nombre: 'Reportes', roles: ['ADMINISTRADOR'] },
-  { ruta: '/validar', nombre: 'Validar entradas', roles: ['PERSONAL'] },
+  { ruta: '/mis-entradas', nombre: 'Mis entradas', roles: ROLES_POR_AREA.misEntradas },
+  { ruta: '/panel', nombre: 'Panel', roles: ROLES_DEL_PERSONAL },
+  { ruta: '/usuarios', nombre: 'Usuarios', roles: ROLES_POR_AREA.usuarios },
+  { ruta: '/eventos', nombre: 'Eventos', roles: ROLES_POR_AREA.eventos },
+  { ruta: '/devoluciones', nombre: 'Devoluciones', roles: ROLES_POR_AREA.devoluciones },
+  { ruta: '/reportes', nombre: 'Reportes', roles: ROLES_POR_AREA.reportes },
+  { ruta: '/validar', nombre: 'Validar entradas', roles: ROLES_POR_AREA.validar },
 ];
 
 @Component({

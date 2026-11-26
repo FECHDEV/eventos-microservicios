@@ -16,7 +16,7 @@ public final class SesionDelGateway {
 		return sesion(7L, "CLIENTE");
 	}
 
-	private static RequestPostProcessor sesion(Long idUsuario, String rol) {
+	public static RequestPostProcessor sesion(Long idUsuario, String rol) {
 		return peticion -> {
 			peticion.addHeader("X-Clave-Servicio", "clave-de-pruebas");
 			peticion.addHeader("X-Usuario-Id", idUsuario.toString());

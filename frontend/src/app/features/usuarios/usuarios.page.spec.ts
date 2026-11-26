@@ -19,7 +19,7 @@ const ANA: UsuarioResumen = {
   nombre: 'Ana',
   apellido: 'Rojas',
   correo: 'ana@mail.com',
-  rol: 'CLIENTE',
+  rol: 'PERSONAL',
   estado: 'ACTIVA',
   fechaRegistro: '2026-09-12T11:00:00',
 };
@@ -137,7 +137,7 @@ describe('UsuariosPage', () => {
 
     expect(texto()).toContain('Ana Rojas');
     expect(texto()).toContain('ana@mail.com');
-    expect(texto()).toContain('Cliente');
+    expect(texto()).toContain('Control de acceso');
     expect(texto()).toContain('Activa');
     expect(texto()).toContain('12/09/2026');
     expect(texto()).toContain('Administrador Inicial');
@@ -153,16 +153,22 @@ describe('UsuariosPage', () => {
 
   // Recargar o compartir el enlace conserva la vista
   it('toma los filtros y la página de la URL', async () => {
-    await abrir('/usuarios?rol=CLIENTE&estado=ACTIVA&texto=ana&pagina=1');
+    await abrir('/usuarios?rol=CONTADOR&estado=ACTIVA&texto=ana&pagina=1');
 
-    expect(usuarios.filtros?.()).toEqual({ rol: 'CLIENTE', estado: 'ACTIVA', texto: 'ana', pagina: 1 });
+    expect(usuarios.filtros?.()).toEqual({
+      grupo: 'personal',
+      rol: 'CONTADOR',
+      estado: 'ACTIVA',
+      texto: 'ana',
+      pagina: 1,
+    });
   });
 
   // Un enlace alterado no llega al backend como un 400
   it('descarta valores de la URL que no son válidos', async () => {
     await abrir('/usuarios?rol=JEFE&estado=BORRADA&pagina=-3');
 
-    expect(usuarios.filtros?.()).toEqual({ rol: null, estado: null, texto: '', pagina: 0 });
+    expect(usuarios.filtros?.()).toEqual({ grupo: 'personal', rol: null, estado: null, texto: '', pagina: 0 });
   });
 
   // RF-5
@@ -184,7 +190,7 @@ describe('UsuariosPage', () => {
   });
 
   it('volver a «Todos» quita el filtro', async () => {
-    await abrir('/usuarios?rol=CLIENTE');
+    await abrir('/usuarios?rol=CONTADOR');
 
     await elegir('filtro-rol', '');
 
@@ -221,12 +227,12 @@ describe('UsuariosPage', () => {
   });
 
   it('pasa a la página siguiente conservando los filtros', async () => {
-    await abrir('/usuarios?rol=CLIENTE');
+    await abrir('/usuarios?rol=CONTADOR');
 
     boton('Siguiente').click();
     await harness.fixture.whenStable();
 
-    expect(url()).toBe('/usuarios?rol=CLIENTE&pagina=1');
+    expect(url()).toBe('/usuarios?rol=CONTADOR&pagina=1');
   });
 
   it('en la primera página no se puede ir atrás, en la última no se puede avanzar', async () => {
@@ -341,7 +347,7 @@ describe('UsuariosPage', () => {
     await abrir();
 
     const selector = fila('ana@mail.com').querySelector('select') as HTMLSelectElement;
-    expect(selector.getAttribute('aria-label')).toBe('Tipo de cuenta de Ana Rojas');
+    expect(selector.getAttribute('aria-label')).toBe('Rol de Ana Rojas');
     expect(botonDeFila('ana@mail.com').getAttribute('aria-label')).toBe('Desactivar a Ana Rojas');
   });
 
@@ -349,34 +355,34 @@ describe('UsuariosPage', () => {
   it('cambiar el rol pide confirmación nombrando a la persona', async () => {
     await abrir();
 
-    await elegirRol('ana@mail.com', 'PERSONAL');
+    await elegirRol('ana@mail.com', 'CONTADOR');
 
     expect(dialogo().hasAttribute('open')).toBe(true);
     expect(dialogo().textContent).toContain('Ana Rojas');
-    expect(dialogo().textContent).toContain('Personal autorizado');
+    expect(dialogo().textContent).toContain('Contador');
     expect(usuarios.cambiosDeRol).toEqual([]);
   });
 
   it('al confirmar cambia el rol y actualiza la fila', async () => {
     await abrir();
-    usuarios.respuesta = Promise.resolve({ ...ANA, rol: 'PERSONAL' });
-    await elegirRol('ana@mail.com', 'PERSONAL');
+    usuarios.respuesta = Promise.resolve({ ...ANA, rol: 'ORGANIZADOR' });
+    await elegirRol('ana@mail.com', 'ORGANIZADOR');
 
     await responderDialogo(true);
 
-    expect(usuarios.cambiosDeRol).toEqual([{ id: 7, rol: 'PERSONAL' }]);
-    expect(fila('ana@mail.com').textContent).toContain('Personal autorizado');
-    expect(texto()).toContain('Ana Rojas ahora es Personal autorizado.');
+    expect(usuarios.cambiosDeRol).toEqual([{ id: 7, rol: 'ORGANIZADOR' }]);
+    expect(fila('ana@mail.com').textContent).toContain('Organizador de eventos');
+    expect(texto()).toContain('Ana Rojas ahora es Organizador de eventos.');
   });
 
   it('al cancelar no cambia nada y el selector vuelve al rol actual', async () => {
     await abrir();
-    await elegirRol('ana@mail.com', 'PERSONAL');
+    await elegirRol('ana@mail.com', 'CONTADOR');
 
     await responderDialogo(false);
 
     expect(usuarios.cambiosDeRol).toEqual([]);
-    expect((fila('ana@mail.com').querySelector('select') as HTMLSelectElement).value).toBe('CLIENTE');
+    expect((fila('ana@mail.com').querySelector('select') as HTMLSelectElement).value).toBe('PERSONAL');
   });
 
   // RF-10, con confirmación
@@ -439,18 +445,18 @@ describe('UsuariosPage', () => {
       falso.respuesta = Promise.reject({
         status: 409,
         detail: 'detalle técnico',
-        codigo: 'FECHA_NACIMIENTO_REQUERIDA',
+        codigo: 'ULTIMO_ADMINISTRADOR_ACTIVO',
       });
       falso.respuesta.catch(() => undefined);
       falso.recurso.value.set(pagina([{ ...ANA, rol: 'PERSONAL' }, ADMIN]));
     });
-    await elegirRol('ana@mail.com', 'CLIENTE');
+    await elegirRol('ana@mail.com', 'CONTADOR');
 
     await responderDialogo(true);
 
-    expect(texto()).toContain('fecha de nacimiento');
+    expect(texto()).toContain('administrador activo');
     expect(texto()).not.toContain('detalle técnico');
-    expect(fila('ana@mail.com').textContent).toContain('Personal autorizado');
+    expect(fila('ana@mail.com').textContent).toContain('Control de acceso');
     expect((fila('ana@mail.com').querySelector('select') as HTMLSelectElement).value).toBe('PERSONAL');
   });
 
@@ -528,8 +534,38 @@ describe('UsuariosPage', () => {
   });
 
   // Una página que ya no existe ofrece volver al principio, no retroceder de a una
+  // RF-27: los clientes son otra lista, sin rol que cambiar
+  it('la pestaña de clientes los lista sin selector de rol y sin alta', async () => {
+    const carla: UsuarioResumen = { ...ANA, idUsuario: 9, nombre: 'Carla', correo: 'carla@mail.com', rol: 'CLIENTE' };
+    await abrir('/usuarios', (falso) => falso.recurso.value.set(pagina([carla])));
+
+    boton('Clientes').click();
+    await harness.fixture.whenStable();
+
+    expect(url()).toBe('/usuarios?grupo=clientes');
+    expect(usuarios.filtros?.().grupo).toBe('clientes');
+    expect(fila('carla@mail.com').querySelector('select')).toBeNull();
+    expect(pantalla().querySelector('#filtro-rol')).toBeNull();
+    expect(texto()).not.toContain('Dar de alta personal');
+  });
+
+  // RF-23: el alta muestra qué hace el rol elegido
+  it('el alta de personal se abre con la descripción de cada rol', async () => {
+    await abrir();
+
+    boton('Dar de alta personal').click();
+    await harness.fixture.whenStable();
+    const rol: HTMLSelectElement = pantalla().querySelector('app-alta-personal #rol')!;
+    rol.value = 'CONTADOR';
+    rol.dispatchEvent(new Event('input'));
+    rol.dispatchEvent(new Event('change'));
+    await harness.fixture.whenStable();
+
+    expect(pantalla().querySelector('#descripcion-rol')?.textContent).toContain('Solo reportes');
+  });
+
   it('fuera de rango ofrece volver a la primera página', async () => {
-    await abrir('/usuarios?rol=CLIENTE&pagina=50', (falso) =>
+    await abrir('/usuarios?rol=CONTADOR&pagina=50', (falso) =>
       falso.recurso.value.set(pagina([], { pagina: 50, totalElementos: 21, totalPaginas: 2 })),
     );
 
@@ -537,6 +573,6 @@ describe('UsuariosPage', () => {
     boton('Ir a la primera página').click();
     await harness.fixture.whenStable();
 
-    expect(url()).toBe('/usuarios?rol=CLIENTE');
+    expect(url()).toBe('/usuarios?rol=CONTADOR');
   });
 });

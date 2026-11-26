@@ -1,0 +1,52 @@
+@use '../../../styles/lista';
+@use '../../../styles/formulario';
+
+:host {
+	display: block;
+}
+
+.alta {
+	padding: var(--sarao-espacio-6);
+	background: var(--sarao-superficie);
+	border: 1px solid var(--sarao-borde);
+	border-radius: var(--sarao-radio);
+}
+
+h2 {
+	margin: 0 0 var(--sarao-espacio-2);
+	font-size: 18px;
+}
+
+.nota,
+.ayuda,
+.opcional {
+	color: var(--sarao-texto-suave);
+}
+
+.nota {
+	margin: 0 0 var(--sarao-espacio-4);
+}
+
+form {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: var(--sarao-espacio-4);
+}
+
+.ayuda {
+	margin: var(--sarao-espacio-1) 0 0;
+	font-size: 12.5px;
+	min-height: 1em;
+}
+
+.botones {
+	grid-column: 1 / -1;
+	display: flex;
+	gap: var(--sarao-espacio-3);
+}
+
+@media (max-width: 640px) {
+	form {
+		grid-template-columns: 1fr;
+	}
+}

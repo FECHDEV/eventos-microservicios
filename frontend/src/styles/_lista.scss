@@ -221,3 +221,27 @@ div.vacio p {
 		text-align: left;
 	}
 }
+
+// La acción principal de una pantalla, como botón (en Eventos es un enlace con el mismo aspecto)
+.principal {
+	font: inherit;
+	font-size: 14px;
+	font-weight: 600;
+	min-height: 44px;
+	padding: var(--sarao-espacio-2) var(--sarao-espacio-4);
+	border: 0;
+	border-radius: var(--sarao-radio-control);
+	background: var(--sarao-ambar);
+	color: var(--sarao-sobre-ambar);
+	cursor: pointer;
+	transition: background-color var(--sarao-transicion);
+}
+
+.principal:hover:not([disabled]) {
+	background: var(--sarao-ambar-fuerte);
+}
+
+.principal[disabled] {
+	opacity: 0.6;
+	cursor: default;
+}

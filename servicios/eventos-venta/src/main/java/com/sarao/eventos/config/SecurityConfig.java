@@ -35,18 +35,19 @@ public class SecurityConfig {
 						.requestMatchers(HttpMethod.HEAD, "/api/catalogo/**").permitAll()
 						// El contador del pie de cada página, también sin sesión. Solo sumar una visita
 						.requestMatchers(HttpMethod.POST, "/api/visitas/*").permitAll()
-						.requestMatchers("/api/eventos/**").hasRole("ADMINISTRADOR")
+						// Roles del personal (decisiones.md): el Administrador hace todo; cada rol del personal, lo suyo
+						.requestMatchers("/api/eventos/**").hasAnyRole("ADMINISTRADOR", "ORGANIZADOR")
 						// CU-13: las devoluciones son del Administrador (RF-1)
 						.requestMatchers("/api/devoluciones/**").hasRole("ADMINISTRADOR")
 						// CU-14: los reportes son del Administrador (RF-1)
-						.requestMatchers("/api/reportes/**").hasRole("ADMINISTRADOR")
+						.requestMatchers("/api/reportes/**").hasAnyRole("ADMINISTRADOR", "CONTADOR")
 						// CU-06: comprar es del Cliente, el único con fecha de nacimiento para validar la edad
 						// (decisiones.md → Adquirir entradas (CU-06))
 						.requestMatchers("/api/reservas/**").hasRole("CLIENTE")
 						// CU-08: sus entradas las consulta el Cliente, y solo las suyas (ConsultaDeEntradas)
 						.requestMatchers("/api/entradas/**").hasRole("CLIENTE")
 						// CU-15: validar entradas en la puerta es del Personal autorizado (RF-1)
-						.requestMatchers("/api/accesos/**").hasRole("PERSONAL")
+						.requestMatchers("/api/accesos/**").hasAnyRole("ADMINISTRADOR", "PERSONAL")
 						// Solo otros servicios, con la clave y sin usuario: el gateway no publica /interno
 						.requestMatchers("/interno/**").hasRole("SERVICIO")
 						.anyRequest().denyAll())

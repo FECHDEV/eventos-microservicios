@@ -1,5 +1,11 @@
 package com.sarao.seguridad;
 
+import com.sarao.seguridad.entity.Usuario;
+
+import org.springframework.security.crypto.password.PasswordEncoder;
+
+import java.time.LocalDateTime;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.ArrayList;
@@ -62,8 +68,12 @@ class GestionUsuariosIntegracionTest {
 	@Autowired
 	private JdbcTemplate jdbc;
 
+	@Autowired
+	private PasswordEncoder passwordEncoder;
+
 	private Long idAdmin;
 	private Long idAna;
+	private Long idJorge;
 
 	@BeforeEach
 	void prepararAdministradorYAna() {
@@ -74,13 +84,17 @@ class GestionUsuariosIntegracionTest {
 				.content(REGISTRO_DE_ANA).exchange()).hasStatus(HttpStatus.CREATED);
 		idAdmin = usuarioRepository.findByCorreo(ADMIN).orElseThrow().getIdUsuario();
 		idAna = usuarioRepository.findByCorreo("ana@mail.com").orElseThrow().getIdUsuario();
+		// Personal de Control de acceso, dado de alta como lo hace el Administrador (RF-23)
+		idJorge = usuarioRepository.save(Usuario.crearPersonal("Jorge", "Méndez", "jorge@mail.com",
+				passwordEncoder.encode("Secreta12"), null, Rol.PERSONAL, LocalDateTime.now())).getIdUsuario();
 	}
 
 	@AfterEach
 	void limpiar() {
 		// Los otros tests de integración inician sesión con el administrador inicial: vuelve a su rol y estado
 		jdbc.update("UPDATE usuario SET rol = 'ADMINISTRADOR', estado = 'ACTIVA' WHERE correo = ?", ADMIN);
-		usuarioRepository.findByCorreo("ana@mail.com").ifPresent(usuarioRepository::delete);
+		Stream.of("ana@mail.com", "jorge@mail.com", "mariela@mail.com")
+				.forEach(correo -> usuarioRepository.findByCorreo(correo).ifPresent(usuarioRepository::delete));
 	}
 
 	private MvcTestResult iniciarSesion(String correo, String contrasena) {
@@ -154,25 +168,103 @@ class GestionUsuariosIntegracionTest {
 	}
 
 	@Test
-	void cambioDeRolRigeEnLaSiguientePeticionDelMismoTokenYConservaLaFecha() throws Exception {
+	void cambioDeRolRigeEnLaSiguientePeticionDelMismoToken() throws Exception {
 		String tokenAdmin = token(ADMIN, CLAVE_ADMIN);
-		String tokenAna = token("ana@mail.com", "Secreta12");
+		String tokenJorge = token("jorge@mail.com", "Secreta12");
 
-		MvcTestResult aPersonal = cambiarRol(tokenAdmin, idAna, "PERSONAL");
+		MvcTestResult aContador = cambiarRol(tokenAdmin, idJorge, "CONTADOR");
 
-		assertThat(aPersonal).hasStatus(HttpStatus.OK);
-		assertThat(aPersonal).bodyJson().extractingPath("$.rol").isEqualTo("PERSONAL");
-		assertThat(datosPersonales(tokenAna)).bodyJson().extractingPath("$.rol").isEqualTo("PERSONAL");
-		assertThat(listar(tokenAna, "")).hasStatus(HttpStatus.FORBIDDEN);
+		assertThat(aContador).hasStatus(HttpStatus.OK);
+		assertThat(aContador).bodyJson().extractingPath("$.rol").isEqualTo("CONTADOR");
+		assertThat(datosPersonales(tokenJorge)).bodyJson().extractingPath("$.rol").isEqualTo("CONTADOR");
+		assertThat(listar(tokenJorge, "")).hasStatus(HttpStatus.FORBIDDEN);
 
-		assertThat(cambiarRol(tokenAdmin, idAna, "ADMINISTRADOR")).hasStatus(HttpStatus.OK);
-		assertThat(listar(tokenAna, "")).hasStatus(HttpStatus.OK);
+		assertThat(cambiarRol(tokenAdmin, idJorge, "ADMINISTRADOR")).hasStatus(HttpStatus.OK);
+		assertThat(listar(tokenJorge, "")).hasStatus(HttpStatus.OK);
 
-		assertThat(cambiarRol(tokenAdmin, idAna, "CLIENTE")).hasStatus(HttpStatus.OK);
-		MvcTestResult datos = datosPersonales(tokenAna);
-		assertThat(datos).bodyJson().extractingPath("$.rol").isEqualTo("CLIENTE");
-		assertThat(datos).bodyJson().extractingPath("$.fechaNacimiento").isEqualTo("2000-05-20");
-		assertThat(listar(tokenAna, "")).hasStatus(HttpStatus.FORBIDDEN);
+		assertThat(cambiarRol(tokenAdmin, idJorge, "ORGANIZADOR")).hasStatus(HttpStatus.OK);
+		assertThat(datosPersonales(tokenJorge)).bodyJson().extractingPath("$.rol").isEqualTo("ORGANIZADOR");
+		assertThat(listar(tokenJorge, "")).hasStatus(HttpStatus.FORBIDDEN);
+	}
+
+	// RF-25
+	@Test
+	void clienteYPersonalNoSeMezclan() throws Exception {
+		String tokenAdmin = token(ADMIN, CLAVE_ADMIN);
+
+		MvcTestResult anaAlPersonal = cambiarRol(tokenAdmin, idAna, "PERSONAL");
+		MvcTestResult jorgeACliente = cambiarRol(tokenAdmin, idJorge, "CLIENTE");
+
+		assertThat(anaAlPersonal).hasStatus(HttpStatus.CONFLICT);
+		assertThat(anaAlPersonal).bodyJson().extractingPath("$.codigo").isEqualTo("CLIENTE_Y_PERSONAL_SEPARADOS");
+		assertThat(jorgeACliente).hasStatus(HttpStatus.CONFLICT);
+		assertThat(jorgeACliente).bodyJson().extractingPath("$.codigo").isEqualTo("CLIENTE_Y_PERSONAL_SEPARADOS");
+		assertThat(datosPersonales(token("ana@mail.com", "Secreta12"))).bodyJson().extractingPath("$.rol")
+				.isEqualTo("CLIENTE");
+	}
+
+	private MvcTestResult darDeAlta(String token, String cuerpo) {
+		return mvc.post().uri("/api/usuarios").with(SesionDelGateway.sesion(mvc, token))
+				.contentType(MediaType.APPLICATION_JSON).content(cuerpo).exchange();
+	}
+
+	private static String altaDeMariela(String rol) {
+		return """
+				{"nombre":"Mariela","apellido":"Suárez","correo":"Mariela@Mail.com","contrasena":"Inicial123","rol":"%s"}
+				""".formatted(rol);
+	}
+
+	// RF-23, RF-26, RF-28
+	@Test
+	void elAdministradorDaDeAltaAlPersonalQueEntraConSuRol() throws Exception {
+		String tokenAdmin = token(ADMIN, CLAVE_ADMIN);
+
+		MvcTestResult alta = darDeAlta(tokenAdmin, altaDeMariela("CONTADOR"));
+
+		assertThat(alta).hasStatus(HttpStatus.CREATED);
+		assertThat(alta).bodyJson().extractingPath("$.correo").isEqualTo("mariela@mail.com");
+		assertThat(alta).bodyJson().extractingPath("$.rol").isEqualTo("CONTADOR");
+		assertThat(alta).bodyJson().extractingPath("$.estado").isEqualTo("ACTIVA");
+		MvcTestResult datos = datosPersonales(token("mariela@mail.com", "Inicial123"));
+		assertThat(datos).hasStatus(HttpStatus.OK);
+		assertThat(datos).bodyJson().extractingPath("$.rol").isEqualTo("CONTADOR");
+
+		MvcTestResult repetido = darDeAlta(tokenAdmin, altaDeMariela("ORGANIZADOR"));
+		assertThat(repetido).hasStatus(HttpStatus.CONFLICT);
+		assertThat(repetido).bodyJson().extractingPath("$.codigo").isEqualTo("CUENTA_EXISTENTE");
+	}
+
+	// RF-24, RF-25, RF-26, RF-2
+	@Test
+	void altaInvalidaOSinSerAdministradorNoRegistraNada() throws Exception {
+		String tokenAdmin = token(ADMIN, CLAVE_ADMIN);
+
+		MvcTestResult cliente = darDeAlta(tokenAdmin, altaDeMariela("CLIENTE"));
+		MvcTestResult rolInexistente = darDeAlta(tokenAdmin, altaDeMariela("SUPERADMIN"));
+		MvcTestResult sinDatos = darDeAlta(tokenAdmin, "{\"rol\":\"CONTADOR\",\"contrasena\":\"corta\"}");
+		MvcTestResult jorge = darDeAlta(token("jorge@mail.com", "Secreta12"), altaDeMariela("CONTADOR"));
+
+		assertThat(cliente).hasStatus(HttpStatus.BAD_REQUEST);
+		assertThat(cliente).bodyJson().extractingPath("$.codigo").isEqualTo("DATOS_INVALIDOS");
+		assertThat(rolInexistente).hasStatus(HttpStatus.BAD_REQUEST);
+		assertThat(sinDatos).hasStatus(HttpStatus.BAD_REQUEST);
+		assertThat(sinDatos).bodyJson().extractingPath("$.errores").asArray().hasSizeGreaterThanOrEqualTo(4);
+		assertThat(jorge).hasStatus(HttpStatus.FORBIDDEN);
+		assertThat(usuarioRepository.findByCorreo("mariela@mail.com")).isEmpty();
+	}
+
+	// RF-27
+	@Test
+	void laListaSeparaAlPersonalDeLosClientes() throws Exception {
+		String tokenAdmin = token(ADMIN, CLAVE_ADMIN);
+
+		MvcTestResult personal = listar(tokenAdmin, "?personal=true&tamano=100");
+		MvcTestResult clientes = listar(tokenAdmin, "?personal=false&tamano=100");
+
+		assertThat(personal).bodyJson().extractingPath("$.contenido[*].correo").asArray()
+				.contains("jorge@mail.com", ADMIN).doesNotContain("ana@mail.com");
+		assertThat(clientes).bodyJson().extractingPath("$.contenido[*].correo").asArray()
+				.contains("ana@mail.com").doesNotContain("jorge@mail.com", ADMIN);
 	}
 
 	@Test
@@ -218,22 +310,22 @@ class GestionUsuariosIntegracionTest {
 	}
 
 	@Test
-	void otroAdministradorNoPuedePasarAClienteAlAdministradorInicialPeroSiAPersonal() throws Exception {
-		assertThat(cambiarRol(token(ADMIN, CLAVE_ADMIN), idAna, "ADMINISTRADOR")).hasStatus(HttpStatus.OK);
-		String tokenAna = token("ana@mail.com", "Secreta12");
+	void otroAdministradorNoPuedePasarAClienteAlAdministradorInicialPeroSiAControlDeAcceso() throws Exception {
+		assertThat(cambiarRol(token(ADMIN, CLAVE_ADMIN), idJorge, "ADMINISTRADOR")).hasStatus(HttpStatus.OK);
+		String tokenJorge = token("jorge@mail.com", "Secreta12");
 		String tokenAdmin = token(ADMIN, CLAVE_ADMIN);
 
-		MvcTestResult aCliente = cambiarRol(tokenAna, idAdmin, "CLIENTE");
+		MvcTestResult aCliente = cambiarRol(tokenJorge, idAdmin, "CLIENTE");
 
 		assertThat(aCliente).hasStatus(HttpStatus.CONFLICT);
-		assertThat(aCliente).bodyJson().extractingPath("$.codigo").isEqualTo("FECHA_NACIMIENTO_REQUERIDA");
-		assertThat(cambiarRol(tokenAna, idAdmin, "PERSONAL")).hasStatus(HttpStatus.OK);
+		assertThat(aCliente).bodyJson().extractingPath("$.codigo").isEqualTo("CLIENTE_Y_PERSONAL_SEPARADOS");
+		assertThat(cambiarRol(tokenJorge, idAdmin, "PERSONAL")).hasStatus(HttpStatus.OK);
 		assertThat(listar(tokenAdmin, "")).hasStatus(HttpStatus.FORBIDDEN);
 	}
 
 	@Test
 	void dosAdministradoresQueSeQuitanElRolAlMismoTiempoNoDejanAlSistemaSinAdministradores() throws Exception {
-		gestionUsuariosService.cambiarRol(idAdmin, idAna, Rol.ADMINISTRADOR);
+		gestionUsuariosService.cambiarRol(idAdmin, idJorge, Rol.ADMINISTRADOR);
 		assertThat(administradoresActivos()).isEqualTo(2);
 		record Operacion(Long administrador, Long afectado) {
 		}
@@ -241,7 +333,7 @@ class GestionUsuariosIntegracionTest {
 		ExecutorService hilos = Executors.newFixedThreadPool(2);
 		try {
 			// Sin bloqueo, cada operación cuenta dos administradores activos y las dos se registran
-			List<Future<String>> operaciones = Stream.of(new Operacion(idAdmin, idAna), new Operacion(idAna, idAdmin))
+			List<Future<String>> operaciones = Stream.of(new Operacion(idAdmin, idJorge), new Operacion(idJorge, idAdmin))
 					.map(operacion -> hilos.submit(() -> {
 						largada.await();
 						try {

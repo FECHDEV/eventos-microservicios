@@ -31,16 +31,19 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 	@Lock(LockModeType.PESSIMISTIC_WRITE)
 	List<Usuario> findConBloqueoByRolAndEstadoOrderByIdUsuario(Rol rol, EstadoCuenta estado);
 
-	// Un null no filtra. El texto llega como patrón LIKE en minúsculas con '!' como escape: la barra invertida también
+	// Un null no filtra; personal separa al personal de los clientes (CU-09 RF-27). El texto llega como patrón LIKE en minúsculas con '!' como escape: la barra invertida también
 	// escapa dentro de los literales de MySQL
 	@Query("""
 			select u from Usuario u
 			where (:rol is null or u.rol = :rol)
+				and (:personal is null
+					or (:personal = true and u.rol <> com.sarao.seguridad.entity.Rol.CLIENTE)
+					or (:personal = false and u.rol = com.sarao.seguridad.entity.Rol.CLIENTE))
 				and (:estado is null or u.estado = :estado)
 				and (:texto is null or lower(u.correo) like :texto escape '!' or lower(u.nombre) like :texto escape '!'
 					or lower(u.apellido) like :texto escape '!')
 			""")
-	Page<Usuario> buscar(@Param("rol") Rol rol, @Param("estado") EstadoCuenta estado, @Param("texto") String texto,
+	Page<Usuario> buscar(@Param("rol") Rol rol, @Param("personal") Boolean personal, @Param("estado") EstadoCuenta estado, @Param("texto") String texto,
 			Pageable paginacion);
 
 	// Serializa las operaciones sobre la misma cuenta, como dos solicitudes de recuperación simultáneas

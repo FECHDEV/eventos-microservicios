@@ -11,7 +11,7 @@ describe('mensajeDeError', () => {
     ['ROL_PROPIO_NO_MODIFICABLE', 'propio rol'],
     ['CUENTA_PROPIA_NO_DESACTIVABLE', 'propia cuenta'],
     ['ULTIMO_ADMINISTRADOR_ACTIVO', 'administrador activo'],
-    ['FECHA_NACIMIENTO_REQUERIDA', 'fecha de nacimiento'],
+    ['CLIENTE_Y_PERSONAL_SEPARADOS', 'cliente'],
   ])('traduce %s', (codigo, motivo) => {
     expect(mensajeDeError(error(codigo))).toContain(motivo);
   });

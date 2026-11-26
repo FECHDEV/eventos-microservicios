@@ -15,12 +15,13 @@ import { comoErrorApi } from '../../core/api/autenticacion.service';
 import { mensajeDeError } from '../../core/api/mensajes-error';
 import { UsuariosService } from '../../core/api/usuarios.service';
 import {
+	DESCRIPCIONES_DE_ROL,
 	EstadoCuenta,
 	ESTADOS,
 	NOMBRES_DE_ESTADO,
 	NOMBRES_DE_ROL,
 	Rol,
-	ROLES,
+	ROLES_DEL_PERSONAL,
 } from '../../core/modelos/usuario';
 import { comoError } from '../../core/modelos/error-api';
 import { FiltrosDeUsuarios, UsuarioResumen } from '../../core/modelos/usuario-resumen';
@@ -28,6 +29,7 @@ import { SesionService } from '../../core/sesion/sesion.service';
 import { DialogoConfirmacion } from '../../shared/dialogo-confirmacion/dialogo-confirmacion';
 import { fechaCorta } from '../../shared/formato/fechas';
 import { paginaDeLaUrl } from '../../shared/navegacion/pagina-de-la-url';
+import { AltaPersonal } from './alta-personal';
 
 // Cuánto se espera después de la última tecla antes de buscar
 const ESPERA_DE_BUSQUEDA_MS = 300;
@@ -36,7 +38,7 @@ const ESPERA_DE_BUSQUEDA_MS = 300;
 // compartir el enlace muestra la misma lista.
 @Component({
 	selector: 'app-usuarios',
-	imports: [DialogoConfirmacion],
+	imports: [AltaPersonal, DialogoConfirmacion],
 	templateUrl: './usuarios.page.html',
 	styleUrl: './usuarios.page.scss',
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -79,7 +81,9 @@ export class UsuariosPage {
 	protected readonly avisoDeError = signal('');
 	protected readonly avisoDeExito = signal('');
 
-	protected readonly roles = ROLES;
+	protected readonly roles = ROLES_DEL_PERSONAL;
+	protected readonly descripcionesDeRol = DESCRIPCIONES_DE_ROL;
+	protected readonly mostrandoAlta = signal(false);
 	protected readonly estados = ESTADOS;
 	protected readonly nombresDeRol = NOMBRES_DE_ROL;
 	protected readonly nombresDeEstado = NOMBRES_DE_ESTADO;
@@ -96,6 +100,23 @@ export class UsuariosPage {
 			this.textoEnviado = texto.trim();
 			this.filtrar({ texto });
 		}, ESPERA_DE_BUSQUEDA_MS);
+	}
+
+	protected alElegirGrupo(grupo: FiltrosDeUsuarios['grupo']): void {
+		this.mostrandoAlta.set(false);
+		this.navegar({ grupo, rol: null, estado: null, texto: '', pagina: 0 });
+	}
+
+	// La cuenta nueva aparece en la lista del personal, la primera por ser la más reciente
+	protected alCrearPersonal(usuario: UsuarioResumen): void {
+		this.mostrandoAlta.set(false);
+		this.avisoDeError.set('');
+		this.avisoDeExito.set(`${nombreDe(usuario)} ya es parte del personal como ${NOMBRES_DE_ROL[usuario.rol]}.`);
+		if (this.filtros().grupo === 'personal' && this.filtros().pagina === 0) {
+			this.listado.reload();
+		} else {
+			this.alElegirGrupo('personal');
+		}
 	}
 
 	protected alElegirRol(valor: string): void {
@@ -220,8 +241,9 @@ function nombreDe(usuario: UsuarioResumen): string {
 }
 
 
+// Solo los roles del personal: el Cliente no se elige ni se asigna (RF-25)
 function esRol(valor: string | null): valor is Rol {
-	return (ROLES as readonly string[]).includes(valor ?? '');
+	return (ROLES_DEL_PERSONAL as readonly string[]).includes(valor ?? '');
 }
 
 function esEstado(valor: string | null): valor is EstadoCuenta {
@@ -234,7 +256,8 @@ function leerFiltros(consulta: ParamMap): FiltrosDeUsuarios {
 	const rol = consulta.get('rol');
 	const estado = consulta.get('estado');
 	return {
-		rol: esRol(rol) ? rol : null,
+		grupo: consulta.get('grupo') === 'clientes' ? 'clientes' : 'personal',
+		rol: esRol(rol) && consulta.get('grupo') !== 'clientes' ? rol : null,
 		estado: esEstado(estado) ? estado : null,
 		texto: consulta.get('texto') ?? '',
 		pagina: paginaDeLaUrl(consulta.get('pagina')),
@@ -245,6 +268,7 @@ function leerFiltros(consulta: ParamMap): FiltrosDeUsuarios {
 function aConsulta(filtros: FiltrosDeUsuarios): Record<string, string | number | undefined> {
 	const texto = filtros.texto.trim();
 	return {
+		grupo: filtros.grupo === 'clientes' ? 'clientes' : undefined,
 		rol: filtros.rol ?? undefined,
 		estado: filtros.estado ?? undefined,
 		texto: texto === '' ? undefined : texto,

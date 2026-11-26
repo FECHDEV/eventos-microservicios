@@ -1,4 +1,7 @@
 <h1>Hola, {{ nombre() }}</h1>
+@if (nombreDelRol()) {
+  <p class="rol"><strong>{{ nombreDelRol() }}.</strong> {{ descripcionDelRol() }}</p>
+}
 
 <ul class="accesos">
   <li>
@@ -7,25 +10,31 @@
       <span class="detalle">Tu nombre, tu teléfono y tu contraseña.</span>
     </a>
   </li>
-  @if (esAdministrador()) {
+  @if (puede('usuarios')) {
     <li>
       <a class="acceso" routerLink="/usuarios">
         <span class="titulo">Usuarios</span>
-        <span class="detalle">Tipos de cuenta y estado de las cuentas.</span>
+        <span class="detalle">Alta del personal, su rol y el estado de las cuentas.</span>
       </a>
     </li>
+  }
+  @if (puede('eventos')) {
     <li>
       <a class="acceso" routerLink="/eventos">
         <span class="titulo">Eventos</span>
         <span class="detalle">Datos, entradas y estado de cada evento.</span>
       </a>
     </li>
+  }
+  @if (puede('devoluciones')) {
     <li>
       <a class="acceso" routerLink="/devoluciones">
         <span class="titulo">Devoluciones</span>
         <span class="detalle">Entradas de eventos cancelados y su devolución.</span>
       </a>
     </li>
+  }
+  @if (puede('reportes')) {
     <li>
       <a class="acceso" routerLink="/reportes">
         <span class="titulo">Reportes</span>
@@ -33,7 +42,7 @@
       </a>
     </li>
   }
-  @if (esPersonal()) {
+  @if (puede('validar')) {
     <li>
       <a class="acceso" routerLink="/validar">
         <span class="titulo">Validar entradas</span>

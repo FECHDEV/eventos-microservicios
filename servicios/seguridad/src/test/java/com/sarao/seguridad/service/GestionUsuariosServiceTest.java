@@ -9,8 +9,11 @@ import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,14 +26,18 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.sarao.seguridad.entity.EstadoCuenta;
 import com.sarao.seguridad.entity.Rol;
 import com.sarao.seguridad.entity.Usuario;
+import com.sarao.seguridad.dto.AltaPersonalRequest;
+import com.sarao.seguridad.exception.ClienteYPersonalSeparadosException;
+import com.sarao.seguridad.exception.CuentaExistenteException;
 import com.sarao.seguridad.exception.CuentaPropiaNoDesactivableException;
-import com.sarao.seguridad.exception.FechaNacimientoRequeridaException;
 import com.sarao.seguridad.exception.RolDeCuentaDesactivadaException;
 import com.sarao.seguridad.exception.RolPropioNoModificableException;
 import com.sarao.seguridad.exception.UltimoAdministradorActivoException;
@@ -47,11 +54,18 @@ class GestionUsuariosServiceTest {
 	@Mock
 	private UsuarioRepository usuarioRepository;
 
+	@Mock
+	private PasswordEncoder passwordEncoder;
+
+	private static final ZoneId ZONA = ZoneId.of("America/La_Paz");
+	private static final LocalDateTime AHORA = LocalDateTime.of(2026, 11, 26, 9, 30);
+
 	private GestionUsuariosService servicio;
 
 	@BeforeEach
 	void crearServicio() {
-		servicio = new GestionUsuariosService(usuarioRepository);
+		servicio = new GestionUsuariosService(usuarioRepository, passwordEncoder,
+				Clock.fixed(AHORA.atZone(ZONA).toInstant(), ZONA));
 	}
 
 	private static Usuario conId(Usuario usuario, long id) {
@@ -60,48 +74,48 @@ class GestionUsuariosServiceTest {
 	}
 
 	private void listadoVacio() {
-		given(usuarioRepository.buscar(any(), any(), any(), any())).willReturn(new PageImpl<>(List.of()));
+		given(usuarioRepository.buscar(any(), any(), any(), any(), any())).willReturn(new PageImpl<>(List.of()));
 	}
 
 	@Test
 	void listarPideLaPaginaIndicadaDelRegistroMasRecienteAlMasAntiguo() {
 		Page<Usuario> pagina = new PageImpl<>(List.of(conId(Usuario.registrarCliente("Ana", "Rojas", "ana@mail.com",
 				"$2a$10$hash", null, NACIMIENTO, REGISTRO), 7L)));
-		given(usuarioRepository.buscar(any(), any(), any(), any())).willReturn(pagina);
+		given(usuarioRepository.buscar(any(), any(), any(), any(), any())).willReturn(pagina);
 
-		assertThat(servicio.listar(Rol.CLIENTE, EstadoCuenta.ACTIVA, null, 2, 30)).isSameAs(pagina);
+		assertThat(servicio.listar(Rol.CLIENTE, null, EstadoCuenta.ACTIVA, null, 2, 30)).isSameAs(pagina);
 
-		then(usuarioRepository).should().buscar(Rol.CLIENTE, EstadoCuenta.ACTIVA, null, PageRequest.of(2, 30, ORDEN));
+		then(usuarioRepository).should().buscar(Rol.CLIENTE, null, EstadoCuenta.ACTIVA, null, PageRequest.of(2, 30, ORDEN));
 	}
 
 	@Test
 	void tamanoMayorA100UsaCienYPaginaOTamanoInvalidosUsanLosPorDefecto() {
 		listadoVacio();
 
-		servicio.listar(null, null, null, -1, 500);
-		servicio.listar(null, null, null, 0, 0);
+		servicio.listar(null, null, null, null, -1, 500);
+		servicio.listar(null, null, null, null, 0, 0);
 
-		then(usuarioRepository).should().buscar(null, null, null, PageRequest.of(0, 100, ORDEN));
-		then(usuarioRepository).should().buscar(null, null, null, PageRequest.of(0, 20, ORDEN));
+		then(usuarioRepository).should().buscar(null, null, null, null, PageRequest.of(0, 100, ORDEN));
+		then(usuarioRepository).should().buscar(null, null, null, null, PageRequest.of(0, 20, ORDEN));
 	}
 
 	@Test
 	void textoSeBuscaRecortadoEnMinusculasYConLosComodinesEscapados() {
 		listadoVacio();
 
-		servicio.listar(null, null, "  Ana_50%! ", 0, 20);
+		servicio.listar(null, null, null, "  Ana_50%! ", 0, 20);
 
-		then(usuarioRepository).should().buscar(null, null, "%ana!_50!%!!%", PageRequest.of(0, 20, ORDEN));
+		then(usuarioRepository).should().buscar(null, null, null, "%ana!_50!%!!%", PageRequest.of(0, 20, ORDEN));
 	}
 
 	@Test
 	void textoVacioOEnBlancoNoFiltra() {
 		listadoVacio();
 
-		servicio.listar(null, null, "", 0, 20);
-		servicio.listar(null, null, "   ", 0, 20);
+		servicio.listar(null, null, null, "", 0, 20);
+		servicio.listar(null, null, null, "   ", 0, 20);
 
-		then(usuarioRepository).should(times(2)).buscar(null, null, null, PageRequest.of(0, 20, ORDEN));
+		then(usuarioRepository).should(times(2)).buscar(null, null, null, null, PageRequest.of(0, 20, ORDEN));
 	}
 
 	private static final long ID_ADMIN = 1L;
@@ -129,29 +143,47 @@ class GestionUsuariosServiceTest {
 
 	// --- cambiarRol ---
 
+	private static Usuario personal(long id, Rol rol) {
+		return conId(Usuario.crearPersonal("Jorge", "Méndez", "jorge" + id + "@mail.com", "$2a$10$hash", null, rol,
+				REGISTRO), id);
+	}
+
 	@Test
-	void asignaElRolBloqueandoPrimeroLosAdministradoresYConservaLaFecha() {
-		Usuario ana = ana();
+	void asignaOtroRolDelPersonalBloqueandoPrimeroLosAdministradores() {
+		Usuario jorge = personal(ID_ANA, Rol.PERSONAL);
 		administradoresActivos(administrador(ID_ADMIN));
-		cuenta(ana);
+		cuenta(jorge);
 
-		assertThat(servicio.cambiarRol(ID_ADMIN, ID_ANA, Rol.PERSONAL)).isSameAs(ana);
+		assertThat(servicio.cambiarRol(ID_ADMIN, ID_ANA, Rol.CONTADOR)).isSameAs(jorge);
 
-		assertThat(ana.getRol()).isEqualTo(Rol.PERSONAL);
-		assertThat(ana.getFechaNacimiento()).isEqualTo(NACIMIENTO);
+		assertThat(jorge.getRol()).isEqualTo(Rol.CONTADOR);
 		InOrder orden = inOrder(usuarioRepository);
 		orden.verify(usuarioRepository).findConBloqueoByRolAndEstadoOrderByIdUsuario(Rol.ADMINISTRADOR, EstadoCuenta.ACTIVA);
 		orden.verify(usuarioRepository).findConBloqueoByIdUsuario(ID_ANA);
 	}
 
+	// RF-25
 	@Test
-	void cuentaConFechaVuelveAClienteDesdeOtroRol() {
+	void unClienteNoPasaAlPersonal() {
 		Usuario ana = ana();
-		ana.asignarRol(Rol.PERSONAL);
 		administradoresActivos(administrador(ID_ADMIN));
 		cuenta(ana);
 
-		assertThat(servicio.cambiarRol(ID_ADMIN, ID_ANA, Rol.CLIENTE).getRol()).isEqualTo(Rol.CLIENTE);
+		assertThatThrownBy(() -> servicio.cambiarRol(ID_ADMIN, ID_ANA, Rol.ORGANIZADOR))
+				.isInstanceOf(ClienteYPersonalSeparadosException.class);
+		assertThat(ana.getRol()).isEqualTo(Rol.CLIENTE);
+	}
+
+	// RF-25
+	@Test
+	void elPersonalNoPasaACliente() {
+		Usuario jorge = personal(ID_ANA, Rol.CONTADOR);
+		administradoresActivos(administrador(ID_ADMIN));
+		cuenta(jorge);
+
+		assertThatThrownBy(() -> servicio.cambiarRol(ID_ADMIN, ID_ANA, Rol.CLIENTE))
+				.isInstanceOf(ClienteYPersonalSeparadosException.class);
+		assertThat(jorge.getRol()).isEqualTo(Rol.CONTADOR);
 	}
 
 	@Test
@@ -215,18 +247,18 @@ class GestionUsuariosServiceTest {
 	}
 
 	@Test
-	void pasarAClienteUnaCuentaSinFechaSeRechaza() {
+	void unAdministradorNoPasaACliente() {
 		Usuario otro = administrador(ID_OTRO_ADMIN);
 		administradoresActivos(administrador(ID_ADMIN), otro);
 		cuenta(otro);
 
 		assertThatThrownBy(() -> servicio.cambiarRol(ID_ADMIN, ID_OTRO_ADMIN, Rol.CLIENTE))
-				.isInstanceOf(FechaNacimientoRequeridaException.class);
+				.isInstanceOf(ClienteYPersonalSeparadosException.class);
 		assertThat(otro.getRol()).isEqualTo(Rol.ADMINISTRADOR);
 	}
 
 	@Test
-	void ultimoAdministradorSinFechaRespondePrimeroPorElUltimoAdministrador() {
+	void ultimoAdministradorAClienteRespondePrimeroPorElUltimoAdministrador() {
 		Usuario ultimo = administrador(ID_OTRO_ADMIN);
 		administradoresActivos(ultimo);
 		cuenta(ultimo);
@@ -236,7 +268,7 @@ class GestionUsuariosServiceTest {
 	}
 
 	@Test
-	void cuentaDesactivadaSinFechaRespondePrimeroPorLaCuentaDesactivada() {
+	void cuentaDesactivadaAClienteRespondePrimeroPorLaCuentaDesactivada() {
 		Usuario desactivado = administrador(ID_OTRO_ADMIN);
 		desactivado.desactivar();
 		administradoresActivos(administrador(ID_ADMIN));
@@ -244,6 +276,67 @@ class GestionUsuariosServiceTest {
 
 		assertThatThrownBy(() -> servicio.cambiarRol(ID_ADMIN, ID_OTRO_ADMIN, Rol.CLIENTE))
 				.isInstanceOf(RolDeCuentaDesactivadaException.class);
+	}
+
+	// --- darDeAlta (RF-23, RF-26) ---
+
+	private static AltaPersonalRequest alta(Rol rol) {
+		return new AltaPersonalRequest("Mariela", "Suárez", " Mariela.Suarez.90@Mail.com ", "Secreta12", " ", rol);
+	}
+
+	@Test
+	void daDeAltaAlPersonalActivoConLaContrasenaCifradaYSinFechaDeNacimiento() {
+		given(passwordEncoder.encode("Secreta12")).willReturn("$2a$10$cifrada");
+		given(usuarioRepository.saveAndFlush(any())).willAnswer(invocacion -> invocacion.getArgument(0));
+
+		Usuario mariela = servicio.darDeAlta(alta(Rol.CONTADOR));
+
+		assertThat(mariela.getCorreo()).isEqualTo("mariela.suarez.90@mail.com");
+		assertThat(mariela.getRol()).isEqualTo(Rol.CONTADOR);
+		assertThat(mariela.estaActiva()).isTrue();
+		assertThat(mariela.getContrasena()).isEqualTo("$2a$10$cifrada");
+		assertThat(mariela.getTelefono()).isNull();
+		assertThat(mariela.getFechaNacimiento()).isNull();
+		assertThat(mariela.getFechaRegistro()).isEqualTo(AHORA);
+	}
+
+	@Test
+	void correoQueYaTieneCuentaSeRechazaSinCifrarNiGuardar() {
+		given(usuarioRepository.existsByCorreo("mariela.suarez.90@mail.com")).willReturn(true);
+
+		assertThatThrownBy(() -> servicio.darDeAlta(alta(Rol.ORGANIZADOR))).isInstanceOf(CuentaExistenteException.class);
+
+		then(passwordEncoder).shouldHaveNoInteractions();
+		then(usuarioRepository).should(never()).saveAndFlush(any());
+	}
+
+	@Test
+	void dosAltasSimultaneasConElMismoCorreoTerminanEnCuentaExistente() {
+		given(passwordEncoder.encode(any())).willReturn("$2a$10$cifrada");
+		given(usuarioRepository.saveAndFlush(any())).willThrow(new DataIntegrityViolationException("duplicado",
+				new org.hibernate.exception.ConstraintViolationException("duplicado",
+						new java.sql.SQLException("Duplicate entry", "23000", 1062),
+						org.hibernate.exception.ConstraintViolationException.ConstraintKind.UNIQUE, "uk_usuario_correo")));
+
+		assertThatThrownBy(() -> servicio.darDeAlta(alta(Rol.PERSONAL))).isInstanceOf(CuentaExistenteException.class);
+	}
+
+	@Test
+	void unClienteNoSeDaDeAlta() {
+		given(passwordEncoder.encode(any())).willReturn("$2a$10$cifrada");
+
+		assertThatThrownBy(() -> servicio.darDeAlta(alta(Rol.CLIENTE))).isInstanceOf(IllegalArgumentException.class);
+		then(usuarioRepository).should(never()).saveAndFlush(any());
+	}
+
+	// RF-27
+	@Test
+	void listarPasaElFiltroDePersonal() {
+		listadoVacio();
+
+		servicio.listar(null, true, null, null, 0, 20);
+
+		then(usuarioRepository).should().buscar(null, true, null, null, PageRequest.of(0, 20, ORDEN));
 	}
 
 	// --- cambiarEstado ---

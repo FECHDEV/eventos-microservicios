@@ -4,7 +4,7 @@
 }
 
 h1 {
-	margin-bottom: var(--sarao-espacio-6);
+	margin-bottom: var(--sarao-espacio-2);
 	font-size: 26px;
 	font-weight: 700;
 }
@@ -60,4 +60,9 @@ h1 {
 .detalle {
 	color: var(--sarao-texto-suave);
 	font-size: 13px;
+}
+
+.rol {
+	margin: 0 0 var(--sarao-espacio-6);
+	color: var(--sarao-texto-suave);
 }

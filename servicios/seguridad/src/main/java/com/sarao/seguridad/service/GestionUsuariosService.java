@@ -1,20 +1,26 @@
 package com.sarao.seguridad.service;
 
+import java.time.Clock;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.sarao.seguridad.dto.AltaPersonalRequest;
 import com.sarao.seguridad.entity.EstadoCuenta;
 import com.sarao.seguridad.entity.Rol;
 import com.sarao.seguridad.entity.Usuario;
+import com.sarao.seguridad.exception.ClienteYPersonalSeparadosException;
+import com.sarao.seguridad.exception.CuentaExistenteException;
 import com.sarao.seguridad.exception.CuentaPropiaNoDesactivableException;
-import com.sarao.seguridad.exception.FechaNacimientoRequeridaException;
 import com.sarao.seguridad.exception.RolDeCuentaDesactivadaException;
 import com.sarao.seguridad.exception.RolPropioNoModificableException;
 import com.sarao.seguridad.exception.UltimoAdministradorActivoException;
@@ -32,15 +38,37 @@ public class GestionUsuariosService {
 	private static final Sort ORDEN = Sort.by(Sort.Direction.DESC, "fechaRegistro", "idUsuario");
 
 	private final UsuarioRepository usuarioRepository;
+	private final PasswordEncoder passwordEncoder;
+	private final Clock clock;
 
 	@Transactional(readOnly = true)
-	public Page<Usuario> listar(Rol rol, EstadoCuenta estado, String texto, int pagina, int tamano) {
+	// RF-27: personal en true deja solo al personal; en false, solo a los clientes; null no filtra
+	public Page<Usuario> listar(Rol rol, Boolean personal, EstadoCuenta estado, String texto, int pagina, int tamano) {
 		// Igual que el Pageable de Spring Data: una página negativa es la primera y un tamaño inválido, el por defecto
 		int tamanoValido = tamano < 1 ? TAMANO_POR_DEFECTO : Math.min(tamano, TAMANO_MAXIMO);
 		// El offset tiene que entrar en un int: una página más alta también queda vacía, con los totales correctos
 		int paginaValida = Math.min(Math.max(pagina, 0), Integer.MAX_VALUE / tamanoValido);
 		PageRequest paginacion = PageRequest.of(paginaValida, tamanoValido, ORDEN);
-		return usuarioRepository.buscar(rol, estado, patronDeBusqueda(texto), paginacion);
+		return usuarioRepository.buscar(rol, personal, estado, patronDeBusqueda(texto), paginacion);
+	}
+
+	// RF-23 y RF-26. Sin @Transactional, como el registro de CU-01: el hash BCrypt no retiene una conexión, y la
+	// restricción UNIQUE resuelve dos altas simultáneas con el mismo correo
+	public Usuario darDeAlta(AltaPersonalRequest solicitud) {
+		if (usuarioRepository.existsByCorreo(solicitud.correo())) {
+			throw new CuentaExistenteException();
+		}
+		Usuario usuario = Usuario.crearPersonal(solicitud.nombre(), solicitud.apellido(), solicitud.correo(),
+				passwordEncoder.encode(solicitud.contrasena()), solicitud.telefono(), solicitud.rol(),
+				LocalDateTime.now(clock));
+		try {
+			return usuarioRepository.saveAndFlush(usuario);
+		} catch (DataIntegrityViolationException e) {
+			if (UsuarioRepository.esCorreoDuplicado(e)) {
+				throw new CuentaExistenteException();
+			}
+			throw e;
+		}
 	}
 
 	// READ_COMMITTED: los bloqueos quedan en las filas, sin los huecos del índice que frenan registros y causan interbloqueos
@@ -57,8 +85,8 @@ public class GestionUsuariosService {
 		if (!usuario.estaActiva()) {
 			throw new RolDeCuentaDesactivadaException();
 		}
-		if (rolNuevo == Rol.CLIENTE && usuario.getFechaNacimiento() == null) {
-			throw new FechaNacimientoRequeridaException();
+		if (usuario.getRol().esDelPersonal() != rolNuevo.esDelPersonal()) {
+			throw new ClienteYPersonalSeparadosException();
 		}
 		usuario.asignarRol(rolNuevo);
 		return usuario;

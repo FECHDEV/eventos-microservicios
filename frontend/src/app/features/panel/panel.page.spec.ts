@@ -128,10 +128,21 @@ describe('PanelPage', () => {
     expect(enlace?.textContent).toContain('Validar entradas');
   });
 
-  it('el administrador no ve validar entradas', () => {
+  // Roles del personal: el Administrador también valida; el Contador solo ve reportes
+  it('el administrador también ve validar entradas', () => {
     sesion.iniciar(sesionCon('ADMINISTRADOR'));
 
-    expect(crear().querySelector('a[href="/validar"]')).toBeNull();
+    expect(crear().querySelector('a[href="/validar"]')).not.toBeNull();
+  });
+
+  it('el contador ve su rol y solo reportes', () => {
+    sesion.iniciar(sesionCon('CONTADOR'));
+    const pagina = crear();
+
+    expect(pagina.textContent).toContain('Contador');
+    expect(pagina.querySelector('a[href="/reportes"]')).not.toBeNull();
+    expect(pagina.querySelector('a[href="/eventos"]')).toBeNull();
+    expect(pagina.querySelector('a[href="/usuarios"]')).toBeNull();
   });
 
   // CU-13: el acceso a devoluciones, como los otros módulos del administrador
