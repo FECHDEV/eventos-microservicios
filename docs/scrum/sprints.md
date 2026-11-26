@@ -136,9 +136,24 @@ Eventos y Venta con 380 pruebas, Seguridad con 239, Pagos con 64, Notificaciones
 **Objetivo:** la documentación del proyecto queda completa: perfil, Sprint 0, los cuatro sprints de
 desarrollo y los artefactos de todo el proyecto, a partir del código, de git y de este registro.
 
-**Backlog:** HU-23.
+**Backlog:** HU-23. Después de la predefensa del 25/11 se suman HU-24 y HU-25.
 
 **Resultado:** HU-23 hecha el 14/11/2026, antes de la fecha prevista. El documento se trabajó el 12/11
 (perfil, Sprint 0 y Sprint 1), el 13/11 (revisión, estimación en puntos y Sprints 2 y 3) y el 14/11
 (Sprint 4, artefactos, conclusiones, recomendaciones, bibliografía y anexos), y se revisó sprint por
 sprint contra el código, git y el CI. Queda la defensa final del 02/12.
+
+**Predefensa (25/11/2026):** las observaciones fueron que los roles no se entendían con solo leerlos,
+que el Cliente no se veía como un rol del personal, que faltaban roles (un Contador solo para los
+reportes) y que el sistema tenía que presentarse con datos, como si una empresa ya lo usara. Se
+decidió con el usuario (`docs/decisiones.md` → «Roles del personal»):
+
+- **HU-24:** cinco roles fijos. Administrador (todo), Organizador de eventos (CU-10 a 12), Contador
+  (CU-14), Control de acceso (CU-15, antes «Personal autorizado») y Cliente, que deja de mostrarse
+  como rol del personal. El Administrador da de alta al personal con una contraseña inicial, y el
+  cambio de rol es solo entre roles del personal. La pantalla de usuarios separa Personal y Clientes
+  y explica qué hace cada rol; el panel muestra el rol de cada persona y solo sus accesos.
+- **HU-25:** `scripts/datos-de-demostracion.sh` carga personal, unos 60 clientes, 12 eventos con
+  afiches propios, cientos de compras repartidas en semanas, accesos de los eventos realizados, un
+  evento cancelado con devoluciones, uno postergado, reportes del Contador y el contador de visitas.
+  `scripts/cuentas-de-prueba.sh` deja una cuenta de prueba por rol, con su buzón.

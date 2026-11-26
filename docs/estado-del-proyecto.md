@@ -1,7 +1,7 @@
 # Estado del proyecto
 
 Resumen para responder preguntas sobre el proyecto desde una sesión que no
-tiene la carpeta local. Al 25/11/2026.
+tiene la carpeta local. Al 26/11/2026.
 
 ## Qué está terminado
 
@@ -13,6 +13,16 @@ tiene la carpeta local. Al 25/11/2026.
 - **La documentación final** (HU-23, Sprint 5): un Word y un PDF de unas 156
   páginas, ya revisados por el usuario. **No está en este repositorio** (ver
   abajo).
+
+## Después de la predefensa (25/11/2026)
+
+- **HU-24, roles del personal:** cinco roles fijos (Administrador, Organizador de eventos, Contador,
+  Control de acceso y Cliente, que ya no se muestra como rol del personal). El Administrador da de
+  alta al personal. Detalle en `docs/decisiones.md` → «Roles del personal».
+- **HU-25, datos de demostración:** `scripts/datos-de-demostracion.sh [DIA]` llena el sistema como
+  si una empresa ya lo usara; `scripts/cuentas-de-prueba.sh` deja una cuenta de prueba por rol
+  (correos del tipo `nombre.apellido.NN@dominio`) con su buzón.
+- El documento final se actualiza con estos cambios.
 
 ## La documentación final
 
@@ -54,7 +64,8 @@ regenerar en la computadora del usuario.
 
 - No habrá diapositivas.
 - **El día antes:** crear un VPS nuevo con `scripts/subir-al-vps.sh` (cada VPS
-  tiene otra IP) y hacer una compra de prueba para confirmar pago y correos.
+  tiene otra IP), cargar los datos de demostración con el día de la defensa y
+  hacer una compra de prueba para confirmar pago y correos.
 - **En la demo:** el pago es real, así que se usan entradas de Bs 0,10. Orden
   sugerido: compra con QR, correo con las entradas, validación con el celular,
   reporte y devolución.

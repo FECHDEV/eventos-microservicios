@@ -56,12 +56,18 @@ comportamiento que no esté acá**; si algo falta, preguntar antes de
 asumir.
 
 ### Usuarios y roles
-- Tres roles **fijos**: Cliente, Administrador, Personal autorizado. No es
-  RBAC: no se crean roles nuevos ni se configuran permisos individuales.
-  Es un atributo enumerado de Usuario.
+- Roles **fijos** (atributo enumerado de Usuario, no RBAC: no se crean roles
+  ni permisos individuales). Desde el 25/11/2026 son cinco
+  (`docs/decisiones.md` → «Roles del personal»):
+  - **Administrador** (`ADMINISTRADOR`): todo.
+  - **Organizador de eventos** (`ORGANIZADOR`): eventos y tipos de entrada (CU-10 a 12).
+  - **Contador** (`CONTADOR`): solo reportes (CU-14).
+  - **Control de acceso** (`PERSONAL`): valida entradas (CU-15).
+  - **Cliente** (`CLIENTE`): no es un rol del personal, es la cuenta de quien compra.
 - Todo usuario que se registra por sí mismo obtiene rol **Cliente**.
-- Los roles Administrador y Personal autorizado los asigna un
-  Administrador sobre un usuario ya registrado (CU-09).
+- Al personal lo da de alta un Administrador (CU-09), con una contraseña
+  inicial. El cambio de rol es solo entre roles del personal: cliente y
+  personal no se mezclan.
 - El **Administrador inicial** se crea en el despliegue mediante carga
   inicial de datos, no mediante un caso de uso.
 - El control de acceso se valida **en el backend**. Ocultar opciones en

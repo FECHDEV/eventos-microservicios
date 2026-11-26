@@ -18,7 +18,7 @@ Una línea por sección; cada decisión lleva a su detalle.
 
 - **[0. Microservicios](#0-microservicios)**: corte, comunicación, compra, sesión, reportes y contraseñas.
 - **[Transversales](#transversales)**: [Spring Boot 4.1.1](#spring-boot-411) · [Variables de entorno con prefijo `EVENTOS_`](#variables-de-entorno-con-prefijo-eventos_) · [Despliegue con Docker: cinco servicios (seis en la nube) y un solo origen](#despliegue-con-docker-cinco-servicios-seis-en-la-nube-y-un-solo-origen) · [Proveedor de pago obligatorio en Docker](#proveedor-de-pago-obligatorio-en-docker) · [Límites de nginx y HTTPS con Caddy en el servidor](#límites-de-nginx-y-https-con-caddy-en-el-servidor) · [Tipos del diagrama que no son entidades](#tipos-del-diagrama-que-no-son-entidades) · [El sistema no notifica los imprevistos de los eventos](#el-sistema-no-notifica-los-imprevistos-de-los-eventos) · [Actor "Tiempo": dos mecanismos distintos](#actor-tiempo-dos-mecanismos-distintos) · [Pago: interfaz propia con dos implementaciones](#pago-interfaz-propia-con-dos-implementaciones) · [Requisitos de la materia: tres mejoras](#requisitos-de-la-materia-tres-mejoras)
-- **[1. Seguridad](#1-seguridad)**: [`Usuario` es una sola clase con `rol` enumerado](#usuario-es-una-sola-clase-con-rol-enumerado) · [Sin `codigoAdministrador` ni `codigoPersonal`](#sin-codigoadministrador-ni-codigopersonal) · [Autenticación por JWT stateless](#autenticación-por-jwt-stateless) · [Contraseñas con BCrypt](#contraseñas-con-bcrypt) · [Recuperación de contraseña en tabla aparte](#recuperación-de-contraseña-en-tabla-aparte) · [Administrador inicial con `CommandLineRunner`](#administrador-inicial-con-commandlinerunner) · [Operaciones rechazadas en CU-09](#operaciones-rechazadas-en-cu-09) · [Registro de clientes](#registro-de-clientes) · [Inicio de sesión](#inicio-de-sesión) · [Recuperación de contraseña](#recuperación-de-contraseña) · [Datos personales (CU-04)](#datos-personales-cu-04) · [Gestión de usuarios (CU-09)](#gestión-de-usuarios-cu-09)
+- **[1. Seguridad](#1-seguridad)**: [`Usuario` es una sola clase con `rol` enumerado](#usuario-es-una-sola-clase-con-rol-enumerado) · [Sin `codigoAdministrador` ni `codigoPersonal`](#sin-codigoadministrador-ni-codigopersonal) · [Autenticación por JWT stateless](#autenticación-por-jwt-stateless) · [Contraseñas con BCrypt](#contraseñas-con-bcrypt) · [Recuperación de contraseña en tabla aparte](#recuperación-de-contraseña-en-tabla-aparte) · [Administrador inicial con `CommandLineRunner`](#administrador-inicial-con-commandlinerunner) · [Operaciones rechazadas en CU-09](#operaciones-rechazadas-en-cu-09) · [Registro de clientes](#registro-de-clientes) · [Inicio de sesión](#inicio-de-sesión) · [Recuperación de contraseña](#recuperación-de-contraseña) · [Datos personales (CU-04)](#datos-personales-cu-04) · [Gestión de usuarios (CU-09)](#gestión-de-usuarios-cu-09) · [Roles del personal (25/11/2026)](#roles-del-personal-25112026)
 - **[2. Notificaciones](#2-notificaciones)**: [Envío de correo detrás de una interfaz `NotificadorCorreo`](#envío-de-correo-detrás-de-una-interfaz-notificadorcorreo) · [El servidor de correo en Docker, con buzones del propio dominio](#el-servidor-de-correo-en-docker-con-buzones-del-propio-dominio)
 - **[3. Gestión de Eventos](#3-gestión-de-eventos)**: [Estado `BORRADOR`](#estado-borrador) · [CU-05 lista eventos activos y postergados](#cu-05-lista-eventos-activos-y-postergados) · [Catálogo de eventos (CU-05)](#catálogo-de-eventos-cu-05) · ["Un evento por fecha" no es una validación del sistema](#un-evento-por-fecha-no-es-una-validación-del-sistema) · [`evento.id_usuario`](#eventoid_usuario) · [`evento.fecha_original`](#eventofecha_original) · [Imagen del evento (amplía el modelo)](#imagen-del-evento-amplía-el-modelo) · [Edición de un evento según su estado](#edición-de-un-evento-según-su-estado) · [Fecha y horario al registrar o editar](#fecha-y-horario-al-registrar-o-editar) · [Restricción de edad y límite de compra](#restricción-de-edad-y-límite-de-compra) · [Cierre automático de la venta con `@Scheduled`](#cierre-automático-de-la-venta-con-scheduled) · [Tipos de entrada según el estado del evento](#tipos-de-entrada-según-el-estado-del-evento) · [Cambiar la cantidad total de un tipo](#cambiar-la-cantidad-total-de-un-tipo) · [Precio de un tipo de entrada](#precio-de-un-tipo-de-entrada) · [Nombre único dentro del evento](#nombre-único-dentro-del-evento) · [Los tipos de entrada no se eliminan](#los-tipos-de-entrada-no-se-eliminan) · [Transiciones de estado del evento (CU-12)](#transiciones-de-estado-del-evento-cu-12) · [La venta se abre al activar y se cierra al cancelar](#la-venta-se-abre-al-activar-y-se-cierra-al-cancelar) · [Fecha nueva al postergar](#fecha-nueva-al-postergar) · [Fecha de nacimiento del Cliente](#fecha-de-nacimiento-del-cliente) · [Espera máxima de un bloqueo en Eventos y Venta](#espera-máxima-de-un-bloqueo-en-eventos-y-venta) · [La entrada conoce su reserva](#la-entrada-conoce-su-reserva) · [Reactivar entradas utilizadas: cuando exista la Venta](#reactivar-entradas-utilizadas-cuando-exista-la-venta) · [Bloqueo del evento al cambiar su estado](#bloqueo-del-evento-al-cambiar-su-estado)
 - **[4. Venta](#4-venta)**: [Una compra es de un solo tipo de entrada](#una-compra-es-de-un-solo-tipo-de-entrada) · [Límite de compra acumulado por cliente y evento](#límite-de-compra-acumulado-por-cliente-y-evento) · [Restricción de edad contra la fecha del evento](#restricción-de-edad-contra-la-fecha-del-evento) · [`cantidad_disponible` se descuenta al reservar](#cantidad_disponible-se-descuenta-al-reservar) · [Concurrencia sobre el último cupo: bloqueo pesimista](#concurrencia-sobre-el-último-cupo-bloqueo-pesimista) · [Precio congelado en `reserva.precio_unitario`](#precio-congelado-en-reservaprecio_unitario) · [`reserva` y `entrada` no tienen FK a `evento`](#reserva-y-entrada-no-tienen-fk-a-evento) · [Adquirir entradas (CU-06)](#adquirir-entradas-cu-06) · [Consultar entradas (CU-08)](#consultar-entradas-cu-08)
@@ -524,6 +524,43 @@ administradores.
   un dato nuevo en `usuario` — modelo cerrado —. Para cortar de verdad las
   sesiones de una cuenta hay que cambiarle la contraseña. Decidido con el usuario
   el 23/09/2026: no se cambia el modelo por esto.
+
+### Roles del personal (25/11/2026)
+
+Observación de la predefensa: los roles no se entendían con solo leerlos, el
+Cliente no se veía como un rol del personal y faltaban roles. Decidido con el
+usuario el 25/11/2026; **cambia la regla de «tres roles fijos»**.
+
+| Rol | Código | Qué hace |
+|---|---|---|
+| Administrador | `ADMINISTRADOR` | Todo: personal, clientes, eventos, devoluciones, reportes y validación de entradas |
+| Organizador de eventos | `ORGANIZADOR` | Eventos y tipos de entrada: registrar, editar, activar, postergar, cancelar y cerrar la venta (CU-10 a CU-12) |
+| Contador | `CONTADOR` | Solo reportes: generar, exportar a PDF y Excel y enviar por correo (CU-14) |
+| Control de acceso | `PERSONAL` | Validar las entradas en la puerta (CU-15); antes «Personal autorizado» |
+| Cliente | `CLIENTE` | No es un rol del personal: es la cuenta de quien se registra en la web para comprar |
+
+- **Siguen siendo roles fijos** (atributo enumerado, sin RBAC), ahora cinco.
+- **Los códigos `CLIENTE` y `PERSONAL` no cambian:** solo cambia el nombre que
+  se muestra. Así no hay que migrar datos ni tocar las otras bases.
+- **El Administrador da de alta al personal** (CU-09, flujo nuevo): correo,
+  nombre, apellido, teléfono opcional, rol del personal y una contraseña
+  inicial con la regla de siempre. El empleado la cambia después en CU-04. Sin
+  correo de bienvenida: no se agrega un cuarto correo.
+- **Cliente y personal no se mezclan:** el cambio de rol de CU-09 es solo entre
+  roles del personal. Una cuenta de cliente no pasa a ser del personal ni al
+  revés (409 `CLIENTE_Y_PERSONAL_SEPARADOS`). Por eso deja de alcanzarse la regla
+  «solo pasa a CLIENTE una cuenta con fecha de nacimiento» (RF-17 de CU-09), que
+  se quita.
+- **La lista de usuarios separa Personal y Clientes.** A un cliente solo se lo
+  activa o desactiva.
+- **Devoluciones (CU-13) y usuarios (CU-09): solo el Administrador.** Las
+  devoluciones son plata y siguen a una cancelación.
+- **El Administrador también valida entradas** (CU-15): puede cubrir la puerta.
+- **Base de datos:** Hibernate crea `usuario.rol` como `enum(...)` en MySQL y
+  `ddl-auto=update` no amplía esa lista. Una base nueva ya nace con los cinco
+  valores; una existente necesita
+  `ALTER TABLE usuario MODIFY rol enum('ADMINISTRADOR','CLIENTE','CONTADOR','ORGANIZADOR','PERSONAL') NOT NULL`
+  o empezar de cero. No se agrega un mecanismo de migraciones por esto.
 
 ---
 

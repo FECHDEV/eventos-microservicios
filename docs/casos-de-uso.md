@@ -10,13 +10,15 @@ está en `decisiones.md`.
 
 | ID | Actor | Tipo | Descripción |
 |---|---|---|---|
-| A-01 | Cliente | Humano | Persona que interactúa con el sistema para consultar información sobre los eventos y, mediante una cuenta registrada, acceder a las funcionalidades relacionadas con la adquisición y gestión de entradas. |
-| A-02 | Administrador | Humano | Usuario responsable de gestionar la información y las operaciones administrativas relacionadas con eventos, usuarios, entradas y reportes. |
-| A-03 | Personal autorizado | Humano | Usuario encargado de verificar y validar las entradas durante el acceso a los eventos. |
+| A-01 | Cliente | Humano | No es un rol del personal: es la cuenta de quien se registra en la web. Persona que interactúa con el sistema para consultar información sobre los eventos y, mediante una cuenta registrada, acceder a las funcionalidades relacionadas con la adquisición y gestión de entradas. |
+| A-02 | Administrador | Humano | Usuario responsable de todo el sistema: da de alta al personal y gestiona usuarios, eventos, devoluciones, reportes y la validación de entradas. |
+| A-03 | Control de acceso | Humano | Personal encargado de verificar y validar las entradas en la puerta de los eventos (antes «Personal autorizado»). |
+| A-08 | Organizador de eventos | Humano | Personal encargado de registrar los eventos, sus tipos de entrada y su estado. |
+| A-09 | Contador | Humano | Personal encargado solo de los reportes: generarlos, exportarlos y enviarlos por correo. |
 | A-04 | Sistema de pago externo | Sistema externo | Sistema encargado de procesar el pago correspondiente a la adquisición de entradas y comunicar el resultado de la operación. |
 | A-05 | Servicio de correo electrónico | Sistema externo | Servicio encargado de gestionar el envío de correos electrónicos generados por el sistema. |
 | A-06 | Tiempo | Actor temporal | Dispara el cierre automático de ventas y la liberación de reservas expiradas. |
-| A-07 | Usuario | Humano, abstracto (padre de A-01, A-02, A-03) | Rol común heredado por Cliente, Administrador y Personal autorizado; captura las relaciones compartidas (iniciar sesión, recuperar contraseña, gestionar datos personales). |
+| A-07 | Usuario | Humano, abstracto (padre de A-01, A-02, A-03, A-08, A-09) | Rol común heredado por Cliente, Administrador, Organizador de eventos, Contador y Control de acceso; captura las relaciones compartidas (iniciar sesión, recuperar contraseña, gestionar datos personales). |
 
 ---
 
@@ -61,7 +63,7 @@ FA-02 Cuenta ya existente (a partir del paso 4)
 
 **Breve descripción:** El Usuario se autentica mediante sus credenciales para obtener acceso a las funcionalidades del sistema que corresponden a su rol. Este caso de uso es común a los actores Cliente, Administrador y Personal autorizado, que heredan la relación por generalización.
 
-**Actor principal:** Usuario (actor abstracto; heredado por Cliente, Administrador y Personal autorizado)
+**Actor principal:** Usuario (actor abstracto; heredado por Cliente, Administrador, Organizador de eventos, Contador y Control de acceso)
 **Actor secundario:** —
 
 **Precondiciones:**
@@ -95,7 +97,7 @@ FA-02 Cuenta desactivada (a partir del paso 4)
 
 **Breve descripción:** El Usuario que no puede acceder a su cuenta solicita la recuperación de su contraseña. El sistema, a través del servicio de correo electrónico, le proporciona el medio para establecer una nueva contraseña y recuperar el acceso. Este caso de uso es común a los actores Cliente, Administrador y Personal autorizado, que heredan la relación por generalización.
 
-**Actor principal:** Usuario (actor abstracto; heredado por Cliente, Administrador y Personal autorizado)
+**Actor principal:** Usuario (actor abstracto; heredado por Cliente, Administrador, Organizador de eventos, Contador y Control de acceso)
 **Actor secundario:** Servicio de correo electrónico
 
 **Precondiciones:**
@@ -132,7 +134,7 @@ FA-02 Proceso de recuperación caducado (a partir del paso 6)
 
 **Breve descripción:** El Usuario consulta la información personal asociada a su cuenta y actualiza aquellos datos que requiera modificar. Este caso de uso es común a los actores Cliente, Administrador y Personal autorizado, que heredan la relación por generalización.
 
-**Actor principal:** Usuario (actor abstracto; heredado por Cliente, Administrador y Personal autorizado)
+**Actor principal:** Usuario (actor abstracto; heredado por Cliente, Administrador, Organizador de eventos, Contador y Control de acceso)
 **Actor secundario:** —
 
 **Precondiciones:**
@@ -322,7 +324,7 @@ FA-01 Sin entradas registradas (a partir del paso 2)
 
 ## CU-09 — GESTIONAR USUARIOS
 
-**Breve descripción:** El Administrador consulta los usuarios registrados en el sistema, asigna los roles que determinan el acceso a las funcionalidades y gestiona el estado de las cuentas mediante su activación o desactivación.
+**Breve descripción:** El Administrador da de alta al personal, consulta los usuarios registrados en el sistema (personal y clientes por separado), asigna los roles del personal que determinan el acceso a las funcionalidades y gestiona el estado de las cuentas mediante su activación o desactivación.
 
 **Actor principal:** Administrador
 **Actor secundario:** —
@@ -352,9 +354,14 @@ FA-02 Operación no permitida (a partir del paso 5)
 a) el Administrador intenta modificar su propio rol;
 b) el Administrador intenta desactivar su propia cuenta;
 c) la operación dejaría al sistema sin ningún administrador activo;
-d) se intenta modificar el rol de un usuario cuya cuenta está desactivada.
+d) se intenta modificar el rol de un usuario cuya cuenta está desactivada;
+e) se intenta pasar una cuenta de cliente a un rol del personal, o al revés.
 5.2 El sistema informa al Administrador y no registra los cambios.
 5.3 El caso de uso vuelve al paso 3.
+FA-03 Alta de personal (a partir del paso 2)
+2.1 El Administrador indica el correo, el nombre, el apellido, el teléfono (opcional), el rol del personal y una contraseña inicial.
+2.2 El sistema valida los datos y que el correo no pertenezca a otra cuenta.
+2.3 El sistema registra la cuenta activa con ese rol y confirma la operación.
 
 **Requisitos funcionales relacionados:** RF-06, RF-07
 
@@ -364,7 +371,7 @@ d) se intenta modificar el rol de un usuario cuya cuenta está desactivada.
 
 **Breve descripción:** El Administrador registra nuevos eventos y modifica la información de los ya registrados, estableciendo su descripción, fecha y horario, lugar, restricción de edad y límite de compra por cliente.
 
-**Actor principal:** Administrador
+**Actor principal:** Administrador, Organizador de eventos
 **Actor secundario:** —
 
 **Precondiciones:**
@@ -402,7 +409,7 @@ FA-03 Evento sin restricción de edad (a partir del paso 5)
 
 **Breve descripción:** El Administrador establece los tipos de entrada disponibles para un evento, junto con sus precios y la cantidad disponible de cada uno, y consulta la disponibilidad existente.
 
-**Actor principal:** Administrador
+**Actor principal:** Administrador, Organizador de eventos
 **Actor secundario:** —
 
 **Precondiciones:**
@@ -434,7 +441,7 @@ FA-01 Información inválida (a partir del paso 5)
 
 **Breve descripción:** El Administrador gestiona el ciclo de vida del evento, pudiendo activarlo, postergarlo, cancelarlo o cerrar manualmente la venta de entradas. El sistema cierra automáticamente la venta al cumplirse la hora de finalización establecida, y conserva la validez de las entradas ante la postergación o cancelación del evento. La notificación a los clientes ante la postergación o cancelación de un evento se realiza fuera del sistema.
 
-**Actor principal:** Administrador
+**Actor principal:** Administrador, Organizador de eventos
 **Actor secundario:** Tiempo
 
 **Precondiciones:**
@@ -505,7 +512,7 @@ FA-02 Entrada ya devuelta (a partir del paso 6)
 
 **Breve descripción:** El Administrador genera reportes de ventas, ingresos, entradas, clientes o accesos, pudiendo filtrarlos según los criterios definidos para cada tipo y exportarlos en formato PDF o Excel.
 
-**Actor principal:** Administrador
+**Actor principal:** Administrador, Contador
 **Actor secundario:** —
 
 **Precondiciones:**
@@ -548,7 +555,7 @@ FA-03 Consulta sin exportación (a partir del paso 6)
 
 **Breve descripción:** El Personal autorizado escanea el código QR de una entrada durante el acceso al evento. El sistema verifica su correspondencia con el evento, su vigencia y su utilización previa, y registra el acceso cuando la validación es correcta.
 
-**Actor principal:** Personal autorizado
+**Actor principal:** Control de acceso, Administrador
 **Actor secundario:** —
 
 **Precondiciones:**

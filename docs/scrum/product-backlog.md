@@ -28,3 +28,5 @@ Orden de arriba abajo por prioridad. Estado: Pendiente, En curso o Hecha.
 | HU-21 | Como administrador, quiero gestionar devoluciones, para registrar las entradas devueltas. | CU-13 | Eventos y Venta | 4 | Hecha |
 | HU-22 | Como equipo, quiero desplegar en el VPS nuevo, para publicar el sistema. | Técnica | Todos | 4 | Hecha |
 | HU-23 | Como equipo, quiero la documentación de perfil con Scrum, para cerrar la entrega. | Entrega | Ninguno | 5 | Hecha |
+| HU-24 | Como administrador, quiero dar de alta al personal con roles que se entiendan solos (Organizador de eventos, Contador, Control de acceso), para repartir el trabajo sin dar más permisos de los necesarios. | Predefensa, CU-09 | Seguridad, Eventos y Venta | 5 | Hecha |
+| HU-25 | Como equipo, quiero datos de demostración de una empresa en uso (clientes, eventos con afiche, ventas, accesos y reportes), para presentar el sistema como si ya funcionara. | Predefensa | Todos | 5 | Hecha |
