@@ -4,7 +4,7 @@ import { firstValueFrom } from 'rxjs';
 
 import { Pagina } from '../modelos/pagina';
 import { EstadoCuenta, Rol } from '../modelos/usuario';
-import { FiltrosDeUsuarios, UsuarioResumen } from '../modelos/usuario-resumen';
+import { AltaDePersonal, FiltrosDeUsuarios, UsuarioResumen } from '../modelos/usuario-resumen';
 import { comoErrorApi } from './autenticacion.service';
 
 // Llamadas a /api/usuarios (CU-09). Solo el administrador llega: el backend lo
@@ -20,6 +20,14 @@ export class UsuariosService {
 			url: '/api/usuarios',
 			params: parametros(filtros()),
 		}));
+	}
+
+	async darDeAlta(datos: AltaDePersonal): Promise<UsuarioResumen> {
+		try {
+			return await firstValueFrom(this.http.post<UsuarioResumen>('/api/usuarios', datos));
+		} catch (error) {
+			throw comoErrorApi(error);
+		}
 	}
 
 	async cambiarRol(idUsuario: number, rol: Rol): Promise<UsuarioResumen> {
@@ -44,7 +52,7 @@ export class UsuariosService {
 // Solo viaja lo que filtra: sin rol ni estado son todos, un texto de solo
 // espacios no filtra y la página 0 es la que el backend usa por defecto
 function parametros(filtros: FiltrosDeUsuarios): Record<string, string> {
-	const resultado: Record<string, string> = {};
+	const resultado: Record<string, string> = { personal: String(filtros.grupo === 'personal') };
 	if (filtros.rol !== null) {
 		resultado['rol'] = filtros.rol;
 	}

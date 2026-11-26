@@ -1,14 +1,18 @@
 package com.sarao.seguridad.controller;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.sarao.seguridad.dto.AltaPersonalRequest;
 import com.sarao.seguridad.dto.CambioEstadoRequest;
 import com.sarao.seguridad.dto.CambioRolRequest;
 import com.sarao.seguridad.dto.PaginaResponse;
@@ -29,10 +33,17 @@ public class UsuariosController {
 
 	@GetMapping
 	public PaginaResponse<UsuarioResumenResponse> listar(@RequestParam(required = false) Rol rol,
-			@RequestParam(required = false) EstadoCuenta estado, @RequestParam(required = false) String texto,
+			@RequestParam(required = false) Boolean personal, @RequestParam(required = false) EstadoCuenta estado, @RequestParam(required = false) String texto,
 			@RequestParam(defaultValue = "0") int pagina, @RequestParam(defaultValue = "20") int tamano) {
-		return PaginaResponse.from(gestionUsuariosService.listar(rol, estado, texto, pagina, tamano),
+		return PaginaResponse.from(gestionUsuariosService.listar(rol, personal, estado, texto, pagina, tamano),
 				UsuarioResumenResponse::from);
+	}
+
+	// RF-23: alta de un miembro del personal
+	@PostMapping
+	@ResponseStatus(HttpStatus.CREATED)
+	public UsuarioResumenResponse darDeAlta(@Valid @RequestBody AltaPersonalRequest solicitud) {
+		return UsuarioResumenResponse.from(gestionUsuariosService.darDeAlta(solicitud));
 	}
 
 	@PutMapping("/{idUsuario}/rol")

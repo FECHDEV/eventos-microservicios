@@ -26,7 +26,7 @@ const PAGINA: Pagina<UsuarioResumen> = {
   totalPaginas: 2,
 };
 
-const SIN_FILTROS: FiltrosDeUsuarios = { rol: null, estado: null, texto: '', pagina: 0 };
+const SIN_FILTROS: FiltrosDeUsuarios = { grupo: 'personal', rol: null, estado: null, texto: '', pagina: 0 };
 
 describe('UsuariosService', () => {
   let servicio: UsuariosService;
@@ -46,14 +46,15 @@ describe('UsuariosService', () => {
     await TestBed.inject(ApplicationRef).whenStable();
   }
 
-  // RF-3 y RF-4: la primera página, sin filtros que el backend no pidió
+  // RF-3, RF-4 y RF-27: la primera página del personal, sin filtros que el backend no pidió
   it('pide la lista sin parámetros de más', async () => {
     const recurso = TestBed.runInInjectionContext(() => servicio.listado(signal(SIN_FILTROS)));
     TestBed.tick();
 
     const peticion = http.expectOne((pedido) => pedido.url === '/api/usuarios');
     expect(peticion.request.method).toBe('GET');
-    expect(peticion.request.params.keys()).toEqual([]);
+    expect(peticion.request.params.keys()).toEqual(['personal']);
+    expect(peticion.request.params.get('personal')).toBe('true');
     peticion.flush(PAGINA);
     await estable();
 
@@ -63,12 +64,13 @@ describe('UsuariosService', () => {
   // RF-5: rol, estado, texto y página viajan como parámetros
   it('envía los filtros y la página', async () => {
     TestBed.runInInjectionContext(() =>
-      servicio.listado(signal({ rol: 'CLIENTE', estado: 'ACTIVA', texto: '  ana ', pagina: 1 })),
+      servicio.listado(signal({ grupo: 'clientes', rol: 'CONTADOR', estado: 'ACTIVA', texto: '  ana ', pagina: 1 })),
     );
     TestBed.tick();
 
     const peticion = http.expectOne((pedido) => pedido.url === '/api/usuarios');
-    expect(peticion.request.params.get('rol')).toBe('CLIENTE');
+    expect(peticion.request.params.get('personal')).toBe('false');
+    expect(peticion.request.params.get('rol')).toBe('CONTADOR');
     expect(peticion.request.params.get('estado')).toBe('ACTIVA');
     expect(peticion.request.params.get('texto')).toBe('ana');
     expect(peticion.request.params.get('pagina')).toBe('1');
@@ -101,6 +103,26 @@ describe('UsuariosService', () => {
     expect(segunda.request.params.get('rol')).toBe('PERSONAL');
     segunda.flush(PAGINA);
     await estable();
+  });
+
+  // RF-23
+  it('da de alta al personal y devuelve la cuenta creada', async () => {
+    const datos = {
+      nombre: 'Mariela',
+      apellido: 'Suárez',
+      correo: 'mariela.suarez.90@mail.com',
+      telefono: null,
+      rol: 'CONTADOR' as const,
+      contrasena: 'Inicial123',
+    };
+    const promesa = servicio.darDeAlta(datos);
+
+    const peticion = http.expectOne('/api/usuarios');
+    expect(peticion.request.method).toBe('POST');
+    expect(peticion.request.body).toEqual(datos);
+    peticion.flush({ ...PAGINA.contenido[0], rol: 'CONTADOR' });
+
+    expect((await promesa).rol).toBe('CONTADOR');
   });
 
   // RF-7

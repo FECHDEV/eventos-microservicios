@@ -284,7 +284,7 @@ describe('AppComponent', () => {
 
     // RF-20: la bienvenida con los accesos está en el Panel
     // CU-13 RF-17: el administrador también ve Devoluciones; CU-14 RF-18, Reportes
-    it('un administrador ve Inicio, Panel, Usuarios, Eventos, Devoluciones y Reportes', async () => {
+    it('un administrador ve todos los módulos del personal', async () => {
       const fijo = await en('/');
 
       expect(nombres(enlacesDelMenu(fijo))).toEqual([
@@ -294,9 +294,16 @@ describe('AppComponent', () => {
         'Eventos',
         'Devoluciones',
         'Reportes',
+        'Validar entradas',
       ]);
       expect(enlacesDelMenu(fijo)[1].getAttribute('href')).toBe('/panel');
       expect(enlacesDelMenu(fijo)[5].getAttribute('href')).toBe('/reportes');
+    });
+
+    // Roles del personal: cada uno ve solo lo suyo
+    it('el organizador ve eventos y el contador reportes', async () => {
+      expect(nombres(enlacesDelMenu(await en('/', 'ORGANIZADOR')))).toEqual(['Inicio', 'Panel', 'Eventos']);
+      expect(nombres(enlacesDelMenu(await en('/', 'CONTADOR')))).toEqual(['Inicio', 'Panel', 'Reportes']);
     });
 
     it('marca Reportes en su pantalla', async () => {

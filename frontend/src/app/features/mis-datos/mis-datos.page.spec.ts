@@ -151,12 +151,12 @@ describe('MisDatosPage', () => {
     expect(texto()).not.toContain('Fecha de nacimiento');
   });
 
-  it('nombra al personal autorizado', async () => {
+  it('nombra a control de acceso', async () => {
     await preparar((falsa) =>
       falsa.recurso.value.set({ ...ANA, rol: 'PERSONAL', fechaNacimiento: null }),
     );
 
-    expect(texto()).toContain('Personal autorizado');
+    expect(texto()).toContain('Control de acceso');
   });
 
   it('mientras carga no muestra el formulario', async () => {

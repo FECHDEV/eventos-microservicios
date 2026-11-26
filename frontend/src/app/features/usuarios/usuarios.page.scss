@@ -8,6 +8,70 @@
 	gap: var(--sarao-espacio-6);
 }
 
+.encabezado {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: space-between;
+	align-items: center;
+	gap: var(--sarao-espacio-3);
+}
+
+.encabezado h1 {
+	margin: 0;
+}
+
+.pestanas {
+	display: inline-flex;
+	align-self: flex-start;
+	border: 1px solid var(--sarao-borde);
+	border-radius: var(--sarao-radio);
+	overflow: hidden;
+}
+
+.pestanas button {
+	font: inherit;
+	font-size: 14px;
+	font-weight: 600;
+	min-height: 40px;
+	padding: var(--sarao-espacio-2) var(--sarao-espacio-4);
+	border: 0;
+	border-radius: 0;
+	background: transparent;
+	color: var(--sarao-texto-suave);
+	cursor: pointer;
+}
+
+.pestanas button[aria-pressed='true'] {
+	background: var(--sarao-ambar);
+	color: var(--sarao-sobre-ambar);
+}
+
+.guia summary {
+	cursor: pointer;
+	font-weight: 600;
+}
+
+.guia dl {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+	gap: var(--sarao-espacio-3);
+	margin: var(--sarao-espacio-3) 0 0;
+}
+
+.guia dt {
+	font-weight: 600;
+}
+
+.guia dd {
+	margin: var(--sarao-espacio-1) 0 0;
+	color: var(--sarao-texto-suave);
+}
+
+.nota {
+	margin: 0;
+	color: var(--sarao-texto-suave);
+}
+
 .filtros {
 	display: grid;
 	grid-template-columns: minmax(0, 2fr) repeat(2, minmax(0, 1fr));

@@ -88,10 +88,7 @@ done
 sleep 5
 
 echo "== Cuentas"
-for persona in "ana Ana" "pedro Pedro"; do
-	set -- $persona
-	espera "registro de $2" "$(cod -X POST $A/auth/registro -H "$J" -d "{\"nombre\":\"$2\",\"apellido\":\"Rojas\",\"correo\":\"$1@mail.com\",\"contrasena\":\"$CLAVE\",\"fechaNacimiento\":\"2000-05-20\"}")" 201
-done
+espera "registro de Ana" "$(cod -X POST $A/auth/registro -H "$J" -d "{\"nombre\":\"Ana\",\"apellido\":\"Rojas\",\"correo\":\"ana@mail.com\",\"contrasena\":\"$CLAVE\",\"fechaNacimiento\":\"2000-05-20\"}")" 201
 # El puerto de Seguridad abre antes de que la carga inicial cree al Administrador
 for _ in $(seq 1 30); do TA=$(token admin@mail.com "$ADMIN_CLAVE"); [ -n "$TA" ] && break; sleep 2; done
 espera "el Administrador inicial entra" "$([ -n "$TA" ] && echo si)" si
@@ -99,14 +96,22 @@ HA="Authorization: Bearer $TA"
 espera "recuperación pedida" "$(cod -X POST $A/auth/recuperacion -H "$J" -d '{"correo":"ana@mail.com"}')" 202
 esperarCorreos ana 1
 espera "correo de recuperación en el buzón" "$(buzon ana)" 1
-ID_PEDRO=$(base "select id_usuario from seguridad_db.usuario where correo='pedro@mail.com'")
-espera "Pedro pasa a Personal" "$(cod -X PUT $A/usuarios/$ID_PEDRO/rol -H "$HA" -H "$J" -d '{"rol":"PERSONAL"}')" 200
+# Al personal lo da de alta el Administrador (decisiones.md → Roles del personal)
+alta() { cod -X POST $A/usuarios -H "$HA" -H "$J" -d "{\"nombre\":\"$2\",\"apellido\":\"Rojas\",\"correo\":\"$1@mail.com\",\"contrasena\":\"$CLAVE\",\"rol\":\"$3\"}"; }
+espera "alta de Pedro en Control de acceso" "$(alta pedro Pedro PERSONAL)" 201
+espera "alta de Olga como Organizadora" "$(alta olga Olga ORGANIZADOR)" 201
+espera "alta de Carlos como Contador" "$(alta carlos Carlos CONTADOR)" 201
+ID_ANA=$(base "select id_usuario from seguridad_db.usuario where correo='ana@mail.com'")
+espera "una clienta no pasa al personal" "$(cod -X PUT $A/usuarios/$ID_ANA/rol -H "$HA" -H "$J" -d '{"rol":"PERSONAL"}')" 409
 HANA="Authorization: Bearer $(token ana@mail.com "$CLAVE")"
 HPEDRO="Authorization: Bearer $(token pedro@mail.com "$CLAVE")"
+HOLGA="Authorization: Bearer $(token olga@mail.com "$CLAVE")"
+HCARLOS="Authorization: Bearer $(token carlos@mail.com "$CLAVE")"
 
 echo "== Evento y compra"
 FECHA=$(date -d "+5 days" +%F)
-EV=$(curl -s -X POST $A/eventos -H "$HA" -H "$J" -d "{\"nombre\":\"Noche de jazz\",\"fecha\":\"$FECHA\",\"horaInicio\":\"20:00\",\"horaFin\":\"23:00\",\"lugar\":\"Teatro\"}" | js 'd["idEvento"]')
+# El evento lo crea la Organizadora
+EV=$(curl -s -X POST $A/eventos -H "$HOLGA" -H "$J" -d "{\"nombre\":\"Noche de jazz\",\"fecha\":\"$FECHA\",\"horaInicio\":\"20:00\",\"horaFin\":\"23:00\",\"lugar\":\"Teatro\"}" | js 'd["idEvento"]')
 TIPO=$(curl -s -X POST $A/eventos/$EV/tipos-entrada -H "$HA" -H "$J" -d '{"nombre":"General","precio":50.00,"cantidadTotal":10}' | js 'd["idTipoEntrada"]')
 espera "activar el evento" "$(cod -X POST $A/eventos/$EV/activacion -H "$HA")" 200
 espera "aparece en el catálogo" "$(curl -s $A/catalogo | js 'd["contenido"][0]["nombre"]')" "Noche de jazz"
@@ -142,6 +147,13 @@ espera "cancelar el evento" "$(cod -X POST $A/eventos/$EV/cancelacion -H "$HA")"
 espera "una entrada pendiente de devolución" "$(curl -s $A/devoluciones -H "$HA" | js 'd[0]["pendientes"]')" 1
 espera "devolver la compra" "$(curl -s -X POST $A/devoluciones/compras/$RESERVA -H "$HA" | js 'd["registradas"]')" 1
 espera "ingresos con lo devuelto" "$(gen INGRESOS | js 'd["resumen"]["totales"][2]')" 50.0
+
+echo "== Roles del personal"
+espera "el Contador ve reportes" "$(cod $A/reportes/opciones -H "$HCARLOS")" 200
+espera "el Contador no ve eventos" "$(cod $A/eventos -H "$HCARLOS")" 403
+espera "la Organizadora no ve reportes" "$(cod $A/reportes/opciones -H "$HOLGA")" 403
+espera "la Organizadora no ve usuarios" "$(cod $A/usuarios -H "$HOLGA")" 403
+espera "Control de acceso no ve eventos" "$(cod $A/eventos -H "$HPEDRO")" 403
 
 echo "== Accesos que no corresponden"
 espera "un Cliente no ve reportes" "$(cod $A/reportes/opciones -H "$HANA")" 403

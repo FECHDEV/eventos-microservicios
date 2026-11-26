@@ -1,7 +1,7 @@
-// El margen lateral crece con la pantalla: 16 px en el celular, 48 px en una
+// El margen lateral crece con la pantalla: 16 px en el celular, 32 px en una
 // pantalla ancha. El encabezado y el contenido comparten ancho y margen, así
 // la marca queda alineada con el título de cada pantalla
-$margen-lateral: clamp(var(--sarao-espacio-4), 5vw, var(--sarao-espacio-12));
+$margen-lateral: clamp(var(--sarao-espacio-4), 5vw, var(--sarao-espacio-8));
 
 :host {
 	display: flex;
@@ -58,7 +58,7 @@ footer p {
 	min-width: 0;
 	display: flex;
 	align-items: center;
-	gap: var(--sarao-espacio-6);
+	gap: var(--sarao-espacio-4);
 }
 
 .marca {
@@ -271,6 +271,25 @@ nav a.actual,
 
 .crear-cuenta:hover {
 	background: var(--sarao-ambar-fuerte);
+}
+
+// Los módulos del administrador no entran junto a la sesión en una pantalla
+// mediana: bajan a una segunda fila y la sesión queda arriba, a la derecha
+@media (min-width: 641px) and (max-width: 1139px) {
+	.muchos-modulos .principal {
+		display: contents;
+	}
+
+	.muchos-modulos nav {
+		order: 3;
+		width: 100%;
+		overflow-x: auto;
+		overscroll-behavior-x: contain;
+	}
+
+	.muchos-modulos nav ul {
+		padding-block: var(--sarao-espacio-1);
+	}
 }
 
 // En el celular la navegación baja a una segunda fila, que se desplaza de

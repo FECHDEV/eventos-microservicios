@@ -1,0 +1,241 @@
+[
+  {
+    "slug": "cumbia-tropical",
+    "nombre": "Noche de Cumbia Tropical",
+    "motivo": "fiesta",
+    "lema": "Las mejores orquestas de la ciudad, toda la noche",
+    "descripcion": "Una noche para bailar con tres orquestas en vivo y DJ entre cada presentación. Barra abierta de refrescos y zona de comidas.",
+    "lugar": "Salón Los Tajibos, Santa Cruz",
+    "horaInicio": "21:00",
+    "horaFin": "23:59",
+    "dias": -46,
+    "final": "realizado",
+    "restriccionEdad": 18,
+    "limiteCompra": 6,
+    "ocupacion": 0.86,
+    "colores": ["#3b0a45", "#e2366b", "#ffd166"],
+    "tipos": [
+      {"nombre": "General", "precio": 60, "total": 120},
+      {"nombre": "Mesa VIP", "precio": 150, "total": 24}
+    ]
+  },
+  {
+    "slug": "risas-de-viernes",
+    "nombre": "Stand-up: Risas de Viernes",
+    "motivo": "standup",
+    "lema": "Tres comediantes, una sola noche",
+    "descripcion": "Los comediantes más divertidos del oriente en una noche de humor para adultos. Show de 90 minutos con presentador.",
+    "lugar": "Teatro Las Palmas, Santa Cruz",
+    "horaInicio": "20:30",
+    "horaFin": "22:30",
+    "dias": -33,
+    "final": "realizado",
+    "restriccionEdad": 18,
+    "limiteCompra": 4,
+    "ocupacion": 0.93,
+    "colores": ["#101828", "#1f3a8a", "#f5b301"],
+    "tipos": [
+      {"nombre": "Platea", "precio": 80, "total": 90},
+      {"nombre": "Preferencia", "precio": 120, "total": 30}
+    ]
+  },
+  {
+    "slug": "rock-del-oriente",
+    "nombre": "Festival Rock del Oriente",
+    "motivo": "concierto",
+    "lema": "Seis bandas en un escenario al aire libre",
+    "descripcion": "Seis bandas de la región en un escenario al aire libre, con zona de comidas y bebidas. Abren las puertas a las 17:00.",
+    "lugar": "Arena del Norte, Montero",
+    "horaInicio": "18:00",
+    "horaFin": "23:59",
+    "dias": -19,
+    "final": "realizado",
+    "restriccionEdad": null,
+    "limiteCompra": 6,
+    "ocupacion": 0.78,
+    "colores": ["#120707", "#8b1e1e", "#ff7a1a"],
+    "tipos": [
+      {"nombre": "General", "precio": 70, "total": 200},
+      {"nombre": "VIP", "precio": 180, "total": 40}
+    ]
+  },
+  {
+    "slug": "sabores-del-norte",
+    "nombre": "Feria Gastronómica Sabores del Norte",
+    "motivo": "feria",
+    "lema": "Majadito, locro, cuñapé y mucho más",
+    "descripcion": "Lo mejor de la cocina del norte integrado con más de 30 puestos, música en vivo y actividades para toda la familia.",
+    "lugar": "Plaza principal, Montero",
+    "horaInicio": "10:00",
+    "horaFin": "20:00",
+    "dias": -8,
+    "final": "realizado",
+    "restriccionEdad": null,
+    "limiteCompra": 8,
+    "ocupacion": 0.7,
+    "colores": ["#0f3d2e", "#2f8f4e", "#ffcf56"],
+    "tipos": [
+      {"nombre": "Entrada general", "precio": 20, "total": 220},
+      {"nombre": "Niños", "precio": 10, "total": 80}
+    ]
+  },
+  {
+    "slug": "jazz-bajo-las-estrellas",
+    "nombre": "Jazz bajo las Estrellas",
+    "motivo": "concierto",
+    "lema": "Standards y jazz latino al aire libre",
+    "descripcion": "Una noche de standards y jazz latino con el cuarteto de la ciudad y artistas invitados, en el patio del centro cultural.",
+    "lugar": "Centro Cultural Sarao, Santa Cruz",
+    "horaInicio": "20:00",
+    "horaFin": "23:30",
+    "dias": 0,
+    "final": "activo",
+    "restriccionEdad": null,
+    "limiteCompra": 4,
+    "ocupacion": 0.62,
+    "colores": ["#0b1030", "#2b2d7c", "#f5b301"],
+    "tipos": [
+      {"nombre": "Platea", "precio": 120, "total": 80},
+      {"nombre": "Preferencia", "precio": 80, "total": 120}
+    ]
+  },
+  {
+    "slug": "fiesta-neon",
+    "nombre": "Fiesta Neón: Fin de Año Universitario",
+    "motivo": "fiesta",
+    "lema": "Glow, DJs y cotillón fluorescente",
+    "descripcion": "La fiesta de fin de año con tres DJs, pintura fluorescente y cotillón incluido. Solo mayores de 18 con carnet.",
+    "lugar": "Discoteca Ámbar, Santa Cruz",
+    "horaInicio": "22:00",
+    "horaFin": "23:59",
+    "dias": 9,
+    "final": "activo",
+    "restriccionEdad": 18,
+    "limiteCompra": 6,
+    "ocupacion": 0.48,
+    "colores": ["#05010f", "#7b2ff7", "#21e6c1"],
+    "tipos": [
+      {"nombre": "Preventa", "precio": 50, "total": 150},
+      {"nombre": "General", "precio": 70, "total": 150}
+    ]
+  },
+  {
+    "slug": "humor-camba",
+    "nombre": "Stand-up: Humor Camba",
+    "motivo": "standup",
+    "lema": "Historias del oriente que solo se entienden aquí",
+    "descripcion": "Humor de nuestra tierra con el elenco de Humor Camba. Show apto para mayores de 16 años.",
+    "lugar": "Teatro Las Palmas, Santa Cruz",
+    "horaInicio": "20:30",
+    "horaFin": "22:30",
+    "dias": 16,
+    "final": "activo",
+    "restriccionEdad": 16,
+    "limiteCompra": 4,
+    "ocupacion": 0.41,
+    "colores": ["#1a0b05", "#a0451c", "#ffd166"],
+    "tipos": [
+      {"nombre": "Platea", "precio": 90, "total": 100},
+      {"nombre": "Palco", "precio": 140, "total": 20}
+    ]
+  },
+  {
+    "slug": "sinfonico-de-navidad",
+    "nombre": "Concierto Sinfónico de Navidad",
+    "motivo": "concierto",
+    "lema": "La orquesta juvenil y clásicos navideños",
+    "descripcion": "La orquesta juvenil interpreta clásicos navideños con coro invitado. Ideal para ir en familia.",
+    "lugar": "Catedral de Montero",
+    "horaInicio": "19:30",
+    "horaFin": "21:30",
+    "dias": 21,
+    "final": "activo",
+    "restriccionEdad": null,
+    "limiteCompra": 8,
+    "ocupacion": 0.35,
+    "colores": ["#06261c", "#0f5c3a", "#e8c26a"],
+    "tipos": [
+      {"nombre": "General", "precio": 40, "total": 250},
+      {"nombre": "Preferencia", "precio": 70, "total": 60}
+    ]
+  },
+  {
+    "slug": "pena-sarao",
+    "nombre": "Peña Folklórica Sarao",
+    "motivo": "feria",
+    "lema": "Música y danza tradicional para compartir",
+    "descripcion": "Grupos de música y danza tradicional, con comida típica y concurso de cueca. Una noche para compartir.",
+    "lugar": "Peña El Chaco, Montero",
+    "horaInicio": "20:00",
+    "horaFin": "23:59",
+    "dias": 34,
+    "final": "activo",
+    "restriccionEdad": null,
+    "limiteCompra": 6,
+    "ocupacion": 0.22,
+    "colores": ["#2a1206", "#9c3d10", "#f2b84b"],
+    "tipos": [
+      {"nombre": "General", "precio": 50, "total": 180},
+      {"nombre": "Mesa preferencial", "precio": 90, "total": 30}
+    ]
+  },
+  {
+    "slug": "bernarda-alba",
+    "nombre": "La Casa de Bernarda Alba",
+    "motivo": "teatro",
+    "lema": "El clásico de García Lorca en escena",
+    "descripcion": "El clásico de García Lorca por el elenco del teatro municipal. Nueva fecha por mantenimiento de la sala.",
+    "lugar": "Casa de la Cultura, Montero",
+    "horaInicio": "20:00",
+    "horaFin": "22:00",
+    "dias": 28,
+    "fechaOriginal": 4,
+    "final": "postergado",
+    "restriccionEdad": 12,
+    "limiteCompra": 4,
+    "ocupacion": 0.38,
+    "colores": ["#1a0508", "#6d0f1f", "#e6b450"],
+    "tipos": [
+      {"nombre": "Platea", "precio": 90, "total": 100}
+    ]
+  },
+  {
+    "slug": "pulso-electronico",
+    "nombre": "Festival Electrónico Pulso",
+    "motivo": "festival",
+    "lema": "Doce horas de música electrónica",
+    "descripcion": "Doce horas de música electrónica con artistas nacionales e internacionales. Cancelado por razones de seguridad del predio.",
+    "lugar": "Predio Ferial, Santa Cruz",
+    "horaInicio": "16:00",
+    "horaFin": "23:59",
+    "dias": 13,
+    "final": "cancelado",
+    "restriccionEdad": 18,
+    "limiteCompra": 6,
+    "ocupacion": 0.3,
+    "colores": ["#020617", "#0e7490", "#f0abfc"],
+    "tipos": [
+      {"nombre": "General", "precio": 110, "total": 150},
+      {"nombre": "VIP", "precio": 250, "total": 30}
+    ]
+  },
+  {
+    "slug": "precarnaval",
+    "nombre": "Precarnavalera Sarao",
+    "motivo": "fiesta",
+    "lema": "Comparsas, banda y carnaval anticipado",
+    "descripcion": "La precarnavalera con comparsas invitadas, banda en vivo y concurso de disfraces.",
+    "lugar": "Arena del Norte, Montero",
+    "horaInicio": "18:00",
+    "horaFin": "23:59",
+    "dias": 70,
+    "final": "borrador",
+    "restriccionEdad": null,
+    "limiteCompra": 8,
+    "ocupacion": 0,
+    "colores": ["#22053a", "#d61f69", "#fde047"],
+    "tipos": [
+      {"nombre": "General", "precio": 60, "total": 400}
+    ]
+  }
+]

@@ -81,13 +81,23 @@ public class Usuario {
 
 	public static Usuario crearAdministrador(String nombre, String apellido, String correo, String contrasenaHash,
 			LocalDateTime fechaRegistro) {
+		return crearPersonal(nombre, apellido, correo, contrasenaHash, null, Rol.ADMINISTRADOR, fechaRegistro);
+	}
+
+	// CU-09 RF-23: sin fecha de nacimiento, que solo pide el Cliente
+	public static Usuario crearPersonal(String nombre, String apellido, String correo, String contrasenaHash,
+			String telefono, Rol rol, LocalDateTime fechaRegistro) {
+		if (!rol.esDelPersonal()) {
+			throw new IllegalArgumentException("El Cliente se registra solo, no se lo da de alta");
+		}
 		Usuario usuario = new Usuario();
 		usuario.nombre = Objects.requireNonNull(nombre);
 		usuario.apellido = Objects.requireNonNull(apellido);
 		usuario.correo = normalizarCorreo(Objects.requireNonNull(correo));
 		usuario.contrasena = Objects.requireNonNull(contrasenaHash);
+		usuario.telefono = telefonoONulo(telefono);
 		usuario.fechaRegistro = Objects.requireNonNull(fechaRegistro);
-		usuario.rol = Rol.ADMINISTRADOR;
+		usuario.rol = rol;
 		usuario.estado = EstadoCuenta.ACTIVA;
 		return usuario;
 	}
