@@ -5,13 +5,13 @@ tiene la carpeta local. Al 26/11/2026.
 
 ## Qué está terminado
 
-- **El sistema:** las 23 historias del `docs/scrum/product-backlog.md` están
-  Hechas (128 puntos en 5 sprints). El resultado de cada sprint, con pruebas y
+- **El sistema:** las 25 historias del `docs/scrum/product-backlog.md` están
+  Hechas (141 puntos en 5 sprints: 128 del plan y 13 de la predefensa). El resultado de cada sprint, con pruebas y
   fechas, está en `docs/scrum/sprints.md`.
 - **El despliegue:** probado en un VPS con `scripts/subir-al-vps.sh`, con una
   compra real, validación de entradas y envío de reportes por correo.
-- **La documentación final** (HU-23, Sprint 5): un Word y un PDF de unas 156
-  páginas, ya revisados por el usuario. **No está en este repositorio** (ver
+- **La documentación final** (HU-23, Sprint 5): un Word y un PDF de 179
+  páginas, actualizados el 26/11 con HU-24 y HU-25. **No está en este repositorio** (ver
   abajo).
 
 ## Después de la predefensa (25/11/2026)
@@ -22,7 +22,9 @@ tiene la carpeta local. Al 26/11/2026.
 - **HU-25, datos de demostración:** `scripts/datos-de-demostracion.sh [DIA]` llena el sistema como
   si una empresa ya lo usara; `scripts/cuentas-de-prueba.sh` deja una cuenta de prueba por rol
   (correos del tipo `nombre.apellido.NN@dominio`) con su buzón.
-- El documento final se actualiza con estos cambios.
+- El documento final ya los incluye: en el Sprint 5 están las dos historias nuevas, los requisitos
+  RF-59 y RF-60, la tabla «Roles del sistema», los casos de uso con los roles nuevos, los diagramas
+  de clases y de secuencia del alta de personal y las capturas de cada rol.
 
 ## La documentación final
 
