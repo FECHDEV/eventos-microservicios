@@ -10,7 +10,7 @@ tiene la carpeta local. Al 26/11/2026.
   fechas, está en `docs/scrum/sprints.md`.
 - **El despliegue:** probado en un VPS con `scripts/subir-al-vps.sh`, con una
   compra real, validación de entradas y envío de reportes por correo.
-- **La documentación final** (HU-23, Sprint 5): un Word y un PDF de 179
+- **La documentación final** (HU-23, Sprint 5): un Word y un PDF de 178
   páginas, actualizados el 26/11 con HU-24 y HU-25. **No está en este repositorio** (ver
   abajo).
 
